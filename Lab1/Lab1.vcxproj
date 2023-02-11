@@ -139,7 +139,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\MySuper3DApp.cpp" />
+    <ClCompile Include="AwesomeGameComponent.cpp" />
+    <ClCompile Include="DisplayWin.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameComponent.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AwesomeGameComponent.h" />
+    <ClInclude Include="DisplayWin.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameComponent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
