@@ -7,16 +7,16 @@
 #include "DisplayWin.h"
 #include "GameComponent.h"
 
-class Game
+class GameFramework
 {
 public:
-	Game(LPCWSTR applicationName);
-	void Init(int windowWidth, int windowHeight);
-	void Run();
-	void UpdateFrameCount(unsigned int& frameCount, float& totalTimeClamped);
-	void Update();
-	void Render(float& totalTimeClamped);
-	void FreeGameResources();
+	GAMEFRAMEWORK_API GameFramework(LPCWSTR applicationName);
+	GAMEFRAMEWORK_API virtual void Init(int windowWidth, int windowHeight);
+	GAMEFRAMEWORK_API virtual void Run();
+	GAMEFRAMEWORK_API virtual void UpdateFrameCount(unsigned int& frameCount, float& totalTimeClamped);
+	GAMEFRAMEWORK_API virtual void Update();
+	GAMEFRAMEWORK_API virtual void Render(float& totalTimeClamped);
+	GAMEFRAMEWORK_API virtual void FreeGameResources();
 
 	int screenWidth;
 	int screenHeight;

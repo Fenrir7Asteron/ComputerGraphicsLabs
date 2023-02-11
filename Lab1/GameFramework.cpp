@@ -3,16 +3,16 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
 
-#include "Game.h"
+#include "GameFramework.h"
 #include "AwesomeGameComponent.h"
 #include <iostream>
 
-Game::Game(LPCWSTR applicationName)
+GameFramework::GameFramework(LPCWSTR applicationName)
 {
 	this->applicationName = applicationName;
 }
 
-void Game::Init(int screenWidth, int screenHeight)
+void GameFramework::Init(int screenWidth, int screenHeight)
 {
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenWidth;
@@ -60,14 +60,9 @@ void Game::Init(int screenWidth, int screenHeight)
 
 	res = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
 	res = device->CreateRenderTargetView(backTex, nullptr, &rtv);
-
-	gameComponents.push_back(new AwesomeGameComponent(this, {1.0f, -0.5f, 0.0f}));
-	gameComponents.push_back(new AwesomeGameComponent(this, {-1.0f, -0.5f, 0.0f}));
-	gameComponents.push_back(new AwesomeGameComponent(this, {0.0f, 0.5f, 0.0f}));
-	gameComponents.push_back(new AwesomeGameComponent(this, {-2.0f, 0.5f, 0.0f}));
 }
 
-void Game::Run()
+void GameFramework::Run()
 {
 	PrevTime = std::chrono::steady_clock::now();
 	float totalTimeClamped = 0;
@@ -104,7 +99,7 @@ void Game::Run()
 	FreeGameResources();
 }
 
-void Game::UpdateFrameCount(unsigned int &frameCount, float &totalTimeClamped)
+void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeClamped)
 {
 	frameCount++;
 
@@ -121,7 +116,7 @@ void Game::UpdateFrameCount(unsigned int &frameCount, float &totalTimeClamped)
 	}
 }
 
-void Game::Update()
+void GameFramework::Update()
 {
 	for (auto gameComponent : gameComponents)
 	{
@@ -129,7 +124,7 @@ void Game::Update()
 	}
 }
 
-void Game::Render(float& totalTimeClamped)
+void GameFramework::Render(float& totalTimeClamped)
 {
 
 	context->ClearState();
@@ -163,7 +158,7 @@ void Game::Render(float& totalTimeClamped)
 	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 }
 
-void Game::FreeGameResources()
+void GameFramework::FreeGameResources()
 {
 	device.Reset();
 	context->Release();

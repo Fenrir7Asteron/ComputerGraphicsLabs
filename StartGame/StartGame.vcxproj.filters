@@ -15,28 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GameFramework.cpp">
+    <ClCompile Include="StartGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DisplayWin.cpp">
+    <ClCompile Include="MyGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameComponent.cpp">
+    <ClCompile Include="..\Lab1\AwesomeGameComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameFramework.h">
+    <ClInclude Include="MyGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DisplayWin.h">
+    <ClInclude Include="..\Lab1\AwesomeGameComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameComponent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameFrameworkExports.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\MyVeryFirstShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

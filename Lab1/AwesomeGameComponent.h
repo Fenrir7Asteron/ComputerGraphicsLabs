@@ -2,16 +2,16 @@
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <d3d11.h>
-#include "GameComponent.h"
+#include "GameFramework.h"
 
 class AwesomeGameComponent : public GameComponent
 {
 public:
-	AwesomeGameComponent(Game* game, DirectX::XMFLOAT3 offset);
+	GAMEFRAMEWORK_API AwesomeGameComponent(GameFramework* game, DirectX::XMFLOAT3 offset);
 
 	// Inherited via GameComponent
-	virtual void Update(float deltaTime) override;
-	virtual void Draw() override;
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Draw() override;
 
 	ID3DBlob* vertexBC;
 	ID3D11VertexShader* vertexShader;

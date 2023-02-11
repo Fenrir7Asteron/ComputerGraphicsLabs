@@ -1,16 +1,18 @@
 #pragma once
-class Game;
+#include "GameFrameworkExports.h"
+
+class GameFramework;
 
 class GameComponent
 {
 public:
-	GameComponent(Game* game);
-	virtual void Update(float deltaTime) = 0;
-	virtual void Draw() = 0;
+	GAMEFRAMEWORK_API GameComponent(GameFramework* game);
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) = 0;
+	GAMEFRAMEWORK_API virtual void Draw() = 0;
 
 protected:
-	void CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName);
+	GAMEFRAMEWORK_API void CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName);
 
-	Game* game_;
+	GameFramework* game_;
 };
 

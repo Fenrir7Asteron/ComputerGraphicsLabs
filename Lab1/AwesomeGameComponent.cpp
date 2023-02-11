@@ -1,5 +1,9 @@
 #include "AwesomeGameComponent.h"
-#include "Game.h"
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "dxguid.lib")
 
 const LPCWSTR vertexShaderPath = L"./Shaders/MyVeryFirstShader.hlsl";
 const LPCWSTR vertexShaderName = L"MyVeryFirstShader.hlsl";
@@ -8,7 +12,7 @@ const LPCWSTR pixelShaderPath = L"./Shaders/MyVeryFirstShader.hlsl";
 const LPCWSTR pixelShaderName = L"MyVeryFirstShader.hlsl";
 D3D_SHADER_MACRO Pixel_Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
-AwesomeGameComponent::AwesomeGameComponent(Game* game, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }) : GameComponent(game)
+AwesomeGameComponent::AwesomeGameComponent(GameFramework* game, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }) : GameComponent(game)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -31,15 +35,25 @@ AwesomeGameComponent::AwesomeGameComponent(Game* game, DirectX::XMFLOAT3 offset 
 	res = D3DCompileFromFile(pixelShaderPath, Pixel_Shader_Macros /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pixelBC, &errorPixelCode);
 	CheckShaderCreationSuccess(res, errorPixelCode, pixelShaderName);
 
-	game_->device->CreateVertexShader(
+	res = game_->device->CreateVertexShader(
 		vertexBC->GetBufferPointer(),
 		vertexBC->GetBufferSize(),
 		nullptr, &vertexShader);
 
-	game_->device->CreatePixelShader(
+	if (FAILED(res))
+	{
+		return;
+	}
+
+	res = game_->device->CreatePixelShader(
 		pixelBC->GetBufferPointer(),
 		pixelBC->GetBufferSize(),
 		nullptr, &pixelShader);
+
+	if (FAILED(res))
+	{
+		return;
+	}
 
 	D3D11_INPUT_ELEMENT_DESC inputElements[] = {
 		D3D11_INPUT_ELEMENT_DESC {

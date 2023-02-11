@@ -1,0 +1,9 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Lab1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  AwesomeGameComponent.cpp
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(15,114): warning C4273: 'AwesomeGameComponent::AwesomeGameComponent': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(10,2): message : see previous definition of '{ctor}'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(111,1): warning C4273: 'AwesomeGameComponent::Update': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(13,33): message : see previous definition of 'Update'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(130,1): warning C4273: 'AwesomeGameComponent::Draw': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(14,33): message : see previous definition of 'Draw'
+  StartGame.vcxproj -> D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.exe

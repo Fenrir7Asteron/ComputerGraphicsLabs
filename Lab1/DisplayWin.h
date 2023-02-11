@@ -2,11 +2,12 @@
 
 #include <windows.h>
 #include <WinUser.h>
+#include "GameFrameworkExports.h"
 
 class DisplayWin
 {
 public:
-	HWND CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight);
+	GAMEFRAMEWORK_API HWND CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight);
 private:
-	static LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
+	GAMEFRAMEWORK_API static LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
 };

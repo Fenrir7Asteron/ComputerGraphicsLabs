@@ -2,9 +2,9 @@
 #include <iostream>
 
 #include "GameComponent.h"
-#include "Game.h"
+#include "GameFramework.h"
 
-GameComponent::GameComponent(Game* game)
+GameComponent::GameComponent(GameFramework* game)
 {
 	game_ = game;
 }
