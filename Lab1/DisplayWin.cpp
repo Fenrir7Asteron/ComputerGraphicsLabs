@@ -2,7 +2,7 @@
 
 #include "DisplayWin.h"
 
-HWND DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight)
+void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight)
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
@@ -49,7 +49,7 @@ HWND DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int 
 
 	ShowCursor(true);
 
-	return hWnd;
+	this->hWnd = &hWnd;
 }
 
 LRESULT DisplayWin::WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
@@ -62,6 +62,7 @@ LRESULT DisplayWin::WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lpar
 		std::cout << "Key: " << static_cast<unsigned int>(wparam) << std::endl;
 
 		if (static_cast<unsigned int>(wparam) == 27) PostQuitMessage(0);
+
 		return 0;
 	}
 	default:

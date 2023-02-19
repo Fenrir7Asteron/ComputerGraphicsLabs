@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "DisplayWin.h"
-#include "GameComponent.h"
+#include "PhysicalBoxComponent.h"
+#include "InputDevice.h"
 
 class GameFramework
 {
@@ -16,13 +17,16 @@ public:
 	GAMEFRAMEWORK_API virtual void UpdateFrameCount(unsigned int& frameCount, float& totalTimeClamped);
 	GAMEFRAMEWORK_API virtual void Update();
 	GAMEFRAMEWORK_API virtual void Render(float& totalTimeClamped);
+	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
+	GAMEFRAMEWORK_API virtual void AddComponent(PhysicalBoxComponent* gameComponent);
+	GAMEFRAMEWORK_API virtual bool Intersects(PhysicalBoxComponent* queryingBox);
 	GAMEFRAMEWORK_API virtual void FreeGameResources();
 
 	int screenWidth;
 	int screenHeight;
 	LPCWSTR applicationName;
-	DisplayWin displayWin;
-	HWND hWnd;
+	DisplayWin* displayWin;
+	InputDevice* inputDevice;
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	ID3D11DeviceContext* context;
@@ -31,6 +35,7 @@ public:
 	ID3D11RenderTargetView* rtv;
 
 	std::vector<GameComponent*> gameComponents;
+	std::vector<PhysicalBoxComponent*> physicalGameComponents;
 
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float deltaTime;

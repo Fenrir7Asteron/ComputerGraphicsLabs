@@ -1,5 +1,8 @@
 #pragma once
+#include <d3d11.h>
+
 #include "GameFrameworkExports.h"
+#include "SimpleMath.h"
 
 class GameFramework;
 
@@ -9,6 +12,9 @@ public:
 	GAMEFRAMEWORK_API GameComponent(GameFramework* game);
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) = 0;
 	GAMEFRAMEWORK_API virtual void Draw() = 0;
+	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
+
+	DirectX::SimpleMath::Vector3 positionOffset;
 
 protected:
 	GAMEFRAMEWORK_API void CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName);

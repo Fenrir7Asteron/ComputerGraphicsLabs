@@ -9,6 +9,11 @@ GameComponent::GameComponent(GameFramework* game)
 	game_ = game;
 }
 
+GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
+{
+	positionOffset += positionDelta;
+}
+
 void GameComponent::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName)
 {
 	if (FAILED(res)) {
@@ -21,7 +26,7 @@ void GameComponent::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* erro
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
 		else
 		{
-			MessageBox(game_->hWnd, shaderName, shaderName, MB_OK);
+			MessageBox(*(game_->displayWin->hWnd), shaderName, shaderName, MB_OK);
 		}
 	}
 }

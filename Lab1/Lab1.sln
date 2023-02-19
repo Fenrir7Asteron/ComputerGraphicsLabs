@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameFramework", "Lab1.vcxpr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StartGame", "..\StartGame\StartGame.vcxproj", "{F15E78ED-393D-4972-85B7-E8FB3D552F7A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pong", "..\Pong\Pong.vcxproj", "{A3FB7747-0232-4633-8DC9-6A9D235BA433}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{F15E78ED-393D-4972-85B7-E8FB3D552F7A}.Release|x64.Build.0 = Release|x64
 		{F15E78ED-393D-4972-85B7-E8FB3D552F7A}.Release|x86.ActiveCfg = Release|Win32
 		{F15E78ED-393D-4972-85B7-E8FB3D552F7A}.Release|x86.Build.0 = Release|Win32
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Debug|x64.ActiveCfg = Debug|x64
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Debug|x64.Build.0 = Debug|x64
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Debug|x86.ActiveCfg = Debug|Win32
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Debug|x86.Build.0 = Debug|Win32
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Release|x64.ActiveCfg = Release|x64
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Release|x64.Build.0 = Release|x64
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Release|x86.ActiveCfg = Release|Win32
+		{A3FB7747-0232-4633-8DC9-6A9D235BA433}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

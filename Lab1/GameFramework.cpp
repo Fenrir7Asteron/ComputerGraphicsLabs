@@ -4,7 +4,6 @@
 #pragma comment(lib, "dxguid.lib")
 
 #include "GameFramework.h"
-#include "AwesomeGameComponent.h"
 #include <iostream>
 
 GameFramework::GameFramework(LPCWSTR applicationName)
@@ -17,7 +16,8 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenWidth;
 
-	hWnd = displayWin.CreateGameWindow(applicationName, screenWidth, screenHeight);
+	displayWin = new DisplayWin();
+	displayWin->CreateGameWindow(applicationName, screenWidth, screenHeight);
 
 	D3D_FEATURE_LEVEL featureLevel[] = { D3D_FEATURE_LEVEL_11_1 };
 
@@ -31,7 +31,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	swapDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = hWnd;
+	swapDesc.OutputWindow = *(displayWin->hWnd);
 	swapDesc.Windowed = true;
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -60,6 +60,8 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	res = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
 	res = device->CreateRenderTargetView(backTex, nullptr, &rtv);
+
+	inputDevice = new InputDevice(this);
 }
 
 void GameFramework::Run()
@@ -90,7 +92,20 @@ void GameFramework::Run()
 				isExitRequested = true;
 				break;
 			}
+
+			if (msg.message == WM_KEYDOWN) {
+				Keys keyEnum = static_cast<Keys>(msg.wParam);
+				inputDevice->AddPressedKey(keyEnum);
+			}
+
+			if (msg.message == WM_KEYUP) {
+				Keys keyEnum = static_cast<Keys>(msg.wParam);
+				inputDevice->RemovePressedKey(keyEnum);
+			}
 		}
+
+		if (isExitRequested)
+			break;
 
 		Update();
 		Render(totalTimeClamped);
@@ -110,7 +125,7 @@ void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeC
 
 		WCHAR text[256];
 		swprintf_s(text, TEXT("FPS: %f"), fps);
-		SetWindowText(hWnd, text);
+		SetWindowText(*(displayWin->hWnd), text);
 
 		frameCount = 0;
 	}
@@ -158,6 +173,31 @@ void GameFramework::Render(float& totalTimeClamped)
 	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 }
 
+GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
+{
+	gameComponents.push_back(gameComponent);
+}
+
+GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalBoxComponent* gameComponent)
+{
+	gameComponents.push_back(gameComponent);
+	physicalGameComponents.push_back(gameComponent);
+}
+
+GAMEFRAMEWORK_API bool GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+{
+	for (auto otherBox : physicalGameComponents) {
+		if (otherBox == queryingBox)
+			continue;
+
+		if (queryingBox->boundingBox.Intersects(otherBox->boundingBox)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void GameFramework::FreeGameResources()
 {
 	device.Reset();
@@ -170,5 +210,10 @@ void GameFramework::FreeGameResources()
 	{
 		delete gameComponent;
 	}
+
 	gameComponents.clear();
+	physicalGameComponents.clear();
+
+	delete displayWin;
+	delete inputDevice;
 }

@@ -1,0 +1,15 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Lab1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  PongRacket.cpp
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(29,31): warning C4251: 'InputDevice::MousePosition': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(30,31): warning C4251: 'InputDevice::MouseOffset': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33,47): warning C4251: 'InputDevice::MouseMove': class 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33): message : see declaration of 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>'
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.cpp(17,173): warning C4273: 'PongRacket::PongRacket': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.h(10,2): message : see previous definition of '{ctor}'
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.cpp(115,1): warning C4273: 'PongRacket::Update': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.h(13,33): message : see previous definition of 'Update'
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.cpp(131,1): warning C4273: 'PongRacket::Draw': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Pong\PongRacket.h(14,33): message : see previous definition of 'Draw'
+  Pong.vcxproj -> D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\Pong.exe
