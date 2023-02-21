@@ -30,6 +30,9 @@
     <ClCompile Include="PongBall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PongWall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PongGame.h">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PongBall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PongWall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

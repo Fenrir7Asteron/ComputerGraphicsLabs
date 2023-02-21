@@ -1,12 +1,4 @@
-#define NOMINMAX
-#define _USE_MATH_DEFINES
-#include "PongBall.h"
-#include "PongRacket.h"
 #include "PongWall.h"
-#include "GameFramework.h"
-#include <iostream>
-#include <algorithm>
-#include <cmath>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -19,7 +11,7 @@ const LPCWSTR vertexShaderName = L"SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderName = L"SimpleObjectShader.hlsl";
 
-PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 0.0f, 0.0f }, float radius = 0.1f, float startSpeed = 0.1f, float racketHitSpeedMultiplier = 1.1f) : PhysicalBoxComponent(game)
+PongWall::PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float wallThickness = 0.025f, float wallLength = 2.0f, DirectX::XMFLOAT3 wallNormal = { 0.0f, 0.0f, 0.0f }) : PhysicalBoxComponent(game, physicalLayer)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -91,18 +83,11 @@ PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 
 	pointsLen = 8;
 
 	points = new DirectX::XMFLOAT4[pointsLen]{
-		DirectX::XMFLOAT4(radius, radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-radius, -radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(radius, -radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-radius, radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
+		DirectX::XMFLOAT4(wallLength  * 0.5f, wallThickness  * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(0.75f, 0.75f, 0.75f, 0.75f),
+		DirectX::XMFLOAT4(-wallLength * 0.5f, -wallThickness * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(0.75f, 0.75f, 0.75f, 0.75f),
+		DirectX::XMFLOAT4(wallLength  * 0.5f, -wallThickness * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(0.75f, 0.75f, 0.75f, 0.75f),
+		DirectX::XMFLOAT4(-wallLength * 0.5f, wallThickness  * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(0.75f, 0.75f, 0.75f, 0.75f),
 	};
-
-	for (int idx = 0; idx < pointsLen; idx += 2)
-	{
-		points[idx].x += startOffset.x;
-		points[idx].y += startOffset.y;
-		points[idx].z += startOffset.z;
-	}
 
 	indicesLen = 6;
 	indices = new int[indicesLen] { 0, 1, 2, 1, 0, 3 };
@@ -113,51 +98,20 @@ PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 
 
 	res = game_->device->CreateRasterizerState(&rastDesc, &rastState);
 
-	this->radius = radius;
-	this->startSpeed = startSpeed;
-	this->racketHitSpeedMultiplier = racketHitSpeedMultiplier;
-	this->currentSpeed = DirectX::SimpleMath::Vector3{ -1.0f, 0.0f, 0.0f } * startSpeed;
+	this->positionOffset.x = offset.x;
+	this->positionOffset.y = offset.y;
 
-	this->boundingBox.Center = startOffset;
-	this->boundingBox.Extents = DirectX::XMFLOAT3(radius, radius, radius);
+	this->wallNormal = wallNormal;
+
+	this->boundingBox.Center = offset;
+	this->boundingBox.Extents = DirectX::XMFLOAT3(wallLength * 0.5f, wallThickness * 0.5f, 1.0f);
 }
 
-void PongBall::Update(float deltaTime)
+void PongWall::Update(float deltaTime)
 {
-	PhysicalBoxComponent* intersectedBox = game_->RayIntersectsSomething(this, positionOffset, currentSpeed);
-
-	if (intersectedBox == nullptr)
-		intersectedBox = game_->Intersects(this);
-
-	if (intersectedBox != nullptr) {
-		if (intersectedBox->physicalLayer == PhysicalLayer::Player && currentSpeed.x < -0.001f) {
-			PongRacket* intersectedRacket = dynamic_cast<PongRacket*>(intersectedBox);
-			if (intersectedRacket != nullptr) {
-				std::cout << "Ball deflected by player racket" << std::endl;
-				GetDeflectedFromRacket(intersectedRacket);
-			}
-			
-		}
-		else if (intersectedBox->physicalLayer == PhysicalLayer::Enemy && currentSpeed.x > 0.001f) {
-			PongRacket* intersectedRacket = dynamic_cast<PongRacket*>(intersectedBox);
-			if (intersectedRacket != nullptr) {
-				std::cout << "Ball deflected by enemy racket" << std::endl;
-				GetDeflectedFromRacket(intersectedRacket);
-			}
-		}
-		else {
-			PongWall* intersectedWall= dynamic_cast<PongWall*>(intersectedBox);
-			if (intersectedWall != nullptr) {
-				std::cout << "Ball reflected by a wall" << std::endl;
-				currentSpeed = DirectX::SimpleMath::Vector3::Reflect(currentSpeed, intersectedWall->wallNormal);
-			}
-		}
-	}
-
-	Move(currentSpeed * deltaTime);	
 }
 
-void PongBall::Draw()
+void PongWall::Draw()
 {
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -225,24 +179,4 @@ void PongBall::Draw()
 
 	vb->Release();
 	ib->Release();
-}
-
-DirectX::SimpleMath::Vector3 PongBall::RotateVectorAroundZAxis(DirectX::SimpleMath::Vector3 vector, float radians)
-{
-	float cos = std::cos(radians);
-	float sin = std::sin(radians);
-	DirectX::SimpleMath::Matrix rotationMatrix(
-		DirectX::SimpleMath::Vector4(cos, -sin, 0, 0),
-		DirectX::SimpleMath::Vector4(sin,  cos, 0, 0),
-		DirectX::SimpleMath::Vector4(  0,    0, 0, 0),
-		DirectX::SimpleMath::Vector4(  0,    0, 0, 0));
-
-	return DirectX::XMVector3Transform(vector, rotationMatrix);
-}
-
-void PongBall::GetDeflectedFromRacket(PongRacket* racket)
-{
-	float deflectionRadians = racket->GetBallDeflectionDegrees(positionOffset) * M_PI / 180.0f;
-	currentSpeed *= -1.0f;
-	currentSpeed = RotateVectorAroundZAxis(currentSpeed, -deflectionRadians);
 }

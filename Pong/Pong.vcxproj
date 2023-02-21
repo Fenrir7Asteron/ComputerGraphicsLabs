@@ -149,6 +149,7 @@
     <ClCompile Include="PongBall.cpp" />
     <ClCompile Include="PongGame.cpp" />
     <ClCompile Include="PongRacket.cpp" />
+    <ClCompile Include="PongWall.cpp" />
     <ClCompile Include="StartGame.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +157,7 @@
     <ClInclude Include="PongBall.h" />
     <ClInclude Include="PongGame.h" />
     <ClInclude Include="PongRacket.h" />
+    <ClInclude Include="PongWall.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\SimpleObjectShader.hlsl">

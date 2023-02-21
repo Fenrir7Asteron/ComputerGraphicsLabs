@@ -4,15 +4,14 @@
 #include <d3d11.h>
 #include "GameFramework.h"
 
-class PongRacket : public PhysicalBoxComponent
+class PongWall: public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float racketWidth, float racketLength, float maxSpeed, float maxDeflectionDegree);
+	GAMEFRAMEWORK_API PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float wallThickness, float wallLength, DirectX::XMFLOAT3 wallNormal);
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API virtual void Draw() override;
-	float GetBallDeflectionDegrees(DirectX::SimpleMath::Vector3 ballPosition);
 
 	ID3DBlob* vertexBC;
 	ID3D11VertexShader* vertexShader;
@@ -23,9 +22,6 @@ public:
 	int pointsLen;
 	int* indices;
 	int indicesLen;
-	float racketLength;
-	float maxSpeed;
-	float maxDeflectionDegree;
+	DirectX::SimpleMath::Vector3 wallNormal;
 	ID3D11RasterizerState* rastState;
 };
-

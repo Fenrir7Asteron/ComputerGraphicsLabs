@@ -14,7 +14,7 @@ const LPCWSTR vertexShaderName = L"SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderName = L"SimpleObjectShader.hlsl";
 
-PongRacket::PongRacket(GameFramework* game, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float racketWidth = 0.025f, float racketLength = 0.15f, float maxSpeed = 1.0f) : PhysicalBoxComponent(game)
+PongRacket::PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float racketWidth = 0.025f, float racketLength = 0.15f, float maxSpeed = 1.0f, float maxDeflectionDegree = 45.0f) : PhysicalBoxComponent(game, physicalLayer)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -86,10 +86,10 @@ PongRacket::PongRacket(GameFramework* game, DirectX::XMFLOAT3 offset = { 0.0f, 0
 	pointsLen = 8;
 
 	points = new DirectX::XMFLOAT4[pointsLen]{
-		DirectX::XMFLOAT4(racketWidth, racketLength, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-racketWidth, -racketLength, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(racketWidth, -racketLength, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-racketWidth, racketLength, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
+		DirectX::XMFLOAT4(racketWidth * 0.5f, racketLength * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
+		DirectX::XMFLOAT4(-racketWidth * 0.5f, -racketLength * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
+		DirectX::XMFLOAT4(racketWidth * 0.5f, -racketLength * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
+		DirectX::XMFLOAT4(-racketWidth * 0.5f, racketLength * 0.5f, 0.0f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
 	};
 
 	indicesLen = 6;
@@ -103,6 +103,7 @@ PongRacket::PongRacket(GameFramework* game, DirectX::XMFLOAT3 offset = { 0.0f, 0
 
 	this->racketLength = racketLength;
 	this->maxSpeed = maxSpeed;
+	this->maxDeflectionDegree = maxDeflectionDegree;
 
 	this->positionOffset.x = offset.x;
 	this->positionOffset.y = offset.y;
@@ -195,4 +196,13 @@ void PongRacket::Draw()
 
 	vb->Release();
 	ib->Release();
+}
+
+float PongRacket::GetBallDeflectionDegrees(DirectX::SimpleMath::Vector3 ballPosition)
+{
+	float offsetPercentage = (ballPosition.y - positionOffset.y) / racketLength;
+	float offsetPercentageClamped = std::max(-1.0f, offsetPercentage);
+	offsetPercentageClamped = std::min(1.0f, offsetPercentage);
+
+	return offsetPercentageClamped * this->maxDeflectionDegree;
 }

@@ -184,18 +184,35 @@ GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalBoxComponent* gameCom
 	physicalGameComponents.push_back(gameComponent);
 }
 
-GAMEFRAMEWORK_API bool GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
 {
 	for (auto otherBox : physicalGameComponents) {
 		if (otherBox == queryingBox)
 			continue;
 
 		if (queryingBox->boundingBox.Intersects(otherBox->boundingBox)) {
-			return true;
+			return otherBox;
 		}
 	}
 
-	return false;
+	return nullptr;
+}
+
+GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 direction)
+{
+	for (auto otherBox : physicalGameComponents) {
+		if (otherBox == queryingBox)
+			continue;
+
+		direction.Normalize();
+		float intersectionDistance = 0.0f;
+
+		if (otherBox->boundingBox.Intersects(origin, direction, intersectionDistance) && intersectionDistance < 0.1f) {
+			return otherBox;
+		}
+	}
+
+	return nullptr;
 }
 
 void GameFramework::FreeGameResources()

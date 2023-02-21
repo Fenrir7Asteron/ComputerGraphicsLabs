@@ -19,7 +19,8 @@ public:
 	GAMEFRAMEWORK_API virtual void Render(float& totalTimeClamped);
 	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
 	GAMEFRAMEWORK_API virtual void AddComponent(PhysicalBoxComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual bool Intersects(PhysicalBoxComponent* queryingBox);
+	GAMEFRAMEWORK_API virtual PhysicalBoxComponent* Intersects(PhysicalBoxComponent* queryingBox);
+	GAMEFRAMEWORK_API virtual PhysicalBoxComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 direction);
 	GAMEFRAMEWORK_API virtual void FreeGameResources();
 
 	int screenWidth;

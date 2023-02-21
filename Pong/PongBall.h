@@ -5,6 +5,7 @@
 #include "PhysicalBoxComponent.h"
 
 class SimpleMath;
+class PongRacket;
 
 class PongBall: public PhysicalBoxComponent
 {
@@ -29,5 +30,9 @@ public:
 	float startSpeed;
 	float racketHitSpeedMultiplier;
 	ID3D11RasterizerState* rastState;
+
+protected:
+	DirectX::SimpleMath::Vector3 RotateVectorAroundZAxis(DirectX::SimpleMath::Vector3 vector, float radians);
+	void GetDeflectedFromRacket(PongRacket* racket);
 };
 

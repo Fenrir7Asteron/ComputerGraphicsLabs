@@ -156,6 +156,7 @@
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Keys.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
+    <ClInclude Include="PhysicalLayer.h" />
     <ClInclude Include="SimpleMath.h" />
   </ItemGroup>
   <ItemGroup>
