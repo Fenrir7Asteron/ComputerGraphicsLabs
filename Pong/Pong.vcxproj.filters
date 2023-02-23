@@ -50,9 +50,15 @@
     <ClInclude Include="PongWall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PongScore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\SimpleObjectShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\BallObjectShader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

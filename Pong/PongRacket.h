@@ -3,11 +3,12 @@
 #include <directxmath.h>
 #include <d3d11.h>
 #include "GameFramework.h"
+#include "PongBall.h"
 
 class PongRacket : public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float racketWidth, float racketLength, float maxSpeed, float maxDeflectionDegree);
+	GAMEFRAMEWORK_API PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float racketWidth, float racketLength, float maxSpeed, float maxDeflectionDegree, bool aiControlled, PongBall* pongBall);
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
@@ -27,5 +28,7 @@ public:
 	float maxSpeed;
 	float maxDeflectionDegree;
 	ID3D11RasterizerState* rastState;
+	bool aiControlled;
+	PongBall* pongBall;
 };
 

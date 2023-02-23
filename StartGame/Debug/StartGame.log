@@ -1,3 +1,32 @@
-﻿     Creating library D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.lib and object D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.exp
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Lab1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  AwesomeGameComponent.cpp
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(29,31): warning C4251: 'InputDevice::MousePosition': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(30,31): warning C4251: 'InputDevice::MouseOffset': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33,47): warning C4251: 'InputDevice::MouseMove': class 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33): message : see declaration of 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(15,114): warning C4273: 'AwesomeGameComponent::AwesomeGameComponent': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(10,2): message : see previous definition of '{ctor}'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(111,1): warning C4273: 'AwesomeGameComponent::Update': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(13,33): message : see previous definition of 'Update'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.cpp(130,1): warning C4273: 'AwesomeGameComponent::Draw': inconsistent dll linkage
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\AwesomeGameComponent.h(14,33): message : see previous definition of 'Draw'
+  MyGame.cpp
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(29,31): warning C4251: 'InputDevice::MousePosition': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(30,31): warning C4251: 'InputDevice::MouseOffset': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33,47): warning C4251: 'InputDevice::MouseMove': class 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33): message : see declaration of 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>'
+  StartGame.cpp
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(29,31): warning C4251: 'InputDevice::MousePosition': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(30,31): warning C4251: 'InputDevice::MouseOffset': struct 'DirectX::SimpleMath::Vector2' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\SimpleMath.h(113): message : see declaration of 'DirectX::SimpleMath::Vector2'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33,47): warning C4251: 'InputDevice::MouseMove': class 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>' needs to have dll-interface to be used by clients of class 'InputDevice'
+D:\projects\ITMO\ComputerGraphicsLabs\Lab1\InputDevice.h(33): message : see declaration of 'MulticastDelegate<const InputDevice::MouseMoveEventArgs &>'
+  Generating Code...
+     Creating library D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.lib and object D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.exp
 LINK : warning LNK4217: symbol '??0AwesomeGameComponent@@QAE@PAVGameFramework@@UXMFLOAT3@DirectX@@@Z (public: __thiscall AwesomeGameComponent::AwesomeGameComponent(class GameFramework *,struct DirectX::XMFLOAT3))' defined in 'AwesomeGameComponent.obj' is imported by 'MyGame.obj' in function '"public: virtual void __thiscall MyGame::Init(int,int)" (?Init@MyGame@@UAEXHH@Z)'
   StartGame.vcxproj -> D:\projects\ITMO\ComputerGraphicsLabs\Lab1\Debug\StartGame.exe

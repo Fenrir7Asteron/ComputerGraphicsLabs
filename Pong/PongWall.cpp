@@ -11,7 +11,7 @@ const LPCWSTR vertexShaderName = L"SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderName = L"SimpleObjectShader.hlsl";
 
-PongWall::PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float wallThickness = 0.025f, float wallLength = 2.0f, DirectX::XMFLOAT3 wallNormal = { 0.0f, 0.0f, 0.0f }) : PhysicalBoxComponent(game, physicalLayer)
+PongWall::PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float wallThickness = 0.025f, float wallLength = 2.0f, DirectX::XMFLOAT3 wallNormal = { 0.0f, 0.0f, 0.0f }, float yDirectionSpeedIncreaseOnBallReflect = 0.1f) : PhysicalBoxComponent(game, physicalLayer)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;

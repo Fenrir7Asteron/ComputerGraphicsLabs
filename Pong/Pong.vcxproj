@@ -157,10 +157,16 @@
     <ClInclude Include="PongBall.h" />
     <ClInclude Include="PongGame.h" />
     <ClInclude Include="PongRacket.h" />
+    <ClInclude Include="PongScore.h" />
     <ClInclude Include="PongWall.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\SimpleObjectShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\BallObjectShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

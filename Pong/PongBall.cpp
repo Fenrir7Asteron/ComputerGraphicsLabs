@@ -13,13 +13,13 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
 
-const LPCWSTR vertexShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
-const LPCWSTR vertexShaderName = L"SimpleObjectShader.hlsl";
+const LPCWSTR vertexShaderPath = L"./Shaders/BallObjectShader.hlsl";
+const LPCWSTR vertexShaderName = L"BallObjectShader.hlsl";
 
-const LPCWSTR pixelShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
-const LPCWSTR pixelShaderName = L"SimpleObjectShader.hlsl";
+const LPCWSTR pixelShaderPath = L"./Shaders/BallObjectShader.hlsl";
+const LPCWSTR pixelShaderName = L"BallObjectShader.hlsl";
 
-PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 0.0f, 0.0f }, float radius = 0.1f, float startSpeed = 0.1f, float racketHitSpeedMultiplier = 1.1f) : PhysicalBoxComponent(game)
+PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 0.0f, 0.0f }, float radius = 0.1f, float startSpeed = 0.1f, float racketHitSpeedIncrease = 0.1f) : PhysicalBoxComponent(game)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -115,8 +115,8 @@ PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 
 
 	this->radius = radius;
 	this->startSpeed = startSpeed;
-	this->racketHitSpeedMultiplier = racketHitSpeedMultiplier;
-	this->currentSpeed = DirectX::SimpleMath::Vector3{ -1.0f, 0.0f, 0.0f } * startSpeed;
+	this->racketHitSpeedIncrease = racketHitSpeedIncrease;
+	this->currentSpeed = DirectX::SimpleMath::Vector3{ startSpeed, 0.0f, 0.0f };
 
 	this->boundingBox.Center = startOffset;
 	this->boundingBox.Extents = DirectX::XMFLOAT3(radius, radius, radius);
@@ -125,9 +125,29 @@ PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 
 void PongBall::Update(float deltaTime)
 {
 	PhysicalBoxComponent* intersectedBox = game_->RayIntersectsSomething(this, positionOffset, currentSpeed);
+	
+	if (intersectedBox == nullptr) 
+	{
+		intersectedBox = game_->RayIntersectsSomething(this, DirectX::SimpleMath::Vector3{ positionOffset.x, positionOffset.y + radius, positionOffset.z}, currentSpeed);
+	}
 
 	if (intersectedBox == nullptr)
-		intersectedBox = game_->Intersects(this);
+	{
+		intersectedBox = game_->RayIntersectsSomething(this, DirectX::SimpleMath::Vector3{ positionOffset.x, positionOffset.y - radius, positionOffset.z }, currentSpeed);
+	}
+
+	if (intersectedBox == nullptr)
+	{
+		intersectedBox = game_->RayIntersectsSomething(this, DirectX::SimpleMath::Vector3{ positionOffset.x + radius, positionOffset.y, positionOffset.z }, currentSpeed);
+	}
+
+	if (intersectedBox == nullptr)
+	{
+		intersectedBox = game_->RayIntersectsSomething(this, DirectX::SimpleMath::Vector3{ positionOffset.x - radius, positionOffset.y, positionOffset.z }, currentSpeed);
+	}
+
+	/*if (intersectedBox == nullptr)
+		intersectedBox = game_->Intersects(this);*/
 
 	if (intersectedBox != nullptr) {
 		if (intersectedBox->physicalLayer == PhysicalLayer::Player && currentSpeed.x < -0.001f) {
@@ -150,11 +170,17 @@ void PongBall::Update(float deltaTime)
 			if (intersectedWall != nullptr) {
 				std::cout << "Ball reflected by a wall" << std::endl;
 				currentSpeed = DirectX::SimpleMath::Vector3::Reflect(currentSpeed, intersectedWall->wallNormal);
+				currentSpeed.y += intersectedWall->wallNormal.y * intersectedWall->yDirectionSpeedIncreaseOnBallReflect;
 			}
 		}
 	}
 
 	Move(currentSpeed * deltaTime);	
+
+	if (std::abs(positionOffset.x) >= 0.95f) 
+	{
+		BallEnteredGoal.Broadcast(positionOffset.x > 0.0f);
+	}
 }
 
 void PongBall::Draw()
@@ -207,6 +233,22 @@ void PongBall::Draw()
 	ID3D11Buffer* constantOffsetBuffer;
 	game_->device->CreateBuffer(&offsetBufDesc, &offsetData, &constantOffsetBuffer);
 
+	D3D11_BUFFER_DESC colorOffsetBufDesc = {};
+	colorOffsetBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	colorOffsetBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	colorOffsetBufDesc.CPUAccessFlags = 0;
+	colorOffsetBufDesc.MiscFlags = 0;
+	colorOffsetBufDesc.StructureByteStride = 0;
+	colorOffsetBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4);
+
+	D3D11_SUBRESOURCE_DATA colorOffsetData = {};
+	colorOffsetData.pSysMem = &color;
+	colorOffsetData.SysMemPitch = 0;
+	colorOffsetData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* colorConstantOffsetBuffer;
+	game_->device->CreateBuffer(&colorOffsetBufDesc, &colorOffsetData, &colorConstantOffsetBuffer);
+
 	UINT strides[] = { 32 };
 	UINT offsets[] = { 0 };
 
@@ -217,6 +259,7 @@ void PongBall::Draw()
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantOffsetBuffer);
+	game_->context->VSSetConstantBuffers(1, 1, &colorConstantOffsetBuffer);
 	game_->context->VSSetShader(vertexShader, nullptr, 0);
 	game_->context->PSSetShader(pixelShader, nullptr, 0);
 
@@ -240,9 +283,19 @@ DirectX::SimpleMath::Vector3 PongBall::RotateVectorAroundZAxis(DirectX::SimpleMa
 	return DirectX::XMVector3Transform(vector, rotationMatrix);
 }
 
+float signnum_c(float x) {
+	if (x >= 0.0) 
+		return 1.0;
+	else 
+		return - 1.0;
+}
+
 void PongBall::GetDeflectedFromRacket(PongRacket* racket)
 {
 	float deflectionRadians = racket->GetBallDeflectionDegrees(positionOffset) * M_PI / 180.0f;
-	currentSpeed *= -1.0f;
+	float currentSpeedMagnitude = currentSpeed.Length();
+	float sign = signnum_c(-currentSpeed.x);
+	currentSpeed = {currentSpeedMagnitude + racketHitSpeedIncrease, 0.0f, 0.0f};
 	currentSpeed = RotateVectorAroundZAxis(currentSpeed, -deflectionRadians);
+	currentSpeed.x *= sign;
 }

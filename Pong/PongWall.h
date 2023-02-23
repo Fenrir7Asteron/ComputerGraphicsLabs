@@ -7,7 +7,7 @@
 class PongWall: public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float wallThickness, float wallLength, DirectX::XMFLOAT3 wallNormal);
+	GAMEFRAMEWORK_API PongWall(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset, float wallThickness, float wallLength, DirectX::XMFLOAT3 wallNormal, float yDirectionSpeedIncreaseOnBallReflect);
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
@@ -24,4 +24,5 @@ public:
 	int indicesLen;
 	DirectX::SimpleMath::Vector3 wallNormal;
 	ID3D11RasterizerState* rastState;
+	float yDirectionSpeedIncreaseOnBallReflect;
 };

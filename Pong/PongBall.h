@@ -3,9 +3,11 @@
 #include <directxmath.h>
 #include <d3d11.h>
 #include "PhysicalBoxComponent.h"
+#include "Delegates.h"
 
 class SimpleMath;
 class PongRacket;
+class PongGame;
 
 class PongBall: public PhysicalBoxComponent
 {
@@ -15,6 +17,7 @@ public:
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API virtual void Draw() override;
+	MulticastDelegate<bool> BallEnteredGoal;
 
 	ID3DBlob* vertexBC;
 	ID3D11VertexShader* vertexShader;
@@ -26,9 +29,10 @@ public:
 	int* indices;
 	int indicesLen;
 	DirectX::SimpleMath::Vector3 currentSpeed = { 0.0f, 0.0f, 0.0f };
+	DirectX::SimpleMath::Vector4 color = {1.0f, 1.0f, 1.0f, 1.0f};
 	float radius;
 	float startSpeed;
-	float racketHitSpeedMultiplier;
+	float racketHitSpeedIncrease;
 	ID3D11RasterizerState* rastState;
 
 protected:

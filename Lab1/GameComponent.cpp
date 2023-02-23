@@ -7,6 +7,7 @@
 GameComponent::GameComponent(GameFramework* game)
 {
 	game_ = game;
+	enabled = true;
 }
 
 GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)

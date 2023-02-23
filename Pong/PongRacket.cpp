@@ -14,7 +14,7 @@ const LPCWSTR vertexShaderName = L"SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/SimpleObjectShader.hlsl";
 const LPCWSTR pixelShaderName = L"SimpleObjectShader.hlsl";
 
-PongRacket::PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float racketWidth = 0.025f, float racketLength = 0.15f, float maxSpeed = 1.0f, float maxDeflectionDegree = 45.0f) : PhysicalBoxComponent(game, physicalLayer)
+PongRacket::PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX::XMFLOAT3 offset = { 0.0f, 0.0f, 0.0f }, float racketWidth = 0.025f, float racketLength = 0.15f, float maxSpeed = 1.0f, float maxDeflectionDegree = 45.0f, bool aiControlled = false, PongBall* pongBall = nullptr) : PhysicalBoxComponent(game, physicalLayer)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -105,26 +105,44 @@ PongRacket::PongRacket(GameFramework* game, PhysicalLayer physicalLayer, DirectX
 	this->maxSpeed = maxSpeed;
 	this->maxDeflectionDegree = maxDeflectionDegree;
 
-	this->positionOffset.x = offset.x;
-	this->positionOffset.y = offset.y;
+	this->positionOffset = offset;
 
 	this->boundingBox.Center = offset;
 	this->boundingBox.Extents = DirectX::XMFLOAT3(racketWidth * 0.5f, racketLength * 0.5f, 1.0f);
+
+	this->aiControlled = aiControlled;
+
+	this->pongBall = pongBall;
 }
 
 void PongRacket::Update(float deltaTime)
 {
-	if (game_->inputDevice->IsKeyDown(Keys::Up) && game_->inputDevice->IsKeyDown(Keys::Down)) {
-		return;
+	if (aiControlled)
+	{
+		if (pongBall->positionOffset.y > positionOffset.y + racketLength * 0.25f)
+		{
+			float delta = std::min(pongBall->positionOffset.y - (positionOffset.y + racketLength * 0.25f), maxSpeed * deltaTime);
+			Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
+		}
+		else if (pongBall->positionOffset.y < positionOffset.y - racketLength * 0.25f)
+		{
+			float delta = std::max(pongBall->positionOffset.y - (positionOffset.y - racketLength * 0.25f), -maxSpeed * deltaTime);
+			Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
+		}
 	}
+	else {
+		if (game_->inputDevice->IsKeyDown(Keys::Up) && game_->inputDevice->IsKeyDown(Keys::Down)) {
+			return;
+		}
 
-	if (game_->inputDevice->IsKeyDown(Keys::Up)) {
-		float delta = std::min(deltaTime * maxSpeed, 1.0f - racketLength - positionOffset.y);
-		Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
-	} 
-	else if (game_->inputDevice->IsKeyDown(Keys::Down)) {
-		float delta = std::max(-deltaTime * maxSpeed, -1.0f + racketLength - positionOffset.y);
-		Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
+		if (game_->inputDevice->IsKeyDown(Keys::Up)) {
+			float delta = std::min(deltaTime * maxSpeed, 1.0f - racketLength * 0.5f - positionOffset.y);
+			Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
+		}
+		else if (game_->inputDevice->IsKeyDown(Keys::Down)) {
+			float delta = std::max(-deltaTime * maxSpeed, -1.0f + racketLength * 0.5f - positionOffset.y);
+			Move(DirectX::SimpleMath::Vector3(0.0f, delta, 0.0f));
+		}
 	}
 }
 

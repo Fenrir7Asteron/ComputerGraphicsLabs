@@ -135,7 +135,8 @@ void GameFramework::Update()
 {
 	for (auto gameComponent : gameComponents)
 	{
-		gameComponent->Update(deltaTime);
+		if (gameComponent->enabled)
+			gameComponent->Update(deltaTime);
 	}
 }
 
@@ -154,11 +155,7 @@ void GameFramework::Render(float& totalTimeClamped)
 
 	context->RSSetViewports(1, &viewport);
 
-	float intensity = totalTimeClamped;
-	if (totalTimeClamped > 0.5f)
-		intensity = 1.0f - totalTimeClamped;
-
-	float color[] = { intensity * 0.5f, intensity * 0.5f, intensity * 0.5f + 0.25f, 1.0f };
+	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	context->ClearRenderTargetView(rtv, color);
 
 	for (auto gameComponent : gameComponents) 
@@ -198,16 +195,18 @@ GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxCom
 	return nullptr;
 }
 
-GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 direction)
+GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
 {
 	for (auto otherBox : physicalGameComponents) {
 		if (otherBox == queryingBox)
 			continue;
 
-		direction.Normalize();
+		float minDistance = std::sqrt(currentSpeed.Length()) * 0.025f;
+		DirectX::SimpleMath::Vector3 direction = currentSpeed / currentSpeed.Length();
 		float intersectionDistance = 0.0f;
 
-		if (otherBox->boundingBox.Intersects(origin, direction, intersectionDistance) && intersectionDistance < 0.1f) {
+		bool intersects = otherBox->boundingBox.Intersects(origin, direction, intersectionDistance);
+		if (intersects && intersectionDistance < minDistance) {
 			return otherBox;
 		}
 	}
