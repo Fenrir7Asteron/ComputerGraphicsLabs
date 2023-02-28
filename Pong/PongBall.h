@@ -12,7 +12,7 @@ class PongGame;
 class PongBall: public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset, float radius, float startSpeed, float racketHitSpeedMultiplier);
+	GAMEFRAMEWORK_API PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset, float radius, int ballEdgesCount, float startSpeed, float racketHitSpeedMultiplier);
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
@@ -24,9 +24,9 @@ public:
 	ID3DBlob* pixelBC;
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* layout;
-	DirectX::XMFLOAT4* points;
+	std::vector<DirectX::XMFLOAT4> points;
 	int pointsLen;
-	int* indices;
+	std::vector<int> indices;
 	int indicesLen;
 	DirectX::SimpleMath::Vector3 currentSpeed = { 0.0f, 0.0f, 0.0f };
 	DirectX::SimpleMath::Vector4 color = {1.0f, 1.0f, 1.0f, 1.0f};

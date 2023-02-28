@@ -1,7 +1,6 @@
 struct VS_IN
 {
 	float4 pos : POSITION0;
-	float4 col : COLOR0;
 };
 
 struct PS_IN

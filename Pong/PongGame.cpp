@@ -14,7 +14,7 @@ void PongGame::Init(int windowWidth, int windowHeight)
 {
 	GameFramework::Init(windowWidth, windowHeight);
 
-	pongBall_ = new PongBall(this, { 0.0f, 0.0f, 0.0f }, 0.03f, 0.6f, 0.1f);
+	pongBall_ = new PongBall(this, { 0.0f, 0.0f, 0.0f }, 0.03f, 32, 0.6f, 0.1f);
 
 	PongRacket* playerRacket = new PongRacket(this, PhysicalLayer::Player, { -0.85f, 0.0f, 0.0f }, 0.05f, 0.3f, 1.75f, 60.0f, false, pongBall_);
 	PongRacket* enemyRacket = new PongRacket(this, PhysicalLayer::Enemy, { 0.85f, 0.0f, 0.0f }, 0.05f, 0.3f, 0.9f, 60.0f, true, pongBall_);

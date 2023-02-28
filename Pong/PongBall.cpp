@@ -19,7 +19,7 @@ const LPCWSTR vertexShaderName = L"BallObjectShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/BallObjectShader.hlsl";
 const LPCWSTR pixelShaderName = L"BallObjectShader.hlsl";
 
-PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 0.0f, 0.0f }, float radius = 0.1f, float startSpeed = 0.1f, float racketHitSpeedIncrease = 0.1f) : PhysicalBoxComponent(game)
+PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 0.0f, 0.0f }, float radius = 0.1f, int ballEdgesCount = 16, float startSpeed = 0.1f, float racketHitSpeedIncrease = 0.1f) : PhysicalBoxComponent(game)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -70,42 +70,36 @@ PongBall::PongBall(GameFramework* game, DirectX::XMFLOAT3 startOffset = { 0.0f, 
 			0,
 			0,
 			D3D11_INPUT_PER_VERTEX_DATA,
-			0},
-		D3D11_INPUT_ELEMENT_DESC {
-			"COLOR",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,
-			D3D11_INPUT_PER_VERTEX_DATA,
 			0}
 	};
 
 	game_->device->CreateInputLayout(
 		inputElements,
-		2,
+		1,
 		vertexBC->GetBufferPointer(),
 		vertexBC->GetBufferSize(),
 		&layout);
 
-	pointsLen = 8;
+	float phi = 0.0f;
+	float angleStep = 2.0f * M_PI / ((float)ballEdgesCount);
 
-	points = new DirectX::XMFLOAT4[pointsLen]{
-		DirectX::XMFLOAT4(radius, radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-radius, -radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(radius, -radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(-radius, radius, radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-	};
-
-	for (int idx = 0; idx < pointsLen; idx += 2)
+	for (int idx = 0; idx < ballEdgesCount; ++idx)
 	{
-		points[idx].x += startOffset.x;
-		points[idx].y += startOffset.y;
-		points[idx].z += startOffset.z;
+		points.push_back({ startOffset.x + radius * std::cos(phi), startOffset.y + radius * std::sin(phi), 0.0f, 1.0f });
+		phi += angleStep;
+	}
+	points.push_back({ startOffset.x, startOffset.y, 0.0f, 1.0f });
+
+	pointsLen = (int) points.size();
+
+	for (int idx = 0; idx < pointsLen - 1; ++idx)
+	{
+		indices.push_back(0);
+		indices.push_back(idx);
+		indices.push_back((idx + 1) % (pointsLen - 1));
 	}
 
-	indicesLen = 6;
-	indices = new int[indicesLen] { 0, 1, 2, 1, 0, 3 };
+	indicesLen = (int)indices.size();
 
 	CD3D11_RASTERIZER_DESC rastDesc = {};
 	rastDesc.CullMode = D3D11_CULL_NONE;
@@ -194,7 +188,7 @@ void PongBall::Draw()
 	vertexBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4) * pointsLen;
 
 	D3D11_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pSysMem = points;
+	vertexData.pSysMem = &points[0];
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -210,7 +204,7 @@ void PongBall::Draw()
 	indexBufDesc.ByteWidth = sizeof(int) * indicesLen;
 
 	D3D11_SUBRESOURCE_DATA indexData = {};
-	indexData.pSysMem = indices;
+	indexData.pSysMem = &indices[0];
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
@@ -249,7 +243,7 @@ void PongBall::Draw()
 	ID3D11Buffer* colorConstantOffsetBuffer;
 	game_->device->CreateBuffer(&colorOffsetBufDesc, &colorOffsetData, &colorConstantOffsetBuffer);
 
-	UINT strides[] = { 32 };
+	UINT strides[] = { sizeof(DirectX::XMFLOAT4) };
 	UINT offsets[] = { 0 };
 
 	game_->context->RSSetState(rastState);
