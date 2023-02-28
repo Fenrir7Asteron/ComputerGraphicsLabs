@@ -21,7 +21,7 @@
     <ClCompile Include="MyGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Lab1\AwesomeGameComponent.cpp">
+    <ClCompile Include="AwesomeGameComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +29,7 @@
     <ClInclude Include="MyGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Lab1\AwesomeGameComponent.h">
+    <ClInclude Include="AwesomeGameComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

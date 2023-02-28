@@ -145,7 +145,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Lab1\AwesomeGameComponent.cpp" />
     <ClCompile Include="PongBall.cpp" />
     <ClCompile Include="PongGame.cpp" />
     <ClCompile Include="PongRacket.cpp" />
@@ -153,7 +152,6 @@
     <ClCompile Include="StartGame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Lab1\AwesomeGameComponent.h" />
     <ClInclude Include="PongBall.h" />
     <ClInclude Include="PongGame.h" />
     <ClInclude Include="PongRacket.h" />

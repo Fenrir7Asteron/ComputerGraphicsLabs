@@ -140,7 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Lab1\AwesomeGameComponent.cpp" />
+    <ClCompile Include="AwesomeGameComponent.cpp" />
     <ClCompile Include="MyGame.cpp" />
     <ClCompile Include="StartGame.cpp" />
   </ItemGroup>
@@ -150,7 +150,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Lab1\AwesomeGameComponent.h" />
+    <ClInclude Include="AwesomeGameComponent.h" />
     <ClInclude Include="MyGame.h" />
   </ItemGroup>
   <ItemGroup>
