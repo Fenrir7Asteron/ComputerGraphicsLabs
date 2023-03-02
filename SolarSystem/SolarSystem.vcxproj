@@ -21,14 +21,13 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{1e982842-fa27-4031-b753-f1e9af152997}</ProjectGuid>
-    <RootNamespace>Lab1</RootNamespace>
+    <ProjectGuid>{3cd1a888-2721-4ebd-8131-dd617fc1a6f1}</ProjectGuid>
+    <RootNamespace>SolarSystem</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GameFramework</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -87,8 +86,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GAMEFRAMEWORK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\projects\ITMO\ComputerGraphicsLabs\Lab1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,29 +140,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Delegates.cpp" />
-    <ClCompile Include="DisplayWin.cpp" />
-    <ClCompile Include="GameFramework.cpp" />
-    <ClCompile Include="GameComponent.cpp" />
-    <ClCompile Include="InputDevice.cpp" />
-    <ClCompile Include="PhysicalBoxComponent.cpp" />
+    <ClInclude Include="CelestialBody.h" />
+    <ClInclude Include="SolarSystemGame.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Delegates.h" />
-    <ClInclude Include="DisplayWin.h" />
-    <ClInclude Include="GameFramework.h" />
-    <ClInclude Include="GameComponent.h" />
-    <ClInclude Include="GameFrameworkExports.h" />
-    <ClInclude Include="InputDevice.h" />
-    <ClInclude Include="Keys.h" />
-    <ClInclude Include="PhysicalBoxComponent.h" />
-    <ClInclude Include="PhysicalLayer.h" />
-    <ClInclude Include="SimpleMath.h" />
+    <ClCompile Include="CelestialBody.cpp" />
+    <ClCompile Include="SolarSystemGame.cpp" />
+    <ClCompile Include="StartGame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="SimpleMath.inl" />
+    <ProjectReference Include="..\Lab1\Lab1.vcxproj">
+      <Project>{1e982842-fa27-4031-b753-f1e9af152997}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\CelestialBodyShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

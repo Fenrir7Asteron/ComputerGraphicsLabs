@@ -62,6 +62,8 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	res = device->CreateRenderTargetView(backTex, nullptr, &rtv);
 
 	inputDevice = new InputDevice(this);
+
+
 }
 
 void GameFramework::Run()
