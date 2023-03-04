@@ -2,12 +2,17 @@
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <d3d11.h>
-#include "GameFramework.h"
+#include "GameComponent.h"
+#include <vector>
+
 
 class CelestialBody : public GameComponent
 {
 public:
-	GAMEFRAMEWORK_API CelestialBody(GameFramework* game, Vector3 position, Quaternion rotation, Vector3 scale, float radius);
+	GAMEFRAMEWORK_API CelestialBody(GameFramework* game, float radius,
+		DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero,
+		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity,
+		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One);
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;

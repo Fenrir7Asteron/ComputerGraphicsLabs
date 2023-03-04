@@ -32,6 +32,7 @@
 #pragma clang diagnostic ignored "-Wfloat-equal"
 #endif
 
+#include "GameFrameworkExports.h"
 
 namespace DirectX
 {
@@ -206,10 +207,10 @@ namespace DirectX
             static void TransformNormal(_In_reads_(count) const Vector2* varray, size_t count, const Matrix& m, _Out_writes_(count) Vector2* resultArray) noexcept;
 
             // Constants
-            static const Vector2 Zero;
-            static const Vector2 One;
-            static const Vector2 UnitX;
-            static const Vector2 UnitY;
+            GAMEFRAMEWORK_API static const Vector2 Zero;
+            GAMEFRAMEWORK_API static const Vector2 One;
+            GAMEFRAMEWORK_API static const Vector2 UnitX;
+            GAMEFRAMEWORK_API static const Vector2 UnitY;
         };
 
         // Binary operators
@@ -319,17 +320,17 @@ namespace DirectX
             static void TransformNormal(_In_reads_(count) const Vector3* varray, size_t count, const Matrix& m, _Out_writes_(count) Vector3* resultArray) noexcept;
 
             // Constants
-            static const Vector3 Zero;
-            static const Vector3 One;
-            static const Vector3 UnitX;
-            static const Vector3 UnitY;
-            static const Vector3 UnitZ;
-            static const Vector3 Up;
-            static const Vector3 Down;
-            static const Vector3 Right;
-            static const Vector3 Left;
-            static const Vector3 Forward;
-            static const Vector3 Backward;
+            GAMEFRAMEWORK_API static const Vector3 Zero;
+            GAMEFRAMEWORK_API static const Vector3 One;
+            GAMEFRAMEWORK_API static const Vector3 UnitX;
+            GAMEFRAMEWORK_API static const Vector3 UnitY;
+            GAMEFRAMEWORK_API static const Vector3 UnitZ;
+            GAMEFRAMEWORK_API static const Vector3 Up;
+            GAMEFRAMEWORK_API static const Vector3 Down;
+            GAMEFRAMEWORK_API static const Vector3 Right;
+            GAMEFRAMEWORK_API static const Vector3 Left;
+            GAMEFRAMEWORK_API static const Vector3 Forward;
+            GAMEFRAMEWORK_API static const Vector3 Backward;
         };
 
         // Binary operators
@@ -438,12 +439,12 @@ namespace DirectX
             static void Transform(_In_reads_(count) const Vector4* varray, size_t count, const Matrix& m, _Out_writes_(count) Vector4* resultArray) noexcept;
 
             // Constants
-            static const Vector4 Zero;
-            static const Vector4 One;
-            static const Vector4 UnitX;
-            static const Vector4 UnitY;
-            static const Vector4 UnitZ;
-            static const Vector4 UnitW;
+            GAMEFRAMEWORK_API static const Vector4 Zero;
+            GAMEFRAMEWORK_API static const Vector4 One;
+            GAMEFRAMEWORK_API static const Vector4 UnitX;
+            GAMEFRAMEWORK_API static const Vector4 UnitY;
+            GAMEFRAMEWORK_API static const Vector4 UnitZ;
+            GAMEFRAMEWORK_API static const Vector4 UnitW;
         };
 
         // Binary operators
@@ -610,7 +611,7 @@ namespace DirectX
             static Matrix Transform(const Matrix& M, const Quaternion& rotation) noexcept;
 
             // Constants
-            static const Matrix Identity;
+            GAMEFRAMEWORK_API static const Matrix Identity;
         };
 
         // Binary operators
@@ -764,7 +765,7 @@ namespace DirectX
             static float Angle(const Quaternion& q1, const Quaternion& q2) noexcept;
 
             // Constants
-            static const Quaternion Identity;
+            GAMEFRAMEWORK_API static const Quaternion Identity;
         };
 
         // Binary operators

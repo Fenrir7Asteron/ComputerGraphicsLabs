@@ -7,6 +7,7 @@
 #include "DisplayWin.h"
 #include "PhysicalBoxComponent.h"
 #include "InputDevice.h"
+#include "CameraController.h"
 
 class GameFramework
 {
@@ -37,6 +38,9 @@ public:
 
 	std::vector<GameComponent*> gameComponents;
 	std::vector<PhysicalBoxComponent*> physicalGameComponents;
+
+	Camera* camera;
+	std::vector<CameraController*> cameraControllers;
 
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float deltaTime;

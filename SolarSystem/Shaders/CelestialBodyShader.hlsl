@@ -22,7 +22,8 @@ PS_IN VSMain( VS_IN input )
 {
 	PS_IN output = (PS_IN)0;
 	
-    output.pos = mul(mul(mul(input.pos, worldMatrix), viewMatrix), projectionMatrix);
+    //output.pos = mul(mul(mul(input.pos, worldMatrix), viewMatrix), projectionMatrix);
+    output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
     output.col = (input.norm + 1.0) * 0.5;
 	
 	return output;

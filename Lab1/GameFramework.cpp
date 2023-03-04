@@ -4,6 +4,8 @@
 #pragma comment(lib, "dxguid.lib")
 
 #include "GameFramework.h"
+#include "FPSCameraController.h"
+#include "windowsx.h"
 #include <iostream>
 
 GameFramework::GameFramework(LPCWSTR applicationName)
@@ -31,7 +33,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	swapDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swapDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapDesc.OutputWindow = *(displayWin->hWnd);
+	swapDesc.OutputWindow = displayWin->hWnd;
 	swapDesc.Windowed = true;
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
@@ -63,7 +65,14 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	inputDevice = new InputDevice(this);
 
+	camera = new Camera(10.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
 
+	cameraControllers.emplace_back(new FPSCameraController(inputDevice));
+
+	for (CameraController* controller : cameraControllers)
+	{
+		controller->SetCamera(camera);
+	}
 }
 
 void GameFramework::Run()
@@ -104,6 +113,14 @@ void GameFramework::Run()
 				Keys keyEnum = static_cast<Keys>(msg.wParam);
 				inputDevice->RemovePressedKey(keyEnum);
 			}
+
+			if (msg.message == WM_MOUSEMOVE) {
+				InputDevice::RawMouseEventArgs args;
+				args.X = GET_X_LPARAM(msg.lParam);
+				args.Y = GET_Y_LPARAM(msg.lParam);
+				inputDevice->OnMouseMove(args);
+				displayWin->CenterMouse();
+			}
 		}
 
 		if (isExitRequested)
@@ -127,7 +144,7 @@ void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeC
 
 		WCHAR text[256];
 		swprintf_s(text, TEXT("FPS: %f"), fps);
-		SetWindowText(*(displayWin->hWnd), text);
+		SetWindowText(displayWin->hWnd, text);
 
 		frameCount = 0;
 	}
@@ -234,4 +251,11 @@ void GameFramework::FreeGameResources()
 
 	delete displayWin;
 	delete inputDevice;
+
+	delete camera;
+	for (auto controller : cameraControllers)
+	{
+		delete controller;
+	}
+	cameraControllers.clear();
 }

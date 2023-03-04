@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include "CelestialBody.h"
 #include "GameFramework.h"
+#include "ModelViewProjectionMatrices.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -17,7 +18,9 @@ const LPCWSTR vertexShaderName = L"CelestialBodyShader.hlsl";
 const LPCWSTR pixelShaderPath = L"./Shaders/CelestialBodyShader.hlsl";
 const LPCWSTR pixelShaderName = L"CelestialBodyShader.hlsl";
 
-CelestialBody::CelestialBody(GameFramework* game, Vector3 position, Quaternion rotation, Vector3 scale, float radius = 100.0f) : GameComponent(game, position, rotation, scale)
+using namespace DirectX::SimpleMath;
+
+CelestialBody::CelestialBody(GameFramework* game, float radius, Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -193,21 +196,26 @@ void CelestialBody::Draw()
 	ID3D11Buffer* ib;
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
-	D3D11_BUFFER_DESC offsetBufDesc = {};
-	offsetBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	offsetBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	offsetBufDesc.CPUAccessFlags = 0;
-	offsetBufDesc.MiscFlags = 0;
-	offsetBufDesc.StructureByteStride = 0;
-	offsetBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4);
+	D3D11_BUFFER_DESC mvpBufDesc = {};
+	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	mvpBufDesc.CPUAccessFlags = 0;
+	mvpBufDesc.MiscFlags = 0;
+	mvpBufDesc.StructureByteStride = 0;
+	mvpBufDesc.ByteWidth = sizeof(ModelViewProjectionMatrices);
 
-	D3D11_SUBRESOURCE_DATA offsetData = {};
-	offsetData.pSysMem = &positionOffset;
-	offsetData.SysMemPitch = 0;
-	offsetData.SysMemSlicePitch = 0;
+	ModelViewProjectionMatrices mvp;
+	mvp.worldMatrix = this->GetWorldMatrix();
+	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
+	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
 
-	ID3D11Buffer* constantOffsetBuffer;
-	game_->device->CreateBuffer(&offsetBufDesc, &offsetData, &constantOffsetBuffer);
+	D3D11_SUBRESOURCE_DATA mvpData = {};
+	mvpData.pSysMem = &mvp;
+	mvpData.SysMemPitch = 0;
+	mvpData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* constantMvpBuffer;
+	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
 	D3D11_BUFFER_DESC colorOffsetBufDesc = {};
 	colorOffsetBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -226,7 +234,7 @@ void CelestialBody::Draw()
 	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game_->context->VSSetConstantBuffers(0, 1, &constantOffsetBuffer);
+	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
 	game_->context->VSSetShader(vertexShader, nullptr, 0);
 	game_->context->PSSetShader(pixelShader, nullptr, 0);
 

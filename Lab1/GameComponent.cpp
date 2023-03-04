@@ -4,6 +4,8 @@
 #include "GameComponent.h"
 #include "GameFramework.h"
 
+using namespace DirectX::SimpleMath;
+
 GameComponent::GameComponent(GameFramework* game, Vector3 position, Quaternion rotation, Vector3 scale)
 {
 	game_ = game;
@@ -16,6 +18,17 @@ GameComponent::GameComponent(GameFramework* game, Vector3 position, Quaternion r
 
 	this->scale = scale;
 
+	UpdateWorldMatrix();
+}
+
+GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
+{
+	positionOffset += positionDelta;
+	worldMatrixIsDirty_ = true;
+}
+
+GAMEFRAMEWORK_API void GameComponent::UpdateWorldMatrix()
+{
 	Matrix rotationTransformMatrix =
 	{
 		1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z), 2.0f * (rotation.x * rotation.y + rotation.w * rotation.z)       , 2.0f * (rotation.x * rotation.z - rotation.w * rotation.y)       , 0.0f,
@@ -24,19 +37,17 @@ GameComponent::GameComponent(GameFramework* game, Vector3 position, Quaternion r
 		0.0f                                                             , 0.0f                                                             , 0.0f                                                             , 1.0f,
 	};
 
-	this->objectToWorldMatrix = Matrix::CreateScale(scale) * rotationTransformMatrix * Matrix::CreateTranslation(position);
+	this->objectToWorldMatrix_ = Matrix::CreateScale(scale) * rotationTransformMatrix * Matrix::CreateTranslation(positionOffset);
+
+	worldMatrixIsDirty_ = false;
 }
 
-GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
+GAMEFRAMEWORK_API const Matrix& GameComponent::GetWorldMatrix()
 {
-	positionOffset += positionDelta;
-	objectToWorldMatrix += Matrix::CreateTranslation(positionDelta);
-}
+	if (worldMatrixIsDirty_)
+		UpdateWorldMatrix();
 
-GAMEFRAMEWORK_API DirectX::SimpleMath::Matrix GameComponent::WorldTransformMatrix()
-{
-	
-	
+	return objectToWorldMatrix_;
 }
 
 void GameComponent::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName)
@@ -51,7 +62,7 @@ void GameComponent::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* erro
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
 		else
 		{
-			MessageBox(*(game_->displayWin->hWnd), shaderName, shaderName, MB_OK);
+			MessageBox(game_->displayWin->hWnd, shaderName, shaderName, MB_OK);
 		}
 	}
 }
