@@ -63,11 +63,46 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	res = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
 	res = device->CreateRenderTargetView(backTex, nullptr, &rtv);
 
+	// create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> pDSState;
+	device->CreateDepthStencilState(&dsDesc, &pDSState);
+
+	// bind depth state
+	context->OMSetDepthStencilState(pDSState.Get(), 1);
+
+	// create depth stencil texture
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
+	D3D11_TEXTURE2D_DESC descDepth = {};
+	descDepth.Width = screenWidth;
+	descDepth.Height = screenHeight;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	device->CreateTexture2D(&descDepth, nullptr, &pDepthStencil);
+
+	// create view of depth stencil texture
+	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+	descDSV.Format = DXGI_FORMAT_D32_FLOAT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
+	device->CreateDepthStencilView(pDepthStencil.Get(), &descDSV, &pDSV);
+
+	// bind depth stencil view
+	context->OMSetRenderTargets(1, &rtv, pDSV.Get());
+
 	inputDevice = new InputDevice(this);
 
-	camera = new Camera(10.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
+	camera = new Camera(100.0f, 10000000.0f, 50.0f, screenWidth, screenHeight);
 
-	cameraControllers.emplace_back(new FPSCameraController(inputDevice));
+	cameraControllers.emplace_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
 
 	for (CameraController* controller : cameraControllers)
 	{
@@ -157,6 +192,21 @@ void GameFramework::Update()
 		if (gameComponent->enabled)
 			gameComponent->Update(deltaTime);
 	}
+
+	for (auto cameraController : cameraControllers)
+	{
+		cameraController->Update(deltaTime);
+	}
+
+	if (inputDevice->IsKeyDown(Keys::P))
+	{
+		camera->SetOrthographic(false);
+	}
+
+	if (inputDevice->IsKeyDown(Keys::O))
+	{
+		camera->SetOrthographic(true);
+	}
 }
 
 void GameFramework::Render(float& totalTimeClamped)
@@ -176,13 +226,12 @@ void GameFramework::Render(float& totalTimeClamped)
 
 	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	context->ClearRenderTargetView(rtv, color);
+	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	for (auto gameComponent : gameComponents) 
 	{
 		gameComponent->Draw();
 	}
-
-	context->OMSetRenderTargets(1, &rtv, nullptr);
 
 	context->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -258,4 +307,18 @@ void GameFramework::FreeGameResources()
 		delete controller;
 	}
 	cameraControllers.clear();
+}
+
+GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
+{
+	if (cameraIdx < 0 || cameraIdx >= cameraControllers.size())
+		return;
+
+	for (int i = 0; i < cameraControllers.size(); ++i)
+	{
+		if (i != cameraIdx)
+			cameraControllers[i]->camera = nullptr;
+		else
+			cameraControllers[i]->camera = camera;
+	}
 }

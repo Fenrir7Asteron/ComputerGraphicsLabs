@@ -141,10 +141,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CelestialBody.h" />
+    <ClInclude Include="OrbitalCameraController.h" />
     <ClInclude Include="SolarSystemGame.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CelestialBody.cpp" />
+    <ClCompile Include="OrbitalCameraController.cpp" />
     <ClCompile Include="SolarSystemGame.cpp" />
     <ClCompile Include="StartGame.cpp" />
   </ItemGroup>

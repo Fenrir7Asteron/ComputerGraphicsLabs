@@ -20,7 +20,8 @@ const LPCWSTR pixelShaderName = L"CelestialBodyShader.hlsl";
 
 using namespace DirectX::SimpleMath;
 
-CelestialBody::CelestialBody(GameFramework* game, float radius, Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale)
+CelestialBody::CelestialBody(GameFramework* game, float radius, int verticesNPerAxis, float distanceFromSun, float rotationPeriodInDays, float revolutionPeriodInDays,
+	Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -97,69 +98,74 @@ CelestialBody::CelestialBody(GameFramework* game, float radius, Vector3 position
 		vertexBC->GetBufferSize(),
 		&layout);
 
-	// format = POSITION, COLOR, NORMAL
-	points =
+	float theta = 0.0f;
+	float phi = 0.0f;
+	float inclinationAngleStep = M_PI / ((float)(verticesNPerAxis));
+	float azimuthAngleStep = 2.0f * M_PI / ((float)verticesNPerAxis);
+
+	for (int i = 0; i < verticesNPerAxis + 1; ++i)
 	{
-		// front
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f),
+		phi = 0.0f;
 
-		// right
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
+		for (int j = 0; j < verticesNPerAxis; ++j)
+		{
+			Vector4 pos = { radius * std::sin(theta) * std::cos(phi), radius * std::sin(theta) * std::sin(phi), radius * std::cos(theta), 1.0f };
 
-		// back
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
+			Vector4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		// left
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(-1.0f, 0.0f, 0.0f, 1.0f),
+			Vector4 norm = pos;
+			norm.Normalize();
 
-		// bottom
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y - radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-
-		// top
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z - radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x + radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),    DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-		DirectX::XMFLOAT4(position.x - radius, position.y + radius, position.z + radius, 1.0f),	DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	  DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 1.0f),
-	};
+			points.push_back(pos);
+			points.push_back(col);
+			points.push_back(norm);
+			phi += azimuthAngleStep;
+		}
+		
+		theta = std::min(theta + inclinationAngleStep, (float) M_PI);
+	}
 
 	pointsLen = (int)points.size();
 
-	indices = { 
-		0, 1, 2, 2, 3, 0,		// front  
-		4, 5, 6, 6, 7, 4,		// right
-		8, 9, 10, 10, 11, 8,	// back
-		12, 13, 14, 14, 15, 12, // left
-		16, 17, 18, 18, 19, 16, // bottom
-		20, 21, 22, 22, 23, 20, // top
-	};
+	for (int i = 0; i < verticesNPerAxis; ++i)
+	{
+		for (int j = 0; j < verticesNPerAxis; ++j)
+		{
+			indices.push_back(((i + 1)) * verticesNPerAxis + j);
+			indices.push_back(i * verticesNPerAxis + ((j + 1)));
+			indices.push_back(i * verticesNPerAxis + j);
+
+			indices.push_back(((i + 1)) * verticesNPerAxis + j);
+			indices.push_back(((i + 1)) * verticesNPerAxis + ((j + 1)));
+			indices.push_back(i * verticesNPerAxis + ((j + 1)));
+		}
+	}
+
+	pointsLen = (int)points.size();
 
 	indicesLen = (int)indices.size();
 
 	CD3D11_RASTERIZER_DESC rastDesc = {};
-	rastDesc.CullMode = D3D11_CULL_NONE;
+	rastDesc.CullMode = D3D11_CULL_BACK;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
 	res = game_->device->CreateRasterizerState(&rastDesc, &rastState);
+
+	Rotate(Vector3::Right, DirectX::XMConvertToRadians(90.0f));
+	Move(Vector3::Forward * distanceFromSun);
+
+	this->distanceFromSun = distanceFromSun;
+	this->rotationSpeed = (2 * M_PI) / rotationPeriodInDays;
+	this->revolutionSpeed = (2 * M_PI) / revolutionPeriodInDays;
+	this->radius = radius;
 }
 
 void CelestialBody::Update(float deltaTime)
 {
-	
+	Rotate(Vector3::Up, deltaTime * rotationSpeed);
+
+	if (distanceFromSun > 0.001f)
+		RotateAroundPoint(Vector3::Zero, Vector3::Up, deltaTime * revolutionSpeed);
 }
 
 void CelestialBody::Draw()
@@ -238,7 +244,7 @@ void CelestialBody::Draw()
 	game_->context->VSSetShader(vertexShader, nullptr, 0);
 	game_->context->PSSetShader(pixelShader, nullptr, 0);
 
-	game_->context->OMSetRenderTargets(1, &game_->rtv, nullptr);
+	game_->context->OMSetRenderTargets(1, &game_->rtv, game_->pDSV.Get());
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 
 	vb->Release();

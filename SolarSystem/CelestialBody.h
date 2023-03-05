@@ -9,7 +9,7 @@
 class CelestialBody : public GameComponent
 {
 public:
-	GAMEFRAMEWORK_API CelestialBody(GameFramework* game, float radius,
+	GAMEFRAMEWORK_API CelestialBody(GameFramework* game, float radius, int verticesNPerAxis, float distanceFromSun, float rotationPeriodInDays, float revolutionPeriodInDays,
 		DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero,
 		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity,
 		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One);
@@ -28,5 +28,10 @@ public:
 	std::vector<int> indices;
 	int indicesLen;
 	ID3D11RasterizerState* rastState;
+
+	float distanceFromSun;
+	float rotationSpeed;
+	float revolutionSpeed;
+	float radius;
 };
 

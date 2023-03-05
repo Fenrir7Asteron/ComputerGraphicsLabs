@@ -2,6 +2,8 @@
 
 #include "DisplayWin.h"
 
+using namespace DirectX::SimpleMath;
+
 void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight)
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -47,7 +49,7 @@ void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int 
 	SetForegroundWindow(hWnd);
 	SetFocus(hWnd);
 
-	ShowCursor(true);
+	ShowCursor(false);
 
 	SetMouseCapture(true);
 
@@ -64,6 +66,8 @@ void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int 
 
 	// Confine the cursor.
 	ClipCursor(&rc);
+
+	CenterMouse();
 
 	this->windowWidth = windowWidth;
 	this->windowHeight= windowHeight;
@@ -86,6 +90,13 @@ GAMEFRAMEWORK_API void DisplayWin::CenterMouse()
 	POINT pt = { windowWidth / 2, windowHeight / 2 };
 	ClientToScreen(hWnd, &pt);
 	SetCursorPos(pt.x, pt.y);
+}
+
+GAMEFRAMEWORK_API Vector2 DisplayWin::OffsetFromWindowCenter(DirectX::SimpleMath::Vector2 offset)
+{
+	offset.x -= windowWidth / 2;
+	offset.y -= windowHeight / 2;
+	return offset;
 }
 
 LRESULT DisplayWin::WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)

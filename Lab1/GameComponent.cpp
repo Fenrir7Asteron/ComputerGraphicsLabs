@@ -27,6 +27,38 @@ GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 position
 	worldMatrixIsDirty_ = true;
 }
 
+GAMEFRAMEWORK_API void GameComponent::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
+{
+	float angleHalf = angle / 2;
+	float qx = std::sin(angleHalf) * axis.x;
+	float qy = std::sin(angleHalf) * axis.y;
+	float qz = std::sin(angleHalf) * axis.z;
+	float qw = std::cos(angleHalf);
+	Quaternion delta = { qx, qy, qz, qw };
+
+	rotation *= delta;
+	rotation.Normalize();
+
+	worldMatrixIsDirty_ = true;
+}
+
+GAMEFRAMEWORK_API void GameComponent::RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle)
+{
+	Vector3 newPosition = positionOffset - point;
+
+	float angleHalf = angle / 2;
+	float qx = std::sin(angleHalf) * axis.x;
+	float qy = std::sin(angleHalf) * axis.y;
+	float qz = std::sin(angleHalf) * axis.z;
+	float qw = std::cos(angleHalf);
+	Quaternion rot = { qx, qy, qz, qw };
+	rot.Normalize();
+
+	newPosition = Vector3::Transform(newPosition, rot);
+	positionOffset = newPosition + point;
+	worldMatrixIsDirty_ = true;
+}
+
 GAMEFRAMEWORK_API void GameComponent::UpdateWorldMatrix()
 {
 	Matrix rotationTransformMatrix =

@@ -23,6 +23,7 @@ public:
 	GAMEFRAMEWORK_API virtual PhysicalBoxComponent* Intersects(PhysicalBoxComponent* queryingBox);
 	GAMEFRAMEWORK_API virtual PhysicalBoxComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed);
 	GAMEFRAMEWORK_API virtual void FreeGameResources();
+	GAMEFRAMEWORK_API virtual void SetCameraController(int cameraIdx);
 
 	int screenWidth;
 	int screenHeight;
@@ -35,6 +36,7 @@ public:
 	IDXGISwapChain* swapChain;
 	ID3D11Texture2D* backTex;
 	ID3D11RenderTargetView* rtv;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
 
 	std::vector<GameComponent*> gameComponents;
 	std::vector<PhysicalBoxComponent*> physicalGameComponents;
