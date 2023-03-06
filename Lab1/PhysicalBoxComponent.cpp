@@ -1,9 +1,11 @@
 #include "PhysicalBoxComponent.h"
 #include "GameComponent.h"
 
-PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game) : GameComponent(game) {}
+using namespace DirectX::SimpleMath;
 
-PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, PhysicalLayer physicalLayer = PhysicalLayer::Default) : GameComponent(game)
+PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale) {}
+
+PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, PhysicalLayer physicalLayer, Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale)
 {
 	this->physicalLayer = physicalLayer;
 }

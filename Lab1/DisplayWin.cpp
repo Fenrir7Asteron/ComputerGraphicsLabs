@@ -2,6 +2,8 @@
 
 #include "DisplayWin.h"
 
+using namespace DirectX::SimpleMath;
+
 void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight)
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -36,7 +38,7 @@ void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int 
 	auto posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
 	auto posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
 
-	HWND hWnd = CreateWindowEx(WS_EX_APPWINDOW, applicationName, applicationName,
+	this->hWnd = CreateWindowEx(WS_EX_APPWINDOW, applicationName, applicationName,
 		dwStyle,
 		posX, posY,
 		windowRect.right - windowRect.left,
@@ -47,9 +49,54 @@ void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int 
 	SetForegroundWindow(hWnd);
 	SetFocus(hWnd);
 
-	ShowCursor(true);
+	ShowCursor(false);
 
-	this->hWnd = &hWnd;
+	SetMouseCapture(true);
+
+	// Get the window client area.
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+
+	// Convert the client area to screen coordinates.
+	POINT pt = { rc.left, rc.top };
+	POINT pt2 = { rc.right, rc.bottom };
+	ClientToScreen(hWnd, &pt);
+	ClientToScreen(hWnd, &pt2);
+	SetRect(&rc, pt.x, pt.y, pt2.x, pt2.y);
+
+	// Confine the cursor.
+	ClipCursor(&rc);
+
+	CenterMouse();
+
+	this->windowWidth = windowWidth;
+	this->windowHeight= windowHeight;
+}
+
+GAMEFRAMEWORK_API void DisplayWin::SetMouseCapture(bool isMouseCaptured)
+{
+	std::cout << isMouseCaptured << std::endl;
+	if (isMouseCaptured) 
+	{
+		SetCapture(hWnd);
+	}
+		
+	else
+		ReleaseCapture();
+}
+
+GAMEFRAMEWORK_API void DisplayWin::CenterMouse()
+{
+	POINT pt = { windowWidth / 2, windowHeight / 2 };
+	ClientToScreen(hWnd, &pt);
+	SetCursorPos(pt.x, pt.y);
+}
+
+GAMEFRAMEWORK_API Vector2 DisplayWin::OffsetFromWindowCenter(DirectX::SimpleMath::Vector2 offset)
+{
+	offset.x -= windowWidth / 2;
+	offset.y -= windowHeight / 2;
+	return offset;
 }
 
 LRESULT DisplayWin::WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
