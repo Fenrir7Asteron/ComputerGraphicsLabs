@@ -20,8 +20,11 @@ const LPCWSTR pixelShaderName = L"CelestialBodyShader.hlsl";
 
 using namespace DirectX::SimpleMath;
 
-CelestialBody::CelestialBody(GameFramework* game, float radius, int verticesNPerAxis, float distanceFromSun, float rotationPeriodInDays, float revolutionPeriodInDays,
-	Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, position, rotation, scale)
+CelestialBody::CelestialBody(GameFramework* game, float radius, int verticesNPerAxis, float distanceFromSun,
+	Vector3 startDistanceAxis, float rotationPeriodInDays, float revolutionPeriodInDays,
+	CelestialBody* revolutionOrigin,
+	Vector3 rotationAxis, Vector3 revolutionAxis,
+	Vector3 position, Quaternion rotation, Vector3 scale) : GameComponent(game, revolutionOrigin, position, rotation, scale)
 {
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -152,20 +155,26 @@ CelestialBody::CelestialBody(GameFramework* game, float radius, int verticesNPer
 	res = game_->device->CreateRasterizerState(&rastDesc, &rastState);
 
 	Rotate(Vector3::Right, DirectX::XMConvertToRadians(90.0f));
-	Move(Vector3::Forward * distanceFromSun);
+	if (revolutionOrigin != nullptr)
+		Move(startDistanceAxis * distanceFromSun);
 
 	this->distanceFromSun = distanceFromSun;
 	this->rotationSpeed = (2 * M_PI) / rotationPeriodInDays;
 	this->revolutionSpeed = (2 * M_PI) / revolutionPeriodInDays;
 	this->radius = radius;
+	this->revolutionOrigin = revolutionOrigin;
+	this->rotationAxis = rotationAxis;
+	this->revolutionAxis = revolutionAxis;
 }
 
 void CelestialBody::Update(float deltaTime)
 {
-	Rotate(Vector3::Up, deltaTime * rotationSpeed);
+	Rotate(rotationAxis, deltaTime * rotationSpeed);
 
-	if (distanceFromSun > 0.001f)
-		RotateAroundPoint(Vector3::Zero, Vector3::Up, deltaTime * revolutionSpeed);
+	if (revolutionOrigin != nullptr)
+	{
+		RotateAroundPoint(Vector3::Zero, revolutionAxis, deltaTime * revolutionSpeed);
+	}
 }
 
 void CelestialBody::Draw()

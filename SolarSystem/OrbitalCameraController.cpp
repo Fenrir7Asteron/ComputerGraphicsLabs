@@ -21,7 +21,7 @@ OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, Displ
 	this->distanceToBodySurface = startDistanceToBodySurface;
 	this->maxDistanceToBodySurface = maxDistanceToBodySurface;
 
-	SetIsTransitioning(true);
+	SetIsTransitioning(false);
 }
 
 void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& mouseMoveData)
@@ -55,7 +55,8 @@ void OrbitalCameraController::Update(float deltaTime)
 
 	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->rotation);
 
-	Vector3 cameraMoveTarget = attachedToBody->positionOffset - camForward * (attachedToBody->radius + distanceToBodySurface);
+	Vector3 bodyPosition = attachedToBody->GetWorldMatrix().Translation();
+	Vector3 cameraMoveTarget = bodyPosition - camForward * (attachedToBody->radius + distanceToBodySurface);
 	Vector3 offsetToTarget = cameraMoveTarget - camera->position;
 
 	float moveSpeed;
@@ -66,9 +67,6 @@ void OrbitalCameraController::Update(float deltaTime)
 		moveSpeed = this->maxCameraMoveSpeedDuringTransition;
 
 		moveDistance = std::min(offsetToTarget.Length(), moveSpeed);
-
-		if (moveDistance < 30.0f)
-			SetIsTransitioning(false);
 
 		Vector3 moveDirection = offsetToTarget;
 		moveDirection.Normalize();
@@ -97,7 +95,7 @@ void OrbitalCameraController::Update(float deltaTime)
 void OrbitalCameraController::SetTargetBody(CelestialBody* targetBody)
 {
 	this->attachedToBody = targetBody;
-	SetIsTransitioning(true);
+	SetIsTransitioning(false);
 }
 
 void OrbitalCameraController::SetIsTransitioning(bool isTransitioning)

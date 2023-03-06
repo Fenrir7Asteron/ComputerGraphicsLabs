@@ -6,7 +6,7 @@
 
 using namespace DirectX::SimpleMath;
 
-GameComponent::GameComponent(GameFramework* game, Vector3 position, Quaternion rotation, Vector3 scale)
+GameComponent::GameComponent(GameFramework* game, GameComponent* parent, Vector3 position, Quaternion rotation, Vector3 scale)
 {
 	game_ = game;
 	enabled = true;
@@ -17,6 +17,7 @@ GameComponent::GameComponent(GameFramework* game, Vector3 position, Quaternion r
 	this->rotation = rotation;
 
 	this->scale = scale;
+	this->parent = parent;
 
 	UpdateWorldMatrix();
 }
@@ -61,23 +62,30 @@ GAMEFRAMEWORK_API void GameComponent::RotateAroundPoint(DirectX::SimpleMath::Vec
 
 GAMEFRAMEWORK_API void GameComponent::UpdateWorldMatrix()
 {
-	Matrix rotationTransformMatrix =
-	{
-		1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z), 2.0f * (rotation.x * rotation.y + rotation.w * rotation.z)       , 2.0f * (rotation.x * rotation.z - rotation.w * rotation.y)       , 0.0f,
-		2.0f * (rotation.x * rotation.y - rotation.w * rotation.z)       , 1.0f - 2.0f * (rotation.x * rotation.x + rotation.z * rotation.z), 2.0f * (rotation.y * rotation.z + rotation.w * rotation.x)       , 0.0f,
-		2.0f * (rotation.x * rotation.z + rotation.w * rotation.y)       , 2.0f * (rotation.y * rotation.z - rotation.w * rotation.x)       , 1.0f - 2.0f * (rotation.x * rotation.x + rotation.y * rotation.y), 0.0f,
-		0.0f                                                             , 0.0f                                                             , 0.0f                                                             , 1.0f,
-	};
-
-	this->objectToWorldMatrix_ = Matrix::CreateScale(scale) * rotationTransformMatrix * Matrix::CreateTranslation(positionOffset);
+	this->objectToWorldMatrix_ = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(positionOffset);
 
 	worldMatrixIsDirty_ = false;
+
+	if (parent != nullptr)
+		this->objectToWorldMatrix_ = this->objectToWorldMatrix_ * Matrix::CreateTranslation(parent->GetWorldMatrix().Translation());
 }
 
 GAMEFRAMEWORK_API const Matrix& GameComponent::GetWorldMatrix()
 {
-	if (worldMatrixIsDirty_)
+	bool isDirty = false;
+	GameComponent* cur = this;
+	while (cur != nullptr)
+	{
+		if (cur->worldMatrixIsDirty_)
+			isDirty = true;
+
+		cur = cur->parent;
+	}
+
+	if (isDirty)
+	{
 		UpdateWorldMatrix();
+	}
 
 	return objectToWorldMatrix_;
 }

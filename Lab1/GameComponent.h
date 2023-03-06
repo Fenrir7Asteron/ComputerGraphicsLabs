@@ -10,6 +10,7 @@ class GameComponent
 {
 public:
 	GAMEFRAMEWORK_API GameComponent(GameFramework* game,
+		GameComponent* parent,
 		DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero,
 		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity,
 		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One);
@@ -27,6 +28,7 @@ public:
 	DirectX::SimpleMath::Quaternion rotation;
 	DirectX::SimpleMath::Vector3 scale;
 	bool enabled;
+	GameComponent* parent;
 
 	
 
