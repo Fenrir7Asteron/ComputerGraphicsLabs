@@ -249,4 +249,5 @@ void CelestialBody::Draw()
 
 	vb->Release();
 	ib->Release();
+	constantMvpBuffer->Release();
 }
