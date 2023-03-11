@@ -21,14 +21,13 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{1e982842-fa27-4031-b753-f1e9af152997}</ProjectGuid>
-    <RootNamespace>Lab1</RootNamespace>
+    <ProjectGuid>{931966ca-c47a-4c2e-b23a-fef8d78602df}</ProjectGuid>
+    <RootNamespace>Katamary</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GameFramework</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -87,8 +86,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GAMEFRAMEWORK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\projects\ITMO\ComputerGraphicsLabs\Lab1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,52 +140,35 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CameraController.cpp" />
-    <ClCompile Include="DDSTextureLoader.cpp" />
-    <ClCompile Include="DebugRenderSysImpl.cpp" />
-    <ClCompile Include="Delegates.cpp" />
-    <ClCompile Include="DisplayWin.cpp" />
-    <ClCompile Include="FPSCameraController.cpp" />
-    <ClCompile Include="GameFramework.cpp" />
-    <ClCompile Include="GameComponent.cpp" />
-    <ClCompile Include="InputDevice.cpp" />
-    <ClCompile Include="Material.cpp" />
-    <ClCompile Include="PhysicalBoxComponent.cpp" />
-    <ClCompile Include="SimpleMath.cpp" />
-    <ClCompile Include="UnlitDiffuseMaterial.cpp" />
-    <ClCompile Include="VertexPositionColor.cpp" />
-    <ClCompile Include="WICTextureLoader.cpp" />
+    <ClInclude Include="KatamaryBall.h" />
+    <ClInclude Include="KatamaryGame.h" />
+    <ClInclude Include="OrbitalCameraController.h" />
+    <ClInclude Include="StaticBox.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="CameraController.h" />
-    <ClInclude Include="DDS.h" />
-    <ClInclude Include="DDSTextureLoader.h" />
-    <ClInclude Include="DebugRenderSysImpl.h" />
-    <ClInclude Include="Delegates.h" />
-    <ClInclude Include="DirectXHelpers.h" />
-    <ClInclude Include="DisplayWin.h" />
-    <ClInclude Include="FPSCameraController.h" />
-    <ClInclude Include="GameFramework.h" />
-    <ClInclude Include="GameComponent.h" />
-    <ClInclude Include="GameFrameworkExports.h" />
-    <ClInclude Include="InputDevice.h" />
-    <ClInclude Include="Keys.h" />
-    <ClInclude Include="LoaderHelpers.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="ModelViewProjectionMatrices.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="PhysicalBoxComponent.h" />
-    <ClInclude Include="PhysicalLayer.h" />
-    <ClInclude Include="PlatformHelpers.h" />
-    <ClInclude Include="SimpleMath.h" />
-    <ClInclude Include="UnlitDiffuseMaterial.h" />
-    <ClInclude Include="VertexPositionColor.h" />
-    <ClInclude Include="WICTextureLoader.h" />
+    <ClCompile Include="KatamaryBall.cpp" />
+    <ClCompile Include="KatamaryGame.cpp" />
+    <ClCompile Include="OrbitalCameraController.cpp" />
+    <ClCompile Include="StartGame.cpp" />
+    <ClCompile Include="StaticBox.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="SimpleMath.inl" />
+    <ProjectReference Include="..\Lab1\Lab1.vcxproj">
+      <Project>{1e982842-fa27-4031-b753-f1e9af152997}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\KatamaryShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Simple.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\TexturedShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

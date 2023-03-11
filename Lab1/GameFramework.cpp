@@ -5,11 +5,18 @@
 
 #include "GameFramework.h"
 #include "FPSCameraController.h"
+#include "DebugRenderSysImpl.h"
 #include "windowsx.h"
 #include <iostream>
 
+using namespace DirectX::SimpleMath;
+
+GameFramework* GameFramework::Instance = nullptr;
+
 GameFramework::GameFramework(LPCWSTR applicationName)
 {
+	GameFramework::Instance = this;
+
 	this->applicationName = applicationName;
 }
 
@@ -108,6 +115,9 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	{
 		controller->SetCamera(camera);
 	}
+
+	debugRender = new DebugRenderSysImpl(this);
+	debugRender->SetCamera(camera);
 }
 
 void GameFramework::Run()
@@ -224,18 +234,20 @@ void GameFramework::Render(float& totalTimeClamped)
 
 	context->RSSetViewports(1, &viewport);
 
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	context->ClearRenderTargetView(rtv, color);
-	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	RestoreTargets();
 
 	for (auto gameComponent : gameComponents) 
 	{
 		gameComponent->Draw();
 	}
 
+	debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
+	debugRender->Draw(deltaTime);
+	
 	context->OMSetRenderTargets(0, nullptr, nullptr);
 
 	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+	debugRender->Clear();
 }
 
 GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
@@ -321,4 +333,11 @@ GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
 		else
 			cameraControllers[i]->camera = camera;
 	}
+}
+
+GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
+{
+	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	context->ClearRenderTargetView(rtv, color);
+	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

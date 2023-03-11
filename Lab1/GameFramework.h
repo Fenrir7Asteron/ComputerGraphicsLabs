@@ -9,6 +9,8 @@
 #include "InputDevice.h"
 #include "CameraController.h"
 
+class DebugRenderSysImpl;
+
 class GameFramework
 {
 public:
@@ -24,6 +26,9 @@ public:
 	GAMEFRAMEWORK_API virtual PhysicalBoxComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed);
 	GAMEFRAMEWORK_API virtual void FreeGameResources();
 	GAMEFRAMEWORK_API virtual void SetCameraController(int cameraIdx);
+	GAMEFRAMEWORK_API virtual void RestoreTargets();
+
+	GAMEFRAMEWORK_API static GameFramework* Instance;
 
 	int screenWidth;
 	int screenHeight;
@@ -46,5 +51,7 @@ public:
 
 	std::chrono::time_point<std::chrono::steady_clock> PrevTime;
 	float deltaTime;
+
+	DebugRenderSysImpl* debugRender;
 };
 

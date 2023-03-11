@@ -1,8 +1,7 @@
 #pragma once
-#include <d3d11.h>
-
 #include "GameFrameworkExports.h"
 #include "SimpleMath.h"
+#include "Material.h"
 
 class GameFramework;
 
@@ -13,7 +12,8 @@ public:
 		GameComponent* parent,
 		DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero,
 		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity,
-		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One);
+		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One,
+		Material* material = nullptr);
 
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) = 0;
 	GAMEFRAMEWORK_API virtual void Draw() = 0;
@@ -29,12 +29,11 @@ public:
 	DirectX::SimpleMath::Vector3 scale;
 	bool enabled;
 	GameComponent* parent;
+	Material* material;
 
 	
 
 protected:
-	GAMEFRAMEWORK_API void CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName);
-
 	GameFramework* game_;
 	DirectX::SimpleMath::Matrix objectToWorldMatrix_;
 	bool worldMatrixIsDirty_;

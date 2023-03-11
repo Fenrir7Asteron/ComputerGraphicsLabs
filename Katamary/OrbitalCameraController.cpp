@@ -8,7 +8,7 @@
 using namespace DirectX::SimpleMath;
 
 OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, DisplayWin* displayWin, float mouseSensitivity, float maxCameraMoveSpeedDuringTransition, float cameraCloseupSpeed,
-	CelestialBody* attachedToBody, float startDistanceToBodySurface, float maxDistanceToBodySurface)
+	KatamaryBall* attachedToBody, float startDistanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface)
 {
 	inputDevice->MouseMove.AddRaw(this, &OrbitalCameraController::MouseMove);
 
@@ -19,6 +19,7 @@ OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, Displ
 	this->cameraCloseupSpeed = cameraCloseupSpeed;
 	this->attachedToBody = attachedToBody;
 	this->distanceToBodySurface = startDistanceToBodySurface;
+	this->minDistanceToBodySurface = minDistanceToBodySurface;
 	this->maxDistanceToBodySurface = maxDistanceToBodySurface;
 }
 
@@ -81,7 +82,7 @@ void OrbitalCameraController::Update(float deltaTime)
 
 	if (inputDevice->IsKeyDown(Keys::W))
 	{
-		distanceToBodySurface = std::max(distanceToBodySurface - deltaTime * cameraCloseupSpeed, 0.0f);
+		distanceToBodySurface = std::max(distanceToBodySurface - deltaTime * cameraCloseupSpeed, this->minDistanceToBodySurface);
 	}
 
 	if (inputDevice->IsKeyDown(Keys::S))
@@ -90,7 +91,7 @@ void OrbitalCameraController::Update(float deltaTime)
 	}
 }
 
-void OrbitalCameraController::SetTargetBody(CelestialBody* targetBody)
+void OrbitalCameraController::SetTargetBody(KatamaryBall* targetBody)
 {
 	this->attachedToBody = targetBody;
 }

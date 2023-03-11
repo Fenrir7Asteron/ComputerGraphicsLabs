@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pong", "..\Pong\Pong.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SolarSystem", "..\SolarSystem\SolarSystem.vcxproj", "{3CD1A888-2721-4EBD-8131-DD617FC1A6F1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Katamary", "..\Katamary\Katamary.vcxproj", "{931966CA-C47A-4C2E-B23A-FEF8D78602DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{3CD1A888-2721-4EBD-8131-DD617FC1A6F1}.Release|x64.Build.0 = Release|x64
 		{3CD1A888-2721-4EBD-8131-DD617FC1A6F1}.Release|x86.ActiveCfg = Release|Win32
 		{3CD1A888-2721-4EBD-8131-DD617FC1A6F1}.Release|x86.Build.0 = Release|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x64.ActiveCfg = Debug|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x64.Build.0 = Debug|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x86.ActiveCfg = Debug|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x86.Build.0 = Debug|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x64.ActiveCfg = Release|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x64.Build.0 = Release|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x86.ActiveCfg = Release|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
