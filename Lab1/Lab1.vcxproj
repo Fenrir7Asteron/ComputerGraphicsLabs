@@ -155,6 +155,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="PhysicalBoxComponent.cpp" />
+    <ClCompile Include="PhysicalSphereComponent.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
     <ClCompile Include="UnlitDiffuseMaterial.cpp" />
     <ClCompile Include="VertexPositionColor.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
     <ClInclude Include="PhysicalLayer.h" />
+    <ClInclude Include="PhysicalSphereComponent.h" />
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="UnlitDiffuseMaterial.h" />

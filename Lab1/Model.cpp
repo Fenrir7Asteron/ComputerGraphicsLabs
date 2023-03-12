@@ -151,11 +151,13 @@ GAMEFRAMEWORK_API void Model::ElementWiseMax(DirectX::SimpleMath::Vector4& out, 
 
 GAMEFRAMEWORK_API void Model::Update(float deltaTime)
 {
-    //boundingBox.Orientation = rotation;
+
 }
 
 GAMEFRAMEWORK_API void Model::Draw()
 {
     pRoot->Draw(GetWorldMatrix());
-    game_->debugRender->DrawOrientedBoundingBox(boundingBox, Matrix::Identity);
+
+    if (enabled)
+        game_->debugRender->DrawOrientedBoundingBox(boundingBox, Matrix::Identity);
 }

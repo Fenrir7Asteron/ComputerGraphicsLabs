@@ -18,5 +18,5 @@ PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, GameComponent* p
 GAMEFRAMEWORK_API void PhysicalBoxComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
 {
 	GameComponent::Move(positionDelta);
-	boundingBox.Center = positionOffset;
+	boundingBox.Center = boundingBox.Center + positionDelta;
 }

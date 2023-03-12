@@ -163,8 +163,17 @@ void GameFramework::Run()
 				InputDevice::RawMouseEventArgs args;
 				args.X = GET_X_LPARAM(msg.lParam);
 				args.Y = GET_Y_LPARAM(msg.lParam);
+				args.WheelDelta = 0;
 				inputDevice->OnMouseMove(args);
 				displayWin->CenterMouse();
+			}
+
+			if (msg.message == WM_MOUSEWHEEL) {
+				InputDevice::RawMouseEventArgs args;
+				args.X = 0;
+				args.Y = 0;
+				args.WheelDelta = (float) GET_WHEEL_DELTA_WPARAM(msg.wParam) / WHEEL_DELTA;
+				inputDevice->OnMouseMove(args);
 			}
 		}
 
@@ -258,13 +267,19 @@ GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalBoxComponent* gameComponent)
 {
 	gameComponents.push_back(gameComponent);
-	physicalGameComponents.push_back(gameComponent);
+	physicalBoxComponents.push_back(gameComponent);
 }
 
-GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalSphereComponent* gameComponent)
 {
-	for (auto otherBox : physicalGameComponents) {
-		if (otherBox == queryingBox)
+	gameComponents.push_back(gameComponent);
+	physicalSphereComponents.push_back(gameComponent);
+}
+
+GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+{
+	for (auto otherBox : physicalBoxComponents) {
+		if (otherBox == queryingBox || otherBox->enabled == false)
 			continue;
 
 		if (queryingBox->boundingBox.Intersects(otherBox->boundingBox)) {
@@ -272,12 +287,44 @@ GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxCom
 		}
 	}
 
+	for (auto otherSphere: physicalSphereComponents) {
+		if (otherSphere->enabled == false)
+			continue;
+
+		if (queryingBox->boundingBox.Intersects(otherSphere->boundingSphere)) {
+			return otherSphere;
+		}
+	}
+
 	return nullptr;
 }
 
-GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
+GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalSphereComponent* queryingSphere)
 {
-	for (auto otherBox : physicalGameComponents) {
+	for (auto otherBox : physicalBoxComponents) {
+		if (otherBox->enabled == false)
+			continue;
+
+		if (queryingSphere->boundingSphere.Intersects(otherBox->boundingBox)) {
+			return otherBox;
+		}
+	}
+
+	for (auto otherSphere : physicalSphereComponents) {
+		if (otherSphere == queryingSphere || otherSphere->enabled == false)
+			continue;
+
+		if (queryingSphere->boundingSphere.Intersects(otherSphere->boundingSphere)) {
+			return otherSphere;
+		}
+	}
+
+	return nullptr;
+}
+
+GAMEFRAMEWORK_API GameComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
+{
+	for (auto otherBox : physicalBoxComponents) {
 		if (otherBox == queryingBox)
 			continue;
 
@@ -308,7 +355,7 @@ void GameFramework::FreeGameResources()
 	}
 
 	gameComponents.clear();
-	physicalGameComponents.clear();
+	physicalBoxComponents.clear();
 
 	delete displayWin;
 	delete inputDevice;

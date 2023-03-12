@@ -37,13 +37,18 @@ void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& m
 		Rotate(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
 	}
 
-
 	if (std::abs(offsetFromCenter.y) > 0)
 	{
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f, offsetFromCenter.y);
 		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->rotation);
 		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
+	}
+
+	if (!isTransitioning && std::abs(mouseMoveData.WheelDelta) > 0)
+	{
+		distanceToBodySurface = std::min(distanceToBodySurface - (float) mouseMoveData.WheelDelta * cameraCloseupSpeed, this->maxDistanceToBodySurface);
+		distanceToBodySurface = std::max(distanceToBodySurface, this->minDistanceToBodySurface);
 	}
 }
 
@@ -75,19 +80,6 @@ void OrbitalCameraController::Update(float deltaTime)
 	else
 	{
 		Move(offsetToTarget);
-	}
-
-	if (isTransitioning)
-		return;
-
-	if (inputDevice->IsKeyDown(Keys::W))
-	{
-		distanceToBodySurface = std::max(distanceToBodySurface - deltaTime * cameraCloseupSpeed, this->minDistanceToBodySurface);
-	}
-
-	if (inputDevice->IsKeyDown(Keys::S))
-	{
-		distanceToBodySurface = std::min(distanceToBodySurface + deltaTime * cameraCloseupSpeed, this->maxDistanceToBodySurface);
 	}
 }
 

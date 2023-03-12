@@ -25,6 +25,7 @@ public:
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
 	GAMEFRAMEWORK_API virtual void Rotate(DirectX::SimpleMath::Vector3 axis, float angle);
 	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle);
+	GAMEFRAMEWORK_API virtual void SetParent(GameComponent* newParent);
 	GAMEFRAMEWORK_API virtual void UpdateWorldMatrix();
 	GAMEFRAMEWORK_API virtual const DirectX::SimpleMath::Matrix& GetWorldMatrix();
 
