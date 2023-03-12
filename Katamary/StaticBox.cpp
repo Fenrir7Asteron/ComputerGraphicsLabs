@@ -71,12 +71,6 @@ StaticBox::StaticBox(GameFramework* game, Vector3 position,	Quaternion rotation,
 
 	indicesLen = (int)indices.size();
 
-	CD3D11_RASTERIZER_DESC rastDesc = {};
-	rastDesc.CullMode = D3D11_CULL_BACK;
-	rastDesc.FillMode = D3D11_FILL_SOLID;
-
-	game_->device->CreateRasterizerState(&rastDesc, &rastState);
-
 	this->unlitDiffuseMaterial = dynamic_cast<UnlitDiffuseMaterial*>(material);
 }
 
@@ -151,7 +145,7 @@ void StaticBox::Draw()
 	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
 	UINT offsets[] = { 0 };
 
-	game_->context->RSSetState(rastState);
+	game_->context->RSSetState(material->rastState);
 
 	game_->context->IASetInputLayout(material->layout);
 	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

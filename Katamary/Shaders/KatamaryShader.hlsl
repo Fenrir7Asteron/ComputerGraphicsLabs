@@ -3,13 +3,14 @@ struct VS_IN
 	float4 pos : POSITION0;
 	float4 col : COLOR0;
 	float4 norm : NORMAL0;
-    float2 tex : TEXCOORD0;
+    float4 tex : TEXCOORD0;
 };
 
 struct PS_IN
 {
 	float4 pos : SV_POSITION;
  	float4 col : COLOR;
+ 	float4 norm : NORMAL;
     float2 tex : TEXCOORD;
 };
 
@@ -28,7 +29,8 @@ PS_IN VSMain( VS_IN input )
 	PS_IN output = (PS_IN)0;
 	
     output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
-    output.col = (input.norm + 1.0) * 0.5;
+    output.col = input.col;
+    output.norm = (input.norm + 1.0) * 0.5;
     output.tex = input.tex;
 	
 	return output;
@@ -36,6 +38,7 @@ PS_IN VSMain( VS_IN input )
 
 float4 PSMain( PS_IN input ) : SV_Target
 {
-	//return input.col;
-    return DiffuseMap.Sample(Sampler, input.tex);
+    input.norm = normalize(input.norm);
+	return input.norm;
+    //return DiffuseMap.Sample(Sampler, input.tex);
 }

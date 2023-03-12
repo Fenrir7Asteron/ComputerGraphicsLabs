@@ -316,6 +316,31 @@ void DebugRenderSysImpl::DrawBoundingBox(const DirectX::BoundingBox& box, const 
 	DrawLine(corners[3], corners[7], Color(0.0f, 0.0f, 1.0f, 1.0f));
 }
 
+void DebugRenderSysImpl::DrawOrientedBoundingBox(const DirectX::BoundingOrientedBox& box, const DirectX::SimpleMath::Matrix& transform)
+{
+	Vector3 corners[8];
+	box.GetCorners(&corners[0]);
+
+	for (auto& corner : corners) {
+		corner = Vector3::Transform(corner, transform);
+	}
+
+	DrawLine(corners[0], corners[1], Color(0.0f, 1.0f, 0.0f, 1.0f));
+	DrawLine(corners[1], corners[2], Color(0.0f, 1.0f, 0.0f, 1.0f));
+	DrawLine(corners[2], corners[3], Color(0.0f, 1.0f, 0.0f, 1.0f));
+	DrawLine(corners[3], corners[0], Color(0.0f, 1.0f, 0.0f, 1.0f));
+
+	DrawLine(corners[4], corners[5], Color(0.0f, 1.0f, 1.0f, 1.0f));
+	DrawLine(corners[5], corners[6], Color(0.0f, 1.0f, 1.0f, 1.0f));
+	DrawLine(corners[6], corners[7], Color(0.0f, 1.0f, 1.0f, 1.0f));
+	DrawLine(corners[7], corners[4], Color(0.0f, 1.0f, 1.0f, 1.0f));
+
+	DrawLine(corners[0], corners[4], Color(0.0f, 0.0f, 1.0f, 1.0f));
+	DrawLine(corners[1], corners[5], Color(0.0f, 0.0f, 1.0f, 1.0f));
+	DrawLine(corners[2], corners[6], Color(0.0f, 0.0f, 1.0f, 1.0f));
+	DrawLine(corners[3], corners[7], Color(0.0f, 0.0f, 1.0f, 1.0f));
+}
+
 void DebugRenderSysImpl::DrawLine(const DirectX::SimpleMath::Vector3& pos0, const DirectX::SimpleMath::Vector3& pos1,
 	const DirectX::SimpleMath::Color& color)
 {

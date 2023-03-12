@@ -1,7 +1,4 @@
 #pragma once
-#include <d3dcompiler.h>
-#include <directxmath.h>
-#include <d3d11.h>
 #include "GameFramework.h"
 
 class UnlitDiffuseMaterial;
@@ -23,7 +20,6 @@ public:
 	int pointsLen;
 	std::vector<int> indices;
 	int indicesLen;
-	ID3D11RasterizerState* rastState;
 
 	UnlitDiffuseMaterial* unlitDiffuseMaterial;
 };

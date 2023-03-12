@@ -1,6 +1,4 @@
 #pragma once
-#include <d3dcompiler.h>
-#include <directxmath.h>
 #include <d3d11.h>
 #include "GameComponent.h"
 #include <vector>
@@ -21,10 +19,9 @@ public:
 	GAMEFRAMEWORK_API virtual void Draw() override;
 
 	std::vector<DirectX::XMFLOAT4> points;
-	int pointsLen;
+	int verticesLen;
 	std::vector<int> indices;
 	int indicesLen;
-	ID3D11RasterizerState* rastState;
 
 	UnlitDiffuseMaterial* unlitDiffuseMaterial;
 

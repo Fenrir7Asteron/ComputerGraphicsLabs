@@ -86,6 +86,12 @@ Material::Material(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath
 		vertexBC->GetBufferSize(),
 		&layout);
 
+	CD3D11_RASTERIZER_DESC rastDesc = {};
+	rastDesc.CullMode = D3D11_CULL_BACK;
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+
+	res = device->CreateRasterizerState(&rastDesc, &rastState);
+
 	this->device = device;
 	this->displayWin = displayWin;
 }

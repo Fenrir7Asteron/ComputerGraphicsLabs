@@ -10,6 +10,11 @@ PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, GameComponent* p
 	this->physicalLayer = physicalLayer;
 }
 
+PhysicalBoxComponent::PhysicalBoxComponent(GameFramework* game, GameComponent* parent, PhysicalLayer physicalLayer, DirectX::SimpleMath::Matrix transform, Material* material) : GameComponent(game, parent, transform, material)
+{
+	this->physicalLayer;
+}
+
 GAMEFRAMEWORK_API void PhysicalBoxComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
 {
 	GameComponent::Move(positionDelta);

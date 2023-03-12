@@ -151,6 +151,9 @@
     <ClCompile Include="GameComponent.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="PhysicalBoxComponent.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
     <ClCompile Include="UnlitDiffuseMaterial.cpp" />
@@ -174,13 +177,17 @@
     <ClInclude Include="Keys.h" />
     <ClInclude Include="LoaderHelpers.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="ModelViewProjectionMatrices.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
     <ClInclude Include="PhysicalLayer.h" />
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="UnlitDiffuseMaterial.h" />
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="VertexPositionColor.h" />
     <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>

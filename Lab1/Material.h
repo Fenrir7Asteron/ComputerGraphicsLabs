@@ -17,6 +17,7 @@ public:
 	ID3DBlob* pixelBC;
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* layout;
+	ID3D11RasterizerState* rastState;
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 

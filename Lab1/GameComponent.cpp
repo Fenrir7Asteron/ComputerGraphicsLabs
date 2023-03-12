@@ -24,6 +24,20 @@ GameComponent::GameComponent(GameFramework* game, GameComponent* parent, Vector3
 	this->material = material;
 }
 
+GameComponent::GameComponent(GameFramework* game, GameComponent* parent,
+	Matrix transform, Material* material)
+{
+	game_ = game;
+	enabled = true;
+
+	transform.Decompose(this->scale, this->rotation, this->positionOffset);
+	this->parent = parent;
+
+	UpdateWorldMatrix();
+
+	this->material = material;
+}
+
 GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
 {
 	positionOffset += positionDelta;

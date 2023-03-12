@@ -23,8 +23,14 @@ public:
 		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One,
 		Material* material = nullptr);
 
+	GAMEFRAMEWORK_API PhysicalBoxComponent(GameFramework* game,
+		GameComponent* parent,
+		PhysicalLayer physicalLayer = PhysicalLayer::Default,
+		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity,
+		Material* material = nullptr);
+
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta) override;
 
-	DirectX::BoundingBox boundingBox;
+	DirectX::BoundingOrientedBox boundingBox;
 	PhysicalLayer physicalLayer = PhysicalLayer::Default;
 };
