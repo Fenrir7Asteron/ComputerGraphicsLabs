@@ -13,13 +13,14 @@ class GameFramework;
 class Material;
 class aiMesh;
 class aiNode;
+class aiMaterial;
 class Mesh;
 
 class Model : public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelPath, float startScale, Material* material, PhysicalLayer physicalLayer = PhysicalLayer::Default);
-	GAMEFRAMEWORK_API std::unique_ptr<Mesh> ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material);
+	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, PhysicalLayer physicalLayer = PhysicalLayer::Default);
+	GAMEFRAMEWORK_API std::unique_ptr<Mesh> ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials);
 	GAMEFRAMEWORK_API std::unique_ptr<Node> ParseNode(const aiNode& node);
 	GAMEFRAMEWORK_API void UpdateBoundingBoxBorders(Node* pNode, DirectX::SimpleMath::Matrix accumulatedTransform);
 	GAMEFRAMEWORK_API void ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2);
@@ -34,5 +35,7 @@ public:
 private:
 	std::unique_ptr<Node> pRoot;
 	std::vector<std::unique_ptr<Mesh>> meshPtrs;
+	std::string modelDir;
+	LPCWSTR shaderPath;
 };
 

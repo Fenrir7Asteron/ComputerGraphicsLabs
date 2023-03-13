@@ -11,7 +11,7 @@ struct PS_IN
 	float4 pos : SV_POSITION;
  	float4 col : COLOR;
  	float4 norm : NORMAL;
-    float2 tex : TEXCOORD;
+    float3 tex : TEXCOORD;
 };
 
 cbuffer VS_CONSTANT_BUFFER : register(b0)
@@ -31,7 +31,7 @@ PS_IN VSMain( VS_IN input )
     output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
     output.col = input.col;
     output.norm = (input.norm + 1.0) * 0.5;
-    output.tex = input.tex;
+    output.tex = input.tex.xyz;
 	
 	return output;
 }
@@ -39,6 +39,7 @@ PS_IN VSMain( VS_IN input )
 float4 PSMain( PS_IN input ) : SV_Target
 {
     input.norm = normalize(input.norm);
-	return input.norm;
-    //return DiffuseMap.Sample(Sampler, input.tex);
+	//return input.norm;
+    //return input.col * (1.0f - input.tex.z) + DiffuseMap.Sample(Sampler, input.tex.xy) * input.tex.z;
+    return DiffuseMap.Sample(Sampler, input.tex.xy);
 }

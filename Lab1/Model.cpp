@@ -1,11 +1,13 @@
 #define NOMINMAX
 #define _USE_MATH_DEFINES
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "Model.h"
 #include "GameFramework.h"
 #include "Mesh.h"
 #include "Vertex.h"
 #include "DebugRenderSysImpl.h"
+#include "UnlitDiffuseMaterial.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -15,21 +17,24 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const std::string modelPath, float startScale, Material* material, PhysicalLayer physicalLayer)
+Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, PhysicalLayer physicalLayer)
     : PhysicalBoxComponent(game, parent, physicalLayer, transform, material)
 {
+    this->modelDir = modelDir;
+    this->shaderPath = shaderPath;
+
     Assimp::Importer importer;
 
     importer.SetPropertyBool("AI_CONFIG_PP_FD_CHECKAREA", false);
 
-    auto pScene = importer.ReadFile(modelPath,
+    auto pScene = importer.ReadFile(modelDir + modelName,
         aiProcessPreset_TargetRealtime_Fast
         //aiProcess_Triangulate
     );
 
     for (int i = 0; i < pScene->mNumMeshes; ++i)
     {
-        meshPtrs.push_back(ParseMesh(game, *pScene->mMeshes[i], startScale, material));
+        meshPtrs.push_back(ParseMesh(game, *pScene->mMeshes[i], startScale, material, pScene->mMaterials));
     }
 
     pRoot = ParseNode(*pScene->mRootNode);
@@ -43,26 +48,72 @@ Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const
     boundingBox.Transform(boundingBox, transform);
 }
 
-GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material)
+GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
 {
     std::vector<Vertex> vertices;
     std::vector<int> indices;
     vertices.reserve(mesh.mNumVertices);
     indices.reserve(mesh.mNumFaces * 3);
 
+   
+
+    bool useTexture = false;
+
+    if (mesh.mMaterialIndex >= 0)
+    {
+        using namespace std::string_literals;
+        auto& pMaterial = *pMaterials[mesh.mMaterialIndex];
+        aiString texFileName;
+
+        if (pMaterial.GetTexture(aiTextureType_DIFFUSE, 0, &texFileName) == aiReturn_SUCCESS)
+        {
+            texFileName = modelDir + texFileName.C_Str();
+            wchar_t wtext[255];
+            std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
+            wtext[texFileName.length] = '\0';
+
+            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, game->device, game->displayWin, wtext);
+            useTexture = true;
+        }
+        else if (pMaterial.GetTexture(aiTextureType_BASE_COLOR, 0, &texFileName) == aiReturn_SUCCESS)
+        {
+            texFileName = modelDir + texFileName.C_Str();
+            wchar_t wtext[255];
+            std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
+            wtext[texFileName.length] = '\0';
+
+            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, game->device, game->displayWin, wtext);
+            useTexture = true;
+        }
+    }
+
     for (unsigned int i = 0; i < mesh.mNumVertices; ++i)
     {
         Vector4 norm = Vector4::Zero;
-        if (mesh.mNormals != nullptr)
-            norm = *reinterpret_cast<DirectX::XMFLOAT4*>(&mesh.mNormals[i]);
-
-        norm.w = 0.0f;
-
-        Vector4 pos = { mesh.mVertices[i].x * startScale, mesh.mVertices[i].y * startScale, mesh.mVertices[i].z * startScale, 1.0f };
         Vector4 col = Vector4::One;
         Vector4 tex = Vector4::Zero;
 
-        vertices.push_back({pos, col, norm, tex});
+        if (mesh.mNormals != nullptr)
+        {
+            norm = *reinterpret_cast<DirectX::XMFLOAT4*>(&mesh.mNormals[i]);
+            norm.w = 0.0f;
+        }
+
+
+        if (mesh.mColors != nullptr && mesh.mColors[0] != nullptr)
+            col = *reinterpret_cast<DirectX::XMFLOAT4*>(&mesh.mColors[0][i]);
+
+        if (mesh.mTextureCoords != nullptr && mesh.mTextureCoords[0] != nullptr)
+        {
+            tex = *reinterpret_cast<DirectX::XMFLOAT4*>(&mesh.mTextureCoords[0][i]);
+            tex.y = 1.0f - tex.y;
+            tex.z = useTexture;
+            tex.w = 0;
+        }
+
+        Vector4 pos = { mesh.mVertices[i].x * startScale, mesh.mVertices[i].y * startScale, mesh.mVertices[i].z * startScale, 1.0f };
+
+        vertices.push_back({ pos, col, norm, tex });
     }
 
     for (unsigned int i = 0; i < mesh.mNumFaces; ++i)
