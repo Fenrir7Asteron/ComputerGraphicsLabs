@@ -41,7 +41,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -115,7 +115,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GAMEFRAMEWORK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -168,6 +168,7 @@
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DebugRenderSysImpl.h" />
     <ClInclude Include="Delegates.h" />
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="DirectXHelpers.h" />
     <ClInclude Include="DisplayWin.h" />
     <ClInclude Include="FPSCameraController.h" />
@@ -183,6 +184,8 @@
     <ClInclude Include="ModelViewProjectionMatrices.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PhongCoefficients.h" />
+    <ClInclude Include="PhongConstantData.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
     <ClInclude Include="PhysicalLayer.h" />
     <ClInclude Include="PhysicalSphereComponent.h" />

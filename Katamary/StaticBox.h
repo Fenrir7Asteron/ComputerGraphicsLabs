@@ -22,4 +22,7 @@ public:
 	int indicesLen;
 
 	UnlitDiffuseMaterial* unlitDiffuseMaterial;
+
+	ID3D11Buffer* vb;
+	ID3D11Buffer* ib;
 };

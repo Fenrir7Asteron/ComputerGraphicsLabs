@@ -6,6 +6,8 @@
 #include "UnlitDiffuseMaterial.h"
 #include "Model.h"
 #include "Vertex.h"
+#include "PhongCoefficients.h"
+#include "PhongConstantData.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -64,11 +66,12 @@ void Mesh::Update(float deltaTime)
 
 GAMEFRAMEWORK_API void Mesh::Draw()
 {
-	Draw(Matrix::Identity);
+	Draw(Matrix::Identity, {});
 }
 
-void Mesh::Draw(Matrix accumulatedTransform)
+void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
+	// MVP transform constant buffer
 	D3D11_BUFFER_DESC mvpBufDesc = {};
 	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -90,6 +93,34 @@ void Mesh::Draw(Matrix accumulatedTransform)
 	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
+
+	// Phong directional light constant buffer
+	D3D11_BUFFER_DESC phongBufDesc = {};
+	phongBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	phongBufDesc.CPUAccessFlags = 0;
+	phongBufDesc.MiscFlags = 0;
+	phongBufDesc.StructureByteStride = 0;
+	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
+
+	PhongConstantData phong;
+	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
+	phong.direction = game_->dirLight.direction;
+	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
+	phong.dirLightDiffuseIntensity = game_->dirLight.dirLightDiffuseIntensity;
+	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
+	phong.dirLightSpecularIntensity = game_->dirLight.dirLightSpecularIntensity;
+	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
+	phong.dirLightAmbientIntensity = game_->dirLight.dirLightAmbientIntensity;
+
+	D3D11_SUBRESOURCE_DATA phongData = {};
+	phongData.pSysMem = &phong;
+	phongData.SysMemPitch = 0;
+	phongData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* constantPhongBuffer;
+	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
@@ -100,6 +131,7 @@ void Mesh::Draw(Matrix accumulatedTransform)
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
+	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
 	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
 	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
 	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
@@ -109,4 +141,5 @@ void Mesh::Draw(Matrix accumulatedTransform)
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 
 	constantMvpBuffer->Release();
+	constantPhongBuffer->Release();
 }

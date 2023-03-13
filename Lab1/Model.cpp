@@ -17,11 +17,12 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, PhysicalLayer physicalLayer)
+Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, const PhongCoefficients phongCoefficients, PhysicalLayer physicalLayer)
     : PhysicalBoxComponent(game, parent, physicalLayer, transform, material)
 {
     this->modelDir = modelDir;
     this->shaderPath = shaderPath;
+    this->phongCoefficients = phongCoefficients;
 
     Assimp::Importer importer;
 
@@ -207,7 +208,7 @@ GAMEFRAMEWORK_API void Model::Update(float deltaTime)
 
 GAMEFRAMEWORK_API void Model::Draw()
 {
-    pRoot->Draw(GetWorldMatrix());
+    pRoot->Draw(GetWorldMatrix(), this->phongCoefficients);
 
     if (enabled)
         game_->debugRender->DrawOrientedBoundingBox(boundingBox, Matrix::Identity);

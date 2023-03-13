@@ -83,6 +83,37 @@ KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAx
 
 	boundingSphere.Center = positionOffset;
 	boundingSphere.Radius = radius;
+
+
+	D3D11_BUFFER_DESC vertexBufDesc = {};
+	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufDesc.CPUAccessFlags = 0;
+	vertexBufDesc.MiscFlags = 0;
+	vertexBufDesc.StructureByteStride = 0;
+	vertexBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4) * verticesLen;
+
+	D3D11_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pSysMem = &points[0];
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+
+	game_->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+
+	D3D11_BUFFER_DESC indexBufDesc = {};
+	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufDesc.CPUAccessFlags = 0;
+	indexBufDesc.MiscFlags = 0;
+	indexBufDesc.StructureByteStride = 0;
+	indexBufDesc.ByteWidth = sizeof(int) * indicesLen;
+
+	D3D11_SUBRESOURCE_DATA indexData = {};
+	indexData.pSysMem = &indices[0];
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+
+	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 }
 
 void KatamaryBall::Update(float deltaTime)
@@ -174,38 +205,6 @@ void KatamaryBall::IncreaseSize(float sizeDelta)
 
 void KatamaryBall::Draw()
 {
-	D3D11_BUFFER_DESC vertexBufDesc = {};
-	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufDesc.CPUAccessFlags = 0;
-	vertexBufDesc.MiscFlags = 0;
-	vertexBufDesc.StructureByteStride = 0;
-	vertexBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4) * verticesLen;
-
-	D3D11_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pSysMem = &points[0];
-	vertexData.SysMemPitch = 0;
-	vertexData.SysMemSlicePitch = 0;
-
-	ID3D11Buffer* vb;
-	game_->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
-
-	D3D11_BUFFER_DESC indexBufDesc = {};
-	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufDesc.CPUAccessFlags = 0;
-	indexBufDesc.MiscFlags = 0;
-	indexBufDesc.StructureByteStride = 0;
-	indexBufDesc.ByteWidth = sizeof(int) * indicesLen;
-
-	D3D11_SUBRESOURCE_DATA indexData = {};
-	indexData.pSysMem = &indices[0];
-	indexData.SysMemPitch = 0;
-	indexData.SysMemSlicePitch = 0;
-
-	ID3D11Buffer* ib;
-	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
-
 	D3D11_BUFFER_DESC mvpBufDesc = {};
 	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -227,14 +226,6 @@ void KatamaryBall::Draw()
 	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
-	D3D11_BUFFER_DESC colorOffsetBufDesc = {};
-	colorOffsetBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	colorOffsetBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	colorOffsetBufDesc.CPUAccessFlags = 0;
-	colorOffsetBufDesc.MiscFlags = 0;
-	colorOffsetBufDesc.StructureByteStride = 0;
-	colorOffsetBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4);
-
 	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
 	UINT offsets[] = { 0 };
 
@@ -255,8 +246,6 @@ void KatamaryBall::Draw()
 
 	game_->debugRender->DrawSphere(boundingSphere.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(boundingSphere.Center), 16);
 
-	vb->Release();
-	ib->Release();
 	constantMvpBuffer->Release();
 }
 

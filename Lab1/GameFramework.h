@@ -9,6 +9,7 @@
 #include "PhysicalSphereComponent.h"
 #include "InputDevice.h"
 #include "CameraController.h"
+#include "DirectionalLight.h"
 
 class DebugRenderSysImpl;
 
@@ -57,5 +58,7 @@ public:
 	float deltaTime;
 
 	DebugRenderSysImpl* debugRender;
+
+	DirectionalLight dirLight;
 };
 

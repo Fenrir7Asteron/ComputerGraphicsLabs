@@ -4,6 +4,7 @@
 #include "SimpleMath.h"
 
 class Mesh;
+class PhongCoefficients;
 
 class Node
 {
@@ -11,7 +12,7 @@ class Node
 
 public:
 	Node(std::vector<Mesh*> meshPtrs, const DirectX::SimpleMath::Matrix& transform);
-	void Draw(DirectX::SimpleMath::Matrix accumulatedTransform);
+	void Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients);
 
 private:
 	void AddChild(std::unique_ptr<Node> pChild);

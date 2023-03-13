@@ -29,6 +29,9 @@ public:
 
 	UnlitDiffuseMaterial* unlitDiffuseMaterial;
 
+	ID3D11Buffer* vb;
+	ID3D11Buffer* ib;
+
 	float radius;
 	float targetVolume;
 	float moveSpeed;

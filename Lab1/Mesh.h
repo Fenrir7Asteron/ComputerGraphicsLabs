@@ -7,6 +7,7 @@
 class UnlitDiffuseMaterial;
 class Model;
 class Vertex;
+class PhongCoefficients;
 
 class Mesh : public GameComponent
 {
@@ -20,7 +21,7 @@ public:
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API virtual void Draw() override;
-	GAMEFRAMEWORK_API virtual void Draw(DirectX::SimpleMath::Matrix accumulatedTransform);
+	GAMEFRAMEWORK_API virtual void Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients);
 
 public:
 	std::vector<Vertex> vertices;

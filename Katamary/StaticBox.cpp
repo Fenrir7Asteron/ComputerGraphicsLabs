@@ -72,15 +72,7 @@ StaticBox::StaticBox(GameFramework* game, Vector3 position,	Quaternion rotation,
 	indicesLen = (int)indices.size();
 
 	this->unlitDiffuseMaterial = dynamic_cast<UnlitDiffuseMaterial*>(material);
-}
 
-void StaticBox::Update(float deltaTime)
-{
-
-}
-
-void StaticBox::Draw()
-{
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -94,7 +86,6 @@ void StaticBox::Draw()
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* vb;
 	game_->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	D3D11_BUFFER_DESC indexBufDesc = {};
@@ -110,9 +101,16 @@ void StaticBox::Draw()
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* ib;
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+}
 
+void StaticBox::Update(float deltaTime)
+{
+
+}
+
+void StaticBox::Draw()
+{
 	D3D11_BUFFER_DESC mvpBufDesc = {};
 	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -134,14 +132,6 @@ void StaticBox::Draw()
 	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
-	D3D11_BUFFER_DESC colorOffsetBufDesc = {};
-	colorOffsetBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	colorOffsetBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	colorOffsetBufDesc.CPUAccessFlags = 0;
-	colorOffsetBufDesc.MiscFlags = 0;
-	colorOffsetBufDesc.StructureByteStride = 0;
-	colorOffsetBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4);
-
 	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
 	UINT offsets[] = { 0 };
 
@@ -160,7 +150,5 @@ void StaticBox::Draw()
 	game_->context->OMSetRenderTargets(1, &game_->rtv, game_->pDSV.Get());
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 
-	vb->Release();
-	ib->Release();
 	constantMvpBuffer->Release();
 }

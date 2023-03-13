@@ -8,6 +8,7 @@
 #include <memory>
 #include "directxmath.h"
 #include "Node.h"
+#include "PhongCoefficients.h"
 
 class GameFramework;
 class Material;
@@ -19,7 +20,7 @@ class Mesh;
 class Model : public PhysicalBoxComponent
 {
 public:
-	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, PhysicalLayer physicalLayer = PhysicalLayer::Default);
+	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, const PhongCoefficients phongCoefficients, PhysicalLayer physicalLayer = PhysicalLayer::Default);
 	GAMEFRAMEWORK_API std::unique_ptr<Mesh> ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials);
 	GAMEFRAMEWORK_API std::unique_ptr<Node> ParseNode(const aiNode& node);
 	GAMEFRAMEWORK_API void UpdateBoundingBoxBorders(Node* pNode, DirectX::SimpleMath::Matrix accumulatedTransform);
@@ -37,5 +38,6 @@ private:
 	std::vector<std::unique_ptr<Mesh>> meshPtrs;
 	std::string modelDir;
 	LPCWSTR shaderPath;
+	PhongCoefficients phongCoefficients;
 };
 

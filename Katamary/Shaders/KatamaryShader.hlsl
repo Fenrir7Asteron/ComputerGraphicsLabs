@@ -21,6 +21,24 @@ cbuffer VS_CONSTANT_BUFFER : register(b0)
     float4x4 projectionMatrix;
 };
 
+
+// Phong directional light parameters
+cbuffer PS_CONSTANT_BUFFER : register(b1)
+{
+    float4 cameraPos;
+    
+    float4 lightDir;
+    
+    float4 kD;
+    float4 iD;
+    
+    float4 kS_alpha; // specular coefficient + shininess
+    float4 iS;
+    
+    float4 kA; 
+    float4 iA;
+};
+
 Texture2D DiffuseMap : register(t0);
 SamplerState Sampler : register(s0);
 
@@ -41,5 +59,11 @@ float4 PSMain( PS_IN input ) : SV_Target
     input.norm = normalize(input.norm);
 	//return input.norm;
     //return input.col * (1.0f - input.tex.z) + DiffuseMap.Sample(Sampler, input.tex.xy) * input.tex.z;
+    
+    // Simple textured
     return DiffuseMap.Sample(Sampler, input.tex.xy);
+    
+    // Phong lighting
+    return float4(lightDir.xyz, 1.0f);
+
 }
