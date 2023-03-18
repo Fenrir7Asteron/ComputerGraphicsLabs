@@ -12,6 +12,7 @@ struct PS_IN
  	float4 col : COLOR;
  	float4 norm : NORMAL;
     float3 tex : TEXCOORD;
+    float4 worldPos : POSITIONT;
 };
 
 cbuffer VS_CONSTANT_BUFFER : register(b0)
@@ -28,15 +29,13 @@ cbuffer PS_CONSTANT_BUFFER : register(b1)
     float4 cameraPos;
     
     float4 lightDir;
+    float4 lightColor;
     
-    float4 kD;
-    float4 iD;
-    
-    float4 kS_alpha; // specular coefficient + shininess
-    float4 iS;
-    
+    float4 kD;    
+    float4 kS_alpha; // specular coefficient + shininess    
     float4 kA; 
-    float4 iA;
+    
+    float4 DSAIntensity;
 };
 
 Texture2D DiffuseMap : register(t0);
@@ -48,22 +47,34 @@ PS_IN VSMain( VS_IN input )
 	
     output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
     output.col = input.col;
-    output.norm = (input.norm + 1.0) * 0.5;
+    //output.norm = (input.norm + 1.0) * 0.5;
+    output.norm = mul(worldMatrix, input.norm);
     output.tex = input.tex.xyz;
+    output.worldPos = mul(worldMatrix, input.pos);
 	
 	return output;
 }
 
 float4 PSMain( PS_IN input ) : SV_Target
 {
-    input.norm = normalize(input.norm);
+    float4 norm = normalize(input.norm);
 	//return input.norm;
     //return input.col * (1.0f - input.tex.z) + DiffuseMap.Sample(Sampler, input.tex.xy) * input.tex.z;
     
-    // Simple textured
-    return DiffuseMap.Sample(Sampler, input.tex.xy);
+    // Texture color
+    float3 objectColor = DiffuseMap.Sample(Sampler, input.tex.xy);
+       
+    // Diffuse
+    float3 diffuseColor = lightColor * kD * dot(norm, -lightDir) * DSAIntensity.x;
     
-    // Phong lighting
-    return float4(lightDir.xyz, 1.0f);
-
+    // Specular
+    float3 reflected = normalize(reflect(lightDir, norm));
+    float3 viewDir = normalize(cameraPos - input.worldPos);
+    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(max(dot(viewDir, reflected), 0.0f), kS_alpha.w);
+    
+    // Ambient
+    float3 ambientColor = lightColor * kA * DSAIntensity.z;
+    
+    objectColor = objectColor * (diffuseColor + specularColor + ambientColor);
+    return float4(objectColor, 1.0f);
 }

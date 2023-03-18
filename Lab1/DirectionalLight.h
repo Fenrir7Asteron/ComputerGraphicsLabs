@@ -5,7 +5,8 @@
 GAMEFRAMEWORK_API struct DirectionalLight
 {
 	DirectX::SimpleMath::Vector4 direction;
-	DirectX::SimpleMath::Vector4 dirLightDiffuseIntensity;
-	DirectX::SimpleMath::Vector4 dirLightSpecularIntensity;
-	DirectX::SimpleMath::Vector4 dirLightAmbientIntensity;
+	DirectX::SimpleMath::Vector4 lightColor;
+	float diffuseIntensity;
+	float specularIntensity;
+	float ambientIntensity;
 };

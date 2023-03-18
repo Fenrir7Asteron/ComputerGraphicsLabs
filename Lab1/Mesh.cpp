@@ -104,14 +104,17 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
 
 	PhongConstantData phong;
+	game_->dirLight.direction.Normalize();
+
 	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
 	phong.direction = game_->dirLight.direction;
+	phong.lightColor = game_->dirLight.lightColor;
+
 	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
-	phong.dirLightDiffuseIntensity = game_->dirLight.dirLightDiffuseIntensity;
 	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
-	phong.dirLightSpecularIntensity = game_->dirLight.dirLightSpecularIntensity;
 	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
-	phong.dirLightAmbientIntensity = game_->dirLight.dirLightAmbientIntensity;
+
+	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f};
 
 	D3D11_SUBRESOURCE_DATA phongData = {};
 	phongData.pSysMem = &phong;

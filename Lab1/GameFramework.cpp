@@ -384,7 +384,7 @@ GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
 
 GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
 {
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float color[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	context->ClearRenderTargetView(rtv, color);
 	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

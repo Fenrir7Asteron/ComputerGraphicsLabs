@@ -27,7 +27,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 
 	PhongCoefficients coeff1 =
 	{
-		{0.78f, 0.57f, 0.11f, 0.0f},
+		{0.5f, 0.5f, 0.5f, 0.0f},
 		{0.99f, 0.94f, 0.81f, 27.90f},
 		{0.33f, 0.22f, 0.03f, 0.0f},
 	};
@@ -49,14 +49,15 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	cameraControllers.emplace_back(this->orbitalCamController);
 	SetCameraController(1);
 
-	Vector4 direction = { 0.5f, -0.5f, 1.0f, 0.0f };
+	Vector4 direction = { 1.0f, 0.0f, 0.0f, 0.0f };
 	direction.Normalize();
 
 	dirLight =
 	{
 		direction,                 // direction
-		{1.0f, 1.0f, 1.0f, 0.0f},  // diffuse
-		{1.0f, 1.0f, 1.0f, 0.0f},  // specular
-		{1.0f, 1.0f, 1.0f, 0.0f},  // ambient
+		{1.0f, 1.0f, 1.0f, 1.0f},  // color
+		03.0f,                     // diffuse
+		00.5f,                     // specular
+		01.0f,                     // ambient
 	};
 }
