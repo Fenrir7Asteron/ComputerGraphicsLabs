@@ -82,6 +82,15 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 
 	ModelViewProjectionMatrices mvp;
 	mvp.worldMatrix = accumulatedTransform;
+
+	mvp.transposeInverseWorldMatrix = { 
+		accumulatedTransform._11, accumulatedTransform._12, accumulatedTransform._13, 0.0f,
+		accumulatedTransform._21, accumulatedTransform._22, accumulatedTransform._23, 0.0f,
+		accumulatedTransform._31, accumulatedTransform._32, accumulatedTransform._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
 	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
 	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
 

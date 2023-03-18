@@ -11,7 +11,7 @@ struct PS_IN
 	float4 pos : SV_POSITION;
  	float4 col : COLOR;
  	float4 norm : NORMAL;
-    float3 tex : TEXCOORD;
+    float4 tex : TEXCOORD;
     float4 worldPos : POSITIONT;
 };
 
@@ -20,6 +20,7 @@ cbuffer VS_CONSTANT_BUFFER : register(b0)
     float4x4 worldMatrix;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
+    float4x4 transposeInverseWorldMatrix;
 };
 
 
@@ -47,9 +48,8 @@ PS_IN VSMain( VS_IN input )
 	
     output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
     output.col = input.col;
-    //output.norm = (input.norm + 1.0) * 0.5;
-    output.norm = mul(worldMatrix, input.norm);
-    output.tex = input.tex.xyz;
+    output.norm = mul(transposeInverseWorldMatrix, input.norm);
+    output.tex = input.tex;
     output.worldPos = mul(worldMatrix, input.pos);
 	
 	return output;
@@ -57,20 +57,19 @@ PS_IN VSMain( VS_IN input )
 
 float4 PSMain( PS_IN input ) : SV_Target
 {
-    float4 norm = normalize(input.norm);
-	//return input.norm;
-    //return input.col * (1.0f - input.tex.z) + DiffuseMap.Sample(Sampler, input.tex.xy) * input.tex.z;
+    float3 norm = normalize(input.norm.xyz);
+    float3 lDir = normalize(lightDir.xyz);
     
     // Texture color
     float3 objectColor = DiffuseMap.Sample(Sampler, input.tex.xy);
        
     // Diffuse
-    float3 diffuseColor = lightColor * kD * dot(norm, -lightDir) * DSAIntensity.x;
+    float3 diffuseColor = lightColor * kD * dot(norm, -lDir) * DSAIntensity.x;
     
     // Specular
-    float3 reflected = normalize(reflect(lightDir, norm));
-    float3 viewDir = normalize(cameraPos - input.worldPos);
-    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(max(dot(viewDir, reflected), 0.0f), kS_alpha.w);
+    float3 reflected = normalize(reflect(lDir, norm.xyz));
+    float3 viewDir = normalize(cameraPos.xyz - input.worldPos.xyz);
+    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(max(dot(reflected, viewDir), 0.0f), kS_alpha.w);
     
     // Ambient
     float3 ambientColor = lightColor * kA * DSAIntensity.z;

@@ -2,6 +2,7 @@
 #include <ModelViewProjectionMatrices.h>
 #include <UnlitDiffuseMaterial.h>
 #include <iostream>
+#include <PhongConstantData.h>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -16,7 +17,7 @@ const LPCWSTR pixelShaderName = L"KatamaryShader.hlsl";
 
 using namespace DirectX::SimpleMath;
 
-StaticBox::StaticBox(GameFramework* game, Vector3 position,	Quaternion rotation, Vector3 scale, Material* material) : GameComponent(game, nullptr, position, rotation, scale, material)
+StaticBox::StaticBox(GameFramework* game, const PhongCoefficients phongCoefficients, Vector3 position,	Quaternion rotation, Vector3 scale, Material* material) : GameComponent(game, nullptr, position, rotation, scale, material)
 {
 	float sideHalf= 50.0f;
 	points =
@@ -102,6 +103,8 @@ StaticBox::StaticBox(GameFramework* game, Vector3 position,	Quaternion rotation,
 	indexData.SysMemSlicePitch = 0;
 
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+
+	this->phongCoefficients = phongCoefficients;
 }
 
 void StaticBox::Update(float deltaTime)
@@ -121,6 +124,15 @@ void StaticBox::Draw()
 
 	ModelViewProjectionMatrices mvp;
 	mvp.worldMatrix = this->GetWorldMatrix();
+
+	mvp.transposeInverseWorldMatrix = {
+		mvp.worldMatrix._11, mvp.worldMatrix._12, mvp.worldMatrix._13, 0.0f,
+		mvp.worldMatrix._21, mvp.worldMatrix._22, mvp.worldMatrix._23, 0.0f,
+		mvp.worldMatrix._31, mvp.worldMatrix._32, mvp.worldMatrix._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
 	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
 	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
 
@@ -132,6 +144,36 @@ void StaticBox::Draw()
 	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
+	// Phong directional light constant buffer
+	D3D11_BUFFER_DESC phongBufDesc = {};
+	phongBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	phongBufDesc.CPUAccessFlags = 0;
+	phongBufDesc.MiscFlags = 0;
+	phongBufDesc.StructureByteStride = 0;
+	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
+
+	PhongConstantData phong;
+	game_->dirLight.direction.Normalize();
+
+	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
+	phong.direction = game_->dirLight.direction;
+	phong.lightColor = game_->dirLight.lightColor;
+
+	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
+	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
+	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
+
+	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f };
+
+	D3D11_SUBRESOURCE_DATA phongData = {};
+	phongData.pSysMem = &phong;
+	phongData.SysMemPitch = 0;
+	phongData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* constantPhongBuffer;
+	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+
 	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
 	UINT offsets[] = { 0 };
 
@@ -142,6 +184,7 @@ void StaticBox::Draw()
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
+	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
 	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
 	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
 	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
@@ -151,4 +194,5 @@ void StaticBox::Draw()
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 
 	constantMvpBuffer->Release();
+	constantPhongBuffer->Release();
 }

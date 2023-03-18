@@ -7,5 +7,6 @@ struct ModelViewProjectionMatrices
 	Matrix worldMatrix;
 	Matrix viewMatrix;
 	Matrix projectionMatrix;
+	Matrix transposeInverseWorldMatrix;
 };
 

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <PhongConstantData.h>
+#include <Vertex.h>
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -16,7 +18,9 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAxis, float moveSpeed, DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
+KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAxis, float moveSpeed, 
+	const PhongCoefficients phongCoefficients,
+	DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
 	: PhysicalSphereComponent(game, nullptr, physicalLayer, radius, transform, material)
 {
 	float theta = 0.0f;
@@ -30,21 +34,19 @@ KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAx
 
 		for (int j = 0; j < verticesNPerAxis; ++j)
 		{
-			
-			Vector4 pos = { std::sin(theta) * std::cos(phi), std::cos(theta), std::sin(theta) * std::sin(phi), 1.0f };
+			Vertex vert;
+			vert.pos = { std::sin(theta) * std::cos(phi), std::cos(theta), std::sin(theta) * std::sin(phi), 1.0f };
 
-			Vector4 col = { 1.0f, 1.0f, 1.0f, 1.0f };
+			vert.col = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-			Vector4 norm = pos;
-			norm.Normalize();
+			vert.n = vert.pos;
+			vert.n.Normalize();
 
-			float u = std::atan2(norm.x, norm.z) / (2 * M_PI) + 0.5;
-			float v = norm.y * 0.5 + 0.5;
+			float u = std::atan2(vert.n.x, vert.n.z) / (2 * M_PI) + 0.5;
+			float v = vert.n.y * 0.5 + 0.5;
+			vert.tex = { 1.0f - u, 1.0f - v, 0.0f, 0.0f };
 
-			points.push_back(pos);
-			points.push_back(col);
-			points.push_back(norm);
-			points.push_back({1.0f - u, 1.0f - v, 0.0f, 0.0f});
+			points.push_back(vert);
 
 			phi += azimuthAngleStep;
 		}
@@ -68,8 +70,6 @@ KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAx
 		}
 	}
 
-	verticesLen = (int)points.size();
-
 	indicesLen = (int)indices.size();
 
 	this->scale = Vector3::One * radius;
@@ -91,7 +91,7 @@ KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAx
 	vertexBufDesc.CPUAccessFlags = 0;
 	vertexBufDesc.MiscFlags = 0;
 	vertexBufDesc.StructureByteStride = 0;
-	vertexBufDesc.ByteWidth = sizeof(DirectX::XMFLOAT4) * verticesLen;
+	vertexBufDesc.ByteWidth = sizeof(Vertex) * verticesLen;
 
 	D3D11_SUBRESOURCE_DATA vertexData = {};
 	vertexData.pSysMem = &points[0];
@@ -114,6 +114,8 @@ KatamaryBall::KatamaryBall(GameFramework* game, float radius, int verticesNPerAx
 	indexData.SysMemSlicePitch = 0;
 
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+
+	this->phongCoefficients = phongCoefficients;
 }
 
 void KatamaryBall::Update(float deltaTime)
@@ -215,6 +217,15 @@ void KatamaryBall::Draw()
 
 	ModelViewProjectionMatrices mvp;
 	mvp.worldMatrix = this->GetWorldMatrix();
+
+	mvp.transposeInverseWorldMatrix = {
+		mvp.worldMatrix._11, mvp.worldMatrix._12, mvp.worldMatrix._13, 0.0f,
+		mvp.worldMatrix._21, mvp.worldMatrix._22, mvp.worldMatrix._23, 0.0f,
+		mvp.worldMatrix._31, mvp.worldMatrix._32, mvp.worldMatrix._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
 	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
 	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
 
@@ -226,7 +237,38 @@ void KatamaryBall::Draw()
 	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
-	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
+
+	// Phong directional light constant buffer
+	D3D11_BUFFER_DESC phongBufDesc = {};
+	phongBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	phongBufDesc.CPUAccessFlags = 0;
+	phongBufDesc.MiscFlags = 0;
+	phongBufDesc.StructureByteStride = 0;
+	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
+
+	PhongConstantData phong;
+	game_->dirLight.direction.Normalize();
+
+	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
+	phong.direction = game_->dirLight.direction;
+	phong.lightColor = game_->dirLight.lightColor;
+
+	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
+	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
+	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
+
+	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f };
+
+	D3D11_SUBRESOURCE_DATA phongData = {};
+	phongData.pSysMem = &phong;
+	phongData.SysMemPitch = 0;
+	phongData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* constantPhongBuffer;
+	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+
+	UINT strides[] = { sizeof(Vertex)};
 	UINT offsets[] = { 0 };
 
 	game_->context->RSSetState(material->rastState);
@@ -236,6 +278,7 @@ void KatamaryBall::Draw()
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
+	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
 	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
 	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
 	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
@@ -247,5 +290,6 @@ void KatamaryBall::Draw()
 	game_->debugRender->DrawSphere(boundingSphere.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(boundingSphere.Center), 16);
 
 	constantMvpBuffer->Release();
+	constantPhongBuffer->Release();
 }
 
