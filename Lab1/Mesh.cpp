@@ -57,6 +57,66 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	indexData.SysMemSlicePitch = 0;
 
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+
+	// Create MVP transform constant buffer
+	D3D11_BUFFER_DESC mvpBufDesc = {};
+	mvpBufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	mvpBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	mvpBufDesc.MiscFlags = 0;
+	mvpBufDesc.StructureByteStride = 0;
+	mvpBufDesc.ByteWidth = sizeof(ModelViewProjectionMatrices);
+
+	ModelViewProjectionMatrices mvp;
+	mvp.worldMatrix = transform;
+
+	mvp.transposeInverseWorldMatrix = {
+		transform._11, transform._12, transform._13, 0.0f,
+		transform._21, transform._22, transform._23, 0.0f,
+		transform._31, transform._32, transform._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
+	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
+	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+
+	D3D11_SUBRESOURCE_DATA mvpData = {};
+	mvpData.pSysMem = &mvp;
+	mvpData.SysMemPitch = 0;
+	mvpData.SysMemSlicePitch = 0;
+
+	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
+
+	// Create Phong directional light constant buffer
+	D3D11_BUFFER_DESC phongBufDesc = {};
+	phongBufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	phongBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	phongBufDesc.MiscFlags = 0;
+	phongBufDesc.StructureByteStride = 0;
+	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
+
+	PhongConstantData phong;
+	game_->dirLight.direction.Normalize();
+
+	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
+	phong.direction = game_->dirLight.direction;
+	phong.lightColor = game_->dirLight.lightColor;
+
+	PhongCoefficients phongCoefficients;
+	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
+	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
+	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
+
+	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f };
+
+	D3D11_SUBRESOURCE_DATA phongData = {};
+	phongData.pSysMem = &phong;
+	phongData.SysMemPitch = 0;
+	phongData.SysMemSlicePitch = 0;
+
+	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
 }
 
 void Mesh::Update(float deltaTime)
@@ -71,19 +131,14 @@ GAMEFRAMEWORK_API void Mesh::Draw()
 
 void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
-	// MVP transform constant buffer
-	D3D11_BUFFER_DESC mvpBufDesc = {};
-	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	mvpBufDesc.CPUAccessFlags = 0;
-	mvpBufDesc.MiscFlags = 0;
-	mvpBufDesc.StructureByteStride = 0;
-	mvpBufDesc.ByteWidth = sizeof(ModelViewProjectionMatrices);
+	// Update MVP transform constant buffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 	ModelViewProjectionMatrices mvp;
 	mvp.worldMatrix = accumulatedTransform;
 
-	mvp.transposeInverseWorldMatrix = { 
+	mvp.transposeInverseWorldMatrix = {
 		accumulatedTransform._11, accumulatedTransform._12, accumulatedTransform._13, 0.0f,
 		accumulatedTransform._21, accumulatedTransform._22, accumulatedTransform._23, 0.0f,
 		accumulatedTransform._31, accumulatedTransform._32, accumulatedTransform._33, 0.0f,
@@ -94,23 +149,13 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
 	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
 
-	D3D11_SUBRESOURCE_DATA mvpData = {};
-	mvpData.pSysMem = &mvp;
-	mvpData.SysMemPitch = 0;
-	mvpData.SysMemSlicePitch = 0;
-
-	ID3D11Buffer* constantMvpBuffer;
-	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
+	game_->context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &mvp, sizeof(mvp));
+	game_->context->Unmap(constantMvpBuffer, 0);
 
 
-	// Phong directional light constant buffer
-	D3D11_BUFFER_DESC phongBufDesc = {};
-	phongBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	phongBufDesc.CPUAccessFlags = 0;
-	phongBufDesc.MiscFlags = 0;
-	phongBufDesc.StructureByteStride = 0;
-	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
+	// Update Phong directional light constant buffer
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 	PhongConstantData phong;
 	game_->dirLight.direction.Normalize();
@@ -125,13 +170,9 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 
 	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f};
 
-	D3D11_SUBRESOURCE_DATA phongData = {};
-	phongData.pSysMem = &phong;
-	phongData.SysMemPitch = 0;
-	phongData.SysMemSlicePitch = 0;
-
-	ID3D11Buffer* constantPhongBuffer;
-	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+	game_->context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &phong, sizeof(phong));
+	game_->context->Unmap(constantPhongBuffer, 0);
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
@@ -151,7 +192,4 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 
 	game_->context->OMSetRenderTargets(1, &game_->rtv, game_->pDSV.Get());
 	game_->context->DrawIndexed(indicesLen, 0, 0);
-
-	constantMvpBuffer->Release();
-	constantPhongBuffer->Release();
 }

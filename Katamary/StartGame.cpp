@@ -6,6 +6,7 @@
 
 int main()
 {
+
 	KatamaryGame game(L"Katamary Game");
 	game.Init(800, 800);
 	game.Run();

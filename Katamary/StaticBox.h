@@ -9,9 +9,7 @@ class StaticBox : public GameComponent
 public:
 	GAMEFRAMEWORK_API StaticBox(GameFramework* game,
 		const PhongCoefficients phongCoefficients,
-		DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero,
-		DirectX::SimpleMath::Quaternion rotation = DirectX::SimpleMath::Quaternion::Identity,
-		DirectX::SimpleMath::Vector3 scale = DirectX::SimpleMath::Vector3::One,
+		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity,
 		Material* material = nullptr);
 
 	// Inherited via GameComponent
@@ -28,4 +26,6 @@ public:
 
 	ID3D11Buffer* vb;
 	ID3D11Buffer* ib;
+	ID3D11Buffer* constantMvpBuffer;
+	ID3D11Buffer* constantPhongBuffer;
 };

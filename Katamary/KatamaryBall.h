@@ -35,6 +35,8 @@ public:
 
 	ID3D11Buffer* vb;
 	ID3D11Buffer* ib;
+	ID3D11Buffer* constantMvpBuffer;
+	ID3D11Buffer* constantPhongBuffer;
 
 	float radius;
 	float targetVolume;

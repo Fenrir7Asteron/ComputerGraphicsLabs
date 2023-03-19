@@ -37,7 +37,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	AddComponent(katamary);
 
 	UnlitDiffuseMaterial* tableMat = new UnlitDiffuseMaterial(vertexShaderPath, pixelShaderPath, device, displayWin, L"./Textures/wood1.jpg");
-	AddComponent(new StaticBox(this, coeff2, Vector3::Down * 100.0f, Quaternion::Identity, {10.0f, 2.0f, 10.0f}, tableMat));
+	AddComponent(new StaticBox(this, coeff2, Matrix::CreateScale({ 10.0f, 2.0f, 10.0f }) * Matrix::CreateTranslation({ 0.0f, -100.0f, 0.0f }), tableMat));
 
 	AddComponent(new Model(this, nullptr, Matrix::CreateScale(Vector3::One * 100.0f) * Matrix::CreateTranslation({ -200.0f, 0.0f, 0.0f }), "../Assets/Models/", "pen.obj", vertexShaderPath, 100.0f, katamaryMat, coeff1));
 	AddComponent(new Model(this, nullptr, Matrix::CreateRotationY(XMConvertToRadians(0.0f)) * Matrix::CreateTranslation({ 200.0f, 0.0f, 0.0f }), "../Assets/Models/Banana/", "banana.fbx", vertexShaderPath, 1.0f, katamaryMat, coeff1));

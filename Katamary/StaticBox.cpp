@@ -17,7 +17,7 @@ const LPCWSTR pixelShaderName = L"KatamaryShader.hlsl";
 
 using namespace DirectX::SimpleMath;
 
-StaticBox::StaticBox(GameFramework* game, const PhongCoefficients phongCoefficients, Vector3 position,	Quaternion rotation, Vector3 scale, Material* material) : GameComponent(game, nullptr, position, rotation, scale, material)
+StaticBox::StaticBox(GameFramework* game, const PhongCoefficients phongCoefficients, Matrix transform, Material* material) : GameComponent(game, nullptr, transform, material)
 {
 	float sideHalf= 50.0f;
 	points =
@@ -105,19 +105,12 @@ StaticBox::StaticBox(GameFramework* game, const PhongCoefficients phongCoefficie
 	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	this->phongCoefficients = phongCoefficients;
-}
 
-void StaticBox::Update(float deltaTime)
-{
-
-}
-
-void StaticBox::Draw()
-{
+	// Create MVP transform constant buffer
 	D3D11_BUFFER_DESC mvpBufDesc = {};
-	mvpBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	mvpBufDesc.Usage = D3D11_USAGE_DYNAMIC;
 	mvpBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	mvpBufDesc.CPUAccessFlags = 0;
+	mvpBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	mvpBufDesc.MiscFlags = 0;
 	mvpBufDesc.StructureByteStride = 0;
 	mvpBufDesc.ByteWidth = sizeof(ModelViewProjectionMatrices);
@@ -126,9 +119,9 @@ void StaticBox::Draw()
 	mvp.worldMatrix = this->GetWorldMatrix();
 
 	mvp.transposeInverseWorldMatrix = {
-		mvp.worldMatrix._11, mvp.worldMatrix._12, mvp.worldMatrix._13, 0.0f,
-		mvp.worldMatrix._21, mvp.worldMatrix._22, mvp.worldMatrix._23, 0.0f,
-		mvp.worldMatrix._31, mvp.worldMatrix._32, mvp.worldMatrix._33, 0.0f,
+		transform._11, transform._12, transform._13, 0.0f,
+		transform._21, transform._22, transform._23, 0.0f,
+		transform._31, transform._32, transform._33, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f,
 	};
 	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
@@ -141,14 +134,13 @@ void StaticBox::Draw()
 	mvpData.SysMemPitch = 0;
 	mvpData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* constantMvpBuffer;
 	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
-	// Phong directional light constant buffer
+	// Create Phong directional light constant buffer
 	D3D11_BUFFER_DESC phongBufDesc = {};
-	phongBufDesc.Usage = D3D11_USAGE_DEFAULT;
+	phongBufDesc.Usage = D3D11_USAGE_DYNAMIC;
 	phongBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	phongBufDesc.CPUAccessFlags = 0;
+	phongBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	phongBufDesc.MiscFlags = 0;
 	phongBufDesc.StructureByteStride = 0;
 	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
@@ -171,8 +163,58 @@ void StaticBox::Draw()
 	phongData.SysMemPitch = 0;
 	phongData.SysMemSlicePitch = 0;
 
-	ID3D11Buffer* constantPhongBuffer;
 	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+}
+
+void StaticBox::Update(float deltaTime)
+{
+
+}
+
+void StaticBox::Draw()
+{
+	// Update MVP transform constant buffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	ModelViewProjectionMatrices mvp;
+	mvp.worldMatrix = this->GetWorldMatrix();
+
+	mvp.transposeInverseWorldMatrix = {
+		mvp.worldMatrix._11, mvp.worldMatrix._12, mvp.worldMatrix._13, 0.0f,
+		mvp.worldMatrix._21, mvp.worldMatrix._22, mvp.worldMatrix._23, 0.0f,
+		mvp.worldMatrix._31, mvp.worldMatrix._32, mvp.worldMatrix._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
+	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
+	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+
+	game_->context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &mvp, sizeof(mvp));
+	game_->context->Unmap(constantMvpBuffer, 0);
+
+
+	// Update Phong directional light constant buffer
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	PhongConstantData phong;
+	game_->dirLight.direction.Normalize();
+
+	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
+	phong.direction = game_->dirLight.direction;
+	phong.lightColor = game_->dirLight.lightColor;
+
+	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
+	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
+	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
+
+	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f };
+
+	game_->context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &phong, sizeof(phong));
+	game_->context->Unmap(constantPhongBuffer, 0);
 
 	UINT strides[] = { sizeof(DirectX::XMFLOAT4) * 4 };
 	UINT offsets[] = { 0 };
@@ -192,7 +234,4 @@ void StaticBox::Draw()
 
 	game_->context->OMSetRenderTargets(1, &game_->rtv, game_->pDSV.Get());
 	game_->context->DrawIndexed(indicesLen, 0, 0);
-
-	constantMvpBuffer->Release();
-	constantPhongBuffer->Release();
 }
