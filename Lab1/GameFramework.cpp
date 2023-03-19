@@ -5,11 +5,18 @@
 
 #include "GameFramework.h"
 #include "FPSCameraController.h"
+#include "DebugRenderSysImpl.h"
 #include "windowsx.h"
 #include <iostream>
 
+using namespace DirectX::SimpleMath;
+
+GameFramework* GameFramework::Instance = nullptr;
+
 GameFramework::GameFramework(LPCWSTR applicationName)
 {
+	GameFramework::Instance = this;
+
 	this->applicationName = applicationName;
 }
 
@@ -108,6 +115,9 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	{
 		controller->SetCamera(camera);
 	}
+
+	debugRender = new DebugRenderSysImpl(this);
+	debugRender->SetCamera(camera);
 }
 
 void GameFramework::Run()
@@ -153,8 +163,17 @@ void GameFramework::Run()
 				InputDevice::RawMouseEventArgs args;
 				args.X = GET_X_LPARAM(msg.lParam);
 				args.Y = GET_Y_LPARAM(msg.lParam);
+				args.WheelDelta = 0;
 				inputDevice->OnMouseMove(args);
 				displayWin->CenterMouse();
+			}
+
+			if (msg.message == WM_MOUSEWHEEL) {
+				InputDevice::RawMouseEventArgs args;
+				args.X = 0;
+				args.Y = 0;
+				args.WheelDelta = (float) GET_WHEEL_DELTA_WPARAM(msg.wParam) / WHEEL_DELTA;
+				inputDevice->OnMouseMove(args);
 			}
 		}
 
@@ -224,18 +243,20 @@ void GameFramework::Render(float& totalTimeClamped)
 
 	context->RSSetViewports(1, &viewport);
 
-	float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	context->ClearRenderTargetView(rtv, color);
-	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	RestoreTargets();
 
 	for (auto gameComponent : gameComponents) 
 	{
 		gameComponent->Draw();
 	}
 
+	debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
+	debugRender->Draw(deltaTime);
+	
 	context->OMSetRenderTargets(0, nullptr, nullptr);
 
 	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+	debugRender->Clear();
 }
 
 GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
@@ -246,13 +267,19 @@ GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalBoxComponent* gameComponent)
 {
 	gameComponents.push_back(gameComponent);
-	physicalGameComponents.push_back(gameComponent);
+	physicalBoxComponents.push_back(gameComponent);
 }
 
-GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalSphereComponent* gameComponent)
 {
-	for (auto otherBox : physicalGameComponents) {
-		if (otherBox == queryingBox)
+	gameComponents.push_back(gameComponent);
+	physicalSphereComponents.push_back(gameComponent);
+}
+
+GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+{
+	for (auto otherBox : physicalBoxComponents) {
+		if (otherBox == queryingBox || otherBox->enabled == false)
 			continue;
 
 		if (queryingBox->boundingBox.Intersects(otherBox->boundingBox)) {
@@ -260,12 +287,44 @@ GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::Intersects(PhysicalBoxCom
 		}
 	}
 
+	for (auto otherSphere: physicalSphereComponents) {
+		if (otherSphere->enabled == false)
+			continue;
+
+		if (queryingBox->boundingBox.Intersects(otherSphere->boundingSphere)) {
+			return otherSphere;
+		}
+	}
+
 	return nullptr;
 }
 
-GAMEFRAMEWORK_API PhysicalBoxComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
+GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalSphereComponent* queryingSphere)
 {
-	for (auto otherBox : physicalGameComponents) {
+	for (auto otherBox : physicalBoxComponents) {
+		if (otherBox->enabled == false)
+			continue;
+
+		if (queryingSphere->boundingSphere.Intersects(otherBox->boundingBox)) {
+			return otherBox;
+		}
+	}
+
+	for (auto otherSphere : physicalSphereComponents) {
+		if (otherSphere == queryingSphere || otherSphere->enabled == false)
+			continue;
+
+		if (queryingSphere->boundingSphere.Intersects(otherSphere->boundingSphere)) {
+			return otherSphere;
+		}
+	}
+
+	return nullptr;
+}
+
+GAMEFRAMEWORK_API GameComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
+{
+	for (auto otherBox : physicalBoxComponents) {
 		if (otherBox == queryingBox)
 			continue;
 
@@ -296,7 +355,7 @@ void GameFramework::FreeGameResources()
 	}
 
 	gameComponents.clear();
-	physicalGameComponents.clear();
+	physicalBoxComponents.clear();
 
 	delete displayWin;
 	delete inputDevice;
@@ -321,4 +380,11 @@ GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
 		else
 			cameraControllers[i]->camera = camera;
 	}
+}
+
+GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
+{
+	float color[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	context->ClearRenderTargetView(rtv, color);
+	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

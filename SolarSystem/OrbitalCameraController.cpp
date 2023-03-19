@@ -20,8 +20,6 @@ OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, Displ
 	this->attachedToBody = attachedToBody;
 	this->distanceToBodySurface = startDistanceToBodySurface;
 	this->maxDistanceToBodySurface = maxDistanceToBodySurface;
-
-	SetIsTransitioning(false);
 }
 
 void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& mouseMoveData)
@@ -95,10 +93,4 @@ void OrbitalCameraController::Update(float deltaTime)
 void OrbitalCameraController::SetTargetBody(CelestialBody* targetBody)
 {
 	this->attachedToBody = targetBody;
-	SetIsTransitioning(false);
-}
-
-void OrbitalCameraController::SetIsTransitioning(bool isTransitioning)
-{
-	this->isTransitioning = isTransitioning;
 }

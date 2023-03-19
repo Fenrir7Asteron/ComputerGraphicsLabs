@@ -41,7 +41,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -115,7 +115,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GAMEFRAMEWORK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -142,19 +142,34 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp" />
+    <ClCompile Include="DebugRenderSysImpl.cpp" />
     <ClCompile Include="Delegates.cpp" />
     <ClCompile Include="DisplayWin.cpp" />
     <ClCompile Include="FPSCameraController.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="GameComponent.cpp" />
     <ClCompile Include="InputDevice.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="PhysicalBoxComponent.cpp" />
+    <ClCompile Include="PhysicalSphereComponent.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
+    <ClCompile Include="UnlitDiffuseMaterial.cpp" />
+    <ClCompile Include="VertexPositionColor.cpp" />
+    <ClCompile Include="WICTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="DDS.h" />
+    <ClInclude Include="DDSTextureLoader.h" />
+    <ClInclude Include="DebugRenderSysImpl.h" />
     <ClInclude Include="Delegates.h" />
+    <ClInclude Include="DirectionalLight.h" />
+    <ClInclude Include="DirectXHelpers.h" />
     <ClInclude Include="DisplayWin.h" />
     <ClInclude Include="FPSCameraController.h" />
     <ClInclude Include="GameFramework.h" />
@@ -162,10 +177,24 @@
     <ClInclude Include="GameFrameworkExports.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="LoaderHelpers.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="ModelViewProjectionMatrices.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="PhongCoefficients.h" />
+    <ClInclude Include="PhongConstantData.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
     <ClInclude Include="PhysicalLayer.h" />
+    <ClInclude Include="PhysicalSphereComponent.h" />
+    <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="SimpleMath.h" />
+    <ClInclude Include="UnlitDiffuseMaterial.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="VertexPositionColor.h" />
+    <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl" />

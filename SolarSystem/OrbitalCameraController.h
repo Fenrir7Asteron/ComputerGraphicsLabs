@@ -23,8 +23,5 @@ public:
 	float distanceToBodySurface;
 	float maxDistanceToBodySurface;
 	bool isTransitioning;
-
-private:
-	void SetIsTransitioning(bool isTransitioning);
 };
 
