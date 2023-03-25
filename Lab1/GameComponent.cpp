@@ -6,7 +6,7 @@
 
 using namespace DirectX::SimpleMath;
 
-GameComponent::GameComponent(GameFramework* game, GameComponent* parent, Vector3 position, Quaternion rotation, Vector3 scale, Material* material)
+GAMEFRAMEWORK_API GameComponent::GameComponent(GameFramework* game, GameComponent* parent, Vector3 position, Quaternion rotation, Vector3 scale, Material* material)
 {
 	game_ = game;
 	enabled = true;
@@ -24,7 +24,7 @@ GameComponent::GameComponent(GameFramework* game, GameComponent* parent, Vector3
 	this->material = material;
 }
 
-GameComponent::GameComponent(GameFramework* game, GameComponent* parent,
+GAMEFRAMEWORK_API GameComponent::GameComponent(GameFramework* game, GameComponent* parent,
 	Matrix transform, Material* material)
 {
 	game_ = game;

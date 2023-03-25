@@ -1,43 +1,39 @@
 #pragma once
 #include <d3d11.h>
-#include "PhysicalSphereComponent.h"
 #include "PhongCoefficients.h"
+#include "Model.h"
 #include <vector>
 
 class UnlitDiffuseMaterial;
 class Vertex;
 
-class KatamaryBall : public PhysicalSphereComponent
+template <class T>
+class KatamaryBall : public Model<T>
 {
 public:
-	GAMEFRAMEWORK_API KatamaryBall(GameFramework* game, float radius, int verticesNPerAxis, float moveSpeed,
+	KatamaryBall(GameFramework* game, float radius, float moveSpeed,
 		const PhongCoefficients phongCoefficients,
+		const std::string modelDir,
+		const std::string modelName,
+		const LPCWSTR shaderPath, float startScale,
 		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity,
 		Material* material = nullptr,
 		PhysicalLayer physicalLayer = PhysicalLayer::Default);
 
 	// Inherited via GameComponent
-	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
-	GAMEFRAMEWORK_API virtual void Draw() override;
-	void AttachObject(GameComponent* other);
-	float GetOtherObjectVolume(GameComponent* other);
+	virtual void Update(float deltaTime) override;
+	virtual void Draw() override;
+
+	template <class U>
+	void AttachObject(Model<U>* other);
+
+	float GetOtherObjectVolume(Model<BoundingOrientedBox>* other);
+	float GetOtherObjectVolume(Model<BoundingSphere>* other);
+
 	float Volume();
 	void IncreaseSize(float sizeDelta);
 
-	std::vector<Vertex> points;
 	std::vector<GameComponent*> attachedObjects;
-	int verticesLen;
-	std::vector<int> indices;
-	int indicesLen;
-
-	UnlitDiffuseMaterial* unlitDiffuseMaterial;
-	PhongCoefficients phongCoefficients;
-
-	ID3D11Buffer* vb;
-	ID3D11Buffer* ib;
-	ID3D11Buffer* constantMvpBuffer;
-	ID3D11Buffer* constantPhongBuffer;
-
 	float radius;
 	float targetVolume;
 	float moveSpeed;

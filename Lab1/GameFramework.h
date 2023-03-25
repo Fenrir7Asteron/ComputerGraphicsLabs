@@ -10,6 +10,7 @@
 #include "InputDevice.h"
 #include "CameraController.h"
 #include "DirectionalLight.h"
+#include "Model.h"
 
 class DebugRenderSysImpl;
 
@@ -23,11 +24,15 @@ public:
 	GAMEFRAMEWORK_API virtual void Update();
 	GAMEFRAMEWORK_API virtual void Render(float& totalTimeClamped);
 	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual void AddComponent(PhysicalBoxComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual void AddComponent(PhysicalSphereComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual GameComponent* Intersects(PhysicalBoxComponent* queryingBox);
-	GAMEFRAMEWORK_API virtual GameComponent* Intersects(PhysicalSphereComponent* queryingSphere);
-	GAMEFRAMEWORK_API virtual GameComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed);
+
+	template <typename T>
+	GAMEFRAMEWORK_API void AddComponent(Model<T>* gameComponent);
+
+	template <typename T>
+	GAMEFRAMEWORK_API GameComponent* Intersects(PhysicalComponent<T>* queryingObject);
+
+	//GAMEFRAMEWORK_API virtual GameComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed);
+	
 	GAMEFRAMEWORK_API virtual void FreeGameResources();
 	GAMEFRAMEWORK_API virtual void SetCameraController(int cameraIdx);
 	GAMEFRAMEWORK_API virtual void RestoreTargets();
@@ -48,8 +53,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
 
 	std::vector<GameComponent*> gameComponents;
-	std::vector<PhysicalBoxComponent*> physicalBoxComponents;
-	std::vector<PhysicalSphereComponent*> physicalSphereComponents;
+	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;
+	std::vector<PhysicalComponent<BoundingSphere>*> physicalSphereComponents;
 
 	Camera* camera;
 	std::vector<CameraController*> cameraControllers;

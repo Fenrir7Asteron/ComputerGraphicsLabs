@@ -145,6 +145,7 @@
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DebugRenderSysImpl.cpp" />
     <ClCompile Include="Delegates.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="DisplayWin.cpp" />
     <ClCompile Include="FPSCameraController.cpp" />
     <ClCompile Include="GameFramework.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="PhysicalBoxComponent.cpp" />
+    <ClCompile Include="PhysicalComponent.cpp" />
     <ClCompile Include="PhysicalSphereComponent.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
     <ClCompile Include="UnlitDiffuseMaterial.cpp" />
@@ -187,6 +189,7 @@
     <ClInclude Include="PhongCoefficients.h" />
     <ClInclude Include="PhongConstantData.h" />
     <ClInclude Include="PhysicalBoxComponent.h" />
+    <ClInclude Include="PhysicalComponent.h" />
     <ClInclude Include="PhysicalLayer.h" />
     <ClInclude Include="PhysicalSphereComponent.h" />
     <ClInclude Include="PlatformHelpers.h" />

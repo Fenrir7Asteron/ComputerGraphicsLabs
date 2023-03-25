@@ -5,7 +5,6 @@
 #include <string>
 
 class UnlitDiffuseMaterial;
-class Model;
 class Vertex;
 class PhongCoefficients;
 

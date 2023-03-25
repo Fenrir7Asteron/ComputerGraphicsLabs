@@ -264,82 +264,63 @@ GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 	gameComponents.push_back(gameComponent);
 }
 
-GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalBoxComponent* gameComponent)
+template<> GAMEFRAMEWORK_API void GameFramework::AddComponent(Model<BoundingOrientedBox>* gameComponent)
 {
 	gameComponents.push_back(gameComponent);
-	physicalBoxComponents.push_back(gameComponent);
+	physicalBoxComponents.emplace_back(&(gameComponent->physicalComponent));
 }
 
-GAMEFRAMEWORK_API void GameFramework::AddComponent(PhysicalSphereComponent* gameComponent)
+template<> GAMEFRAMEWORK_API void GameFramework::AddComponent(Model<BoundingSphere>* gameComponent)
 {
 	gameComponents.push_back(gameComponent);
-	physicalSphereComponents.push_back(gameComponent);
+	physicalSphereComponents.emplace_back(&(gameComponent->physicalComponent));
 }
 
-GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalBoxComponent* queryingBox)
+template<typename T>
+GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<T>* queryingComponent)
 {
-	for (auto otherBox : physicalBoxComponents) {
-		if (otherBox == queryingBox || otherBox->enabled == false)
+	for (auto otherBoxComponent : physicalBoxComponents) {
+		if (otherBoxComponent->parent->enabled == false || otherBoxComponent->parent == queryingComponent->parent)
 			continue;
 
-		if (queryingBox->boundingBox.Intersects(otherBox->boundingBox)) {
-			return otherBox;
+		if (queryingComponent->boundingShape.Intersects(otherBoxComponent->boundingShape)) {
+			return otherBoxComponent->parent;
 		}
 	}
 
 	for (auto otherSphere: physicalSphereComponents) {
-		if (otherSphere->enabled == false)
+		if (otherSphere->parent->enabled == false || otherSphere->parent == queryingComponent->parent)
 			continue;
 
-		if (queryingBox->boundingBox.Intersects(otherSphere->boundingSphere)) {
-			return otherSphere;
+		if (queryingComponent->boundingShape.Intersects(otherSphere->boundingShape)) {
+			return otherSphere->parent;
 		}
 	}
 
 	return nullptr;
 }
 
-GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalSphereComponent* queryingSphere)
-{
-	for (auto otherBox : physicalBoxComponents) {
-		if (otherBox->enabled == false)
-			continue;
+template GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<BoundingSphere>* queryingComponent);
+template GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<BoundingOrientedBox>* queryingComponent);
 
-		if (queryingSphere->boundingSphere.Intersects(otherBox->boundingBox)) {
-			return otherBox;
-		}
-	}
-
-	for (auto otherSphere : physicalSphereComponents) {
-		if (otherSphere == queryingSphere || otherSphere->enabled == false)
-			continue;
-
-		if (queryingSphere->boundingSphere.Intersects(otherSphere->boundingSphere)) {
-			return otherSphere;
-		}
-	}
-
-	return nullptr;
-}
-
-GAMEFRAMEWORK_API GameComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
-{
-	for (auto otherBox : physicalBoxComponents) {
-		if (otherBox == queryingBox)
-			continue;
-
-		float minDistance = std::sqrt(currentSpeed.Length()) * 0.025f;
-		DirectX::SimpleMath::Vector3 direction = currentSpeed / currentSpeed.Length();
-		float intersectionDistance = 0.0f;
-
-		bool intersects = otherBox->boundingBox.Intersects(origin, direction, intersectionDistance);
-		if (intersects && intersectionDistance < minDistance) {
-			return otherBox;
-		}
-	}
-
-	return nullptr;
-}
+//GAMEFRAMEWORK_API GameComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
+//{
+//	for (auto otherBox : physicalBoxComponents) {
+//		if (otherBox == queryingBox)
+//			continue;
+//
+//		float minDistance = std::sqrt(currentSpeed.Length()) * 0.025f;
+//		DirectX::SimpleMath::Vector3 direction = currentSpeed / currentSpeed.Length();
+//		float intersectionDistance = 0.0f;
+//
+//		bool intersects = otherBox->boundingBox.Intersects(origin, direction, intersectionDistance);
+//		if (intersects && intersectionDistance < minDistance) {
+//			return otherBox;
+//		}
+//	}
+//
+//	return nullptr;
+//}
 
 void GameFramework::FreeGameResources()
 {

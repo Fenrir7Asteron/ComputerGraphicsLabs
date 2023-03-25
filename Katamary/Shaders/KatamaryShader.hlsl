@@ -64,12 +64,12 @@ float4 PSMain( PS_IN input ) : SV_Target
     float3 objectColor = DiffuseMap.Sample(Sampler, input.tex.xy);
        
     // Diffuse
-    float3 diffuseColor = lightColor * kD * dot(norm, -lDir) * DSAIntensity.x;
+    float3 diffuseColor = lightColor * kD * saturate(dot(norm, -lDir)) * DSAIntensity.x;
     
     // Specular
     float3 reflected = normalize(reflect(lDir, norm.xyz));
     float3 viewDir = normalize(cameraPos.xyz - input.worldPos.xyz);
-    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(max(dot(reflected, viewDir), 0.0f), kS_alpha.w);
+    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(saturate(dot(reflected, viewDir)), kS_alpha.w);
     
     // Ambient
     float3 ambientColor = lightColor * kA * DSAIntensity.z;

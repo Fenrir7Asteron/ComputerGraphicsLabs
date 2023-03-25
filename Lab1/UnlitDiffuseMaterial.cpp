@@ -7,6 +7,7 @@ using namespace DirectX;
 UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, Microsoft::WRL::ComPtr<ID3D11Device> device,
 	DisplayWin* displayWin, const LPCWSTR diffuseTexturePath) : Material::Material()
 {
+	// Create color pass resources
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 

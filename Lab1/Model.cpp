@@ -4,21 +4,18 @@
 
 #include "Model.h"
 #include "GameFramework.h"
-#include "Mesh.h"
-#include "Vertex.h"
 #include "DebugRenderSysImpl.h"
 #include "UnlitDiffuseMaterial.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <cmath>
 #include <iostream>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale, Material* material, const PhongCoefficients phongCoefficients, PhysicalLayer physicalLayer)
-    : PhysicalBoxComponent(game, parent, physicalLayer, transform, material)
+GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+    Material* material,
+    const PhongCoefficients phongCoefficients,
+    PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
 {
     this->modelDir = modelDir;
     this->shaderPath = shaderPath;
@@ -45,18 +42,62 @@ Model::Model(GameFramework* game, GameComponent* parent, Matrix transform, const
 
     BoundingBox aabbBoundingBox;
     BoundingBox::CreateFromPoints(aabbBoundingBox, minPos, maxPos);
-    BoundingOrientedBox::CreateFromBoundingBox(boundingBox, aabbBoundingBox);
-    boundingBox.Transform(boundingBox, transform);
+    BoundingOrientedBox::CreateFromBoundingBox(physicalComponent.boundingShape, aabbBoundingBox);
+    physicalComponent.boundingShape.Transform(physicalComponent.boundingShape, transform);
+    physicalComponent.parent = this;
 }
 
-GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
+GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+    Material* material,
+    const PhongCoefficients phongCoefficients,
+    PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
+{
+    this->modelDir = modelDir;
+    this->shaderPath = shaderPath;
+    this->phongCoefficients = phongCoefficients;
+
+    Assimp::Importer importer;
+
+    importer.SetPropertyBool("AI_CONFIG_PP_FD_CHECKAREA", false);
+
+    auto pScene = importer.ReadFile(modelDir + modelName,
+        aiProcessPreset_TargetRealtime_Fast
+        //aiProcess_Triangulate
+    );
+
+    for (int i = 0; i < pScene->mNumMeshes; ++i)
+    {
+        meshPtrs.push_back(ParseMesh(game, *pScene->mMeshes[i], startScale, material, pScene->mMaterials));
+    }
+
+    pRoot = ParseNode(*pScene->mRootNode);
+
+    invalidateBoundingBox = true;
+    UpdateBoundingBoxBorders(pRoot.get(), transform);
+
+    BoundingBox aabbBoundingBox;
+    BoundingBox::CreateFromPoints(aabbBoundingBox, minPos, maxPos);
+    physicalComponent.boundingShape.Radius = aabbBoundingBox.Extents.x;
+    physicalComponent.parent = this;
+}
+
+template GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+    Material* material,
+    const PhongCoefficients phongCoefficients,
+    PhysicalLayer physicalLayer);
+
+template GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+    Material* material,
+    const PhongCoefficients phongCoefficients,
+    PhysicalLayer physicalLayer);
+
+template <class T>
+std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
 {
     std::vector<Vertex> vertices;
     std::vector<int> indices;
     vertices.reserve(mesh.mNumVertices);
     indices.reserve(mesh.mNumFaces * 3);
-
-   
 
     bool useTexture = false;
 
@@ -130,7 +171,8 @@ GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(GameFramework* game, co
     return std::make_unique<Mesh>(game, Matrix::Identity, material, vertices, indices);
 }
 
-GAMEFRAMEWORK_API std::unique_ptr<Node> Model::ParseNode(const aiNode& node)
+template <class T>
+std::unique_ptr<Node> Model<T>::ParseNode(const aiNode& node)
 {
     Matrix transform = *reinterpret_cast<const DirectX::XMFLOAT4X4*>(&node.mTransformation);
     transform.Transpose();
@@ -153,9 +195,11 @@ GAMEFRAMEWORK_API std::unique_ptr<Node> Model::ParseNode(const aiNode& node)
     return pNode;
 }
 
-GAMEFRAMEWORK_API void Model::UpdateBoundingBoxBorders(Node* pNode, Matrix accumulatedTransform)
+template <class T>
+void Model<T>::UpdateBoundingBoxBorders(Node* pNode, Matrix accumulatedTransform)
 {
     accumulatedTransform *= pNode->transform;
+    accumulatedTransform.Transpose();
 
     for (int i = 0; i < pNode->childPtrs.size(); ++i)
     {
@@ -185,7 +229,8 @@ GAMEFRAMEWORK_API void Model::UpdateBoundingBoxBorders(Node* pNode, Matrix accum
     }
 }
 
-GAMEFRAMEWORK_API void Model::ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
+template <class T>
+void Model<T>::ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
 {
     out.x = std::min(vec1.x, vec2.x);
     out.y = std::min(vec1.y, vec2.y);
@@ -193,7 +238,8 @@ GAMEFRAMEWORK_API void Model::ElementWiseMin(DirectX::SimpleMath::Vector4& out, 
     out.w = std::min(vec1.w, vec2.w);
 }
 
-GAMEFRAMEWORK_API void Model::ElementWiseMax(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
+template <class T>
+void Model<T>::ElementWiseMax(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
 {
     out.x = std::max(vec1.x, vec2.x);
     out.y = std::max(vec1.y, vec2.y);
@@ -201,15 +247,45 @@ GAMEFRAMEWORK_API void Model::ElementWiseMax(DirectX::SimpleMath::Vector4& out, 
     out.w = std::max(vec1.w, vec2.w);
 }
 
-GAMEFRAMEWORK_API void Model::Update(float deltaTime)
+template <class T>
+void Model<T>::Move(DirectX::SimpleMath::Vector3 positionDelta)
+{
+    GameComponent::Move(positionDelta);
+    physicalComponent.Move(positionDelta);
+}
+
+template <class T>
+void Model<T>::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
+{
+    GameComponent::Rotate(axis, angle);
+    physicalComponent.Rotate(axis, angle);
+}
+
+template <class T>
+void Model<T>::RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle)
+{
+    GameComponent::RotateAroundPoint(point, axis, angle);
+    physicalComponent.RotateAroundPoint(point, axis, angle);
+}
+
+template <class T>
+void Model<T>::Update(float deltaTime)
 {
 
 }
 
-GAMEFRAMEWORK_API void Model::Draw()
+GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Draw()
 {
     pRoot->Draw(GetWorldMatrix(), this->phongCoefficients);
 
     if (enabled)
-        game_->debugRender->DrawOrientedBoundingBox(boundingBox, Matrix::Identity);
+        game_->debugRender->DrawOrientedBoundingBox(physicalComponent.boundingShape, Matrix::Identity);
+}
+
+GAMEFRAMEWORK_API void Model<BoundingSphere>::Draw()
+{
+    pRoot->Draw(GetWorldMatrix(), this->phongCoefficients);
+
+    if (enabled)
+        game_->debugRender->DrawSphere(physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(physicalComponent.boundingShape.Center), 16);
 }

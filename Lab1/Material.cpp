@@ -11,6 +11,7 @@ Material::Material()
 
 Material::Material(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, Microsoft::WRL::ComPtr<ID3D11Device> device, DisplayWin* displayWin)
 {
+	// Create color pass resources
 	vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 
