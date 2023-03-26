@@ -22,9 +22,10 @@ KatamaryBall<BoundingSphere>::KatamaryBall(GameFramework* game, float radius, fl
 	const PhongCoefficients phongCoefficients,
 	const std::string modelDir,
 	const std::string modelName,
-	const LPCWSTR shaderPath, float startScale,
+	const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+	float startScale,
 	DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
-	: Model<BoundingSphere>(game, nullptr, transform, modelDir, modelName, shaderPath, startScale, material, phongCoefficients, physicalLayer)
+	: Model<BoundingSphere>(game, nullptr, transform, modelDir, modelName, shaderPath, depthShaderPath, startScale, material, phongCoefficients, physicalLayer)
 {
 	this->radius = radius;
 	this->scale = Vector3::One * radius;
@@ -40,9 +41,10 @@ KatamaryBall<BoundingOrientedBox>::KatamaryBall(GameFramework* game, float radiu
 	const PhongCoefficients phongCoefficients,
 	const std::string modelDir,
 	const std::string modelName,
-	const LPCWSTR shaderPath, float startScale,
+	const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+	float startScale,
 	DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
-	: Model<BoundingOrientedBox>(game, nullptr, transform, modelDir, modelName, shaderPath, startScale, material, phongCoefficients, physicalLayer)
+	: Model<BoundingOrientedBox>(game, nullptr, transform, modelDir, modelName, shaderPath, depthShaderPath, startScale, material, phongCoefficients, physicalLayer)
 {
 	this->radius = radius;
 	this->scale = Vector3::One * radius;

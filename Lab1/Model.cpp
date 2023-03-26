@@ -12,13 +12,17 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform,
+    const std::string modelDir, const std::string modelName,
+    const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+    float startScale,
     Material* material,
     const PhongCoefficients phongCoefficients,
     PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
 {
     this->modelDir = modelDir;
     this->shaderPath = shaderPath;
+    this->depthShaderPath = depthShaderPath;
     this->phongCoefficients = phongCoefficients;
 
     Assimp::Importer importer;
@@ -47,13 +51,17 @@ GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameCom
     physicalComponent.parent = this;
 }
 
-GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform,
+    const std::string modelDir, const std::string modelName,
+    const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+    float startScale,
     Material* material,
     const PhongCoefficients phongCoefficients,
     PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
 {
     this->modelDir = modelDir;
     this->shaderPath = shaderPath;
+    this->depthShaderPath = depthShaderPath;
     this->phongCoefficients = phongCoefficients;
 
     Assimp::Importer importer;
@@ -81,16 +89,6 @@ GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponen
     physicalComponent.parent = this;
 }
 
-template GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
-    Material* material,
-    const PhongCoefficients phongCoefficients,
-    PhysicalLayer physicalLayer);
-
-template GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
-    Material* material,
-    const PhongCoefficients phongCoefficients,
-    PhysicalLayer physicalLayer);
-
 template <class T>
 std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
 {
@@ -114,7 +112,7 @@ std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mes
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, game->device, game->displayWin, wtext);
+            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
             useTexture = true;
         }
         else if (pMaterial.GetTexture(aiTextureType_BASE_COLOR, 0, &texFileName) == aiReturn_SUCCESS)
@@ -124,7 +122,7 @@ std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mes
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, game->device, game->displayWin, wtext);
+            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
             useTexture = true;
         }
     }
@@ -273,6 +271,15 @@ void Model<T>::Update(float deltaTime)
 {
 
 }
+
+template <class T>
+GAMEFRAMEWORK_API void Model<T>::DrawShadowMap()
+{
+    pRoot->DrawShadowMap(GetWorldMatrix());
+}
+
+template GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::DrawShadowMap();
+template GAMEFRAMEWORK_API void Model<BoundingSphere>::DrawShadowMap();
 
 GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Draw()
 {

@@ -35,3 +35,8 @@ GAMEFRAMEWORK_API void CameraController::SetCamera(Camera* camera)
 {
 	this->camera = camera;
 }
+
+GAMEFRAMEWORK_API void CameraController::Update(float deltaTime)
+{
+	
+}

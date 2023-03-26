@@ -22,7 +22,8 @@ public:
 	GAMEFRAMEWORK_API virtual void Run();
 	GAMEFRAMEWORK_API virtual void UpdateFrameCount(unsigned int& frameCount, float& totalTimeClamped);
 	GAMEFRAMEWORK_API virtual void Update();
-	GAMEFRAMEWORK_API virtual void Render(float& totalTimeClamped);
+	GAMEFRAMEWORK_API virtual void RenderShadowMap();
+	GAMEFRAMEWORK_API virtual void RenderColor();
 	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
 
 	template <typename T>
@@ -50,7 +51,9 @@ public:
 	IDXGISwapChain* swapChain;
 	ID3D11Texture2D* backTex;
 	ID3D11RenderTargetView* rtv;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> pDSState;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
+	D3D11_VIEWPORT viewport;
 
 	std::vector<GameComponent*> gameComponents;
 	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;

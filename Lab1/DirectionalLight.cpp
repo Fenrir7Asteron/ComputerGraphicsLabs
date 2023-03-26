@@ -1,4 +1,6 @@
 #include "DirectionalLight.h"
+#include "Camera.h"
+#include "CameraController.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -9,13 +11,13 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight()
 
 GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	Microsoft::WRL::ComPtr<ID3D11Device> device,
-	Vector4 direction,
+	float pitchDegree,
+	float yawDegree,
 	Vector4 lightColor,
 	float diffuseIntensity, float specularIntensity, float ambientIntensity, 
-	float nearPlane, float farPlane,
+	float farPlane,
 	int shadowMapWidth,	int shadowMapHeight)
 {
-	this->direction = direction;
 	this->lightColor = lightColor;
 	this->diffuseIntensity = diffuseIntensity;
 	this->specularIntensity = specularIntensity;
@@ -30,8 +32,8 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	shadowMapDesc.ArraySize = 1;
 	shadowMapDesc.SampleDesc.Count = 1;
 	shadowMapDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-	shadowMapDesc.Height = static_cast<UINT>(512);
-	shadowMapDesc.Width = static_cast<UINT>(512);
+	shadowMapDesc.Height = static_cast<UINT>(shadowMapWidth);
+	shadowMapDesc.Width = static_cast<UINT>(shadowMapHeight);
 
 	HRESULT res = device->CreateTexture2D(
 		&shadowMapDesc,
@@ -78,7 +80,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	comparisonSamplerDesc.MipLODBias = 0.f;
 	comparisonSamplerDesc.MaxAnisotropy = 0;
 	comparisonSamplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-	comparisonSamplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+	comparisonSamplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 
 	// Point filtered shadows can be faster, and may be a good choice when
 	// rendering on hardware with lower feature levels. This sample has a
@@ -105,9 +107,28 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	viewProjectionConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	viewProjectionConstantBufferDesc.MiscFlags = 0;
 	viewProjectionConstantBufferDesc.StructureByteStride = 0;
-	viewProjectionConstantBufferDesc.ByteWidth = sizeof(Matrix);
+	viewProjectionConstantBufferDesc.ByteWidth = sizeof(LightViewProjection);
 
-	viewProjection = XMMatrixOrthographicLH(shadowMapWidth, shadowMapHeight, nearPlane, farPlane);
+
+	Camera* lightCamera = new Camera(1000.0f, farPlane, 90.0f, shadowMapWidth, shadowMapHeight);
+	lightCamera->SetOrthographic(true);
+
+	CameraController camController = CameraController();
+	camController.SetCamera(lightCamera);
+	
+	Vector3 camRight = Vector3::Transform(Vector3::Right, lightCamera->rotation);
+	float pitchRadians = XMConvertToRadians(pitchDegree);
+	camController.Rotate(camRight, pitchRadians);
+
+	float yawRadians = XMConvertToRadians(yawDegree);
+	camController.Rotate(Vector3::Up, yawRadians);
+
+	Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
+	lightCamera->position = -cameraForward * (farPlane * 0.01f);
+	this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
+
+	viewProjection.view = lightCamera->GetViewMatrix();
+	viewProjection.projection = lightCamera->GetProjectionMatrix();
 
 	D3D11_SUBRESOURCE_DATA viewProjectionConstantBufferData = {};
 	viewProjectionConstantBufferData.pSysMem = &viewProjection;
@@ -119,4 +140,11 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 		&viewProjectionConstantBufferData,
 		&constantLightViewProjectionBuffer
 	);
+
+	// Init viewport for shadow rendering
+	ZeroMemory(&shadowViewport, sizeof(D3D11_VIEWPORT));
+	shadowViewport.Height = shadowMapWidth;
+	shadowViewport.Width = shadowMapHeight;
+	shadowViewport.MinDepth = 0.f;
+	shadowViewport.MaxDepth = 1.f;
 }

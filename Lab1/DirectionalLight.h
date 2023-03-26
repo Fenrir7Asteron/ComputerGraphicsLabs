@@ -3,6 +3,7 @@
 #include "GameFrameworkExports.h"
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "LightViewProjection.h"
 
 GAMEFRAMEWORK_API class DirectionalLight
 {
@@ -11,11 +12,12 @@ public:
 
 	GAMEFRAMEWORK_API DirectionalLight(
 		Microsoft::WRL::ComPtr<ID3D11Device> device,
-		DirectX::SimpleMath::Vector4 direction,
+		float pitchDegree,
+		float yawDegree,
 		DirectX::SimpleMath::Vector4 lightColor,
 		float diffuseIntensity, float specularIntensity, float ambientIntensity,
-		float nearPlane = 100.0f, float farPlane = 10000000.0f,
-		int shadowMapWidth = 512, int shadowMapHeight = 512);
+		float farPlane = 1000000.0f,
+		int shadowMapWidth = 2048, int shadowMapHeight = 2048);
 
 	DirectX::SimpleMath::Vector4 direction;
 	DirectX::SimpleMath::Vector4 lightColor;
@@ -29,5 +31,6 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> comparisonSampler;
 	ID3D11RasterizerState* shadowRastState;
 	ID3D11Buffer* constantLightViewProjectionBuffer;
-	DirectX::SimpleMath::Matrix viewProjection;
+	D3D11_VIEWPORT shadowViewport;
+	LightViewProjection viewProjection;
 };

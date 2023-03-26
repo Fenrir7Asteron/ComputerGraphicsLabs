@@ -75,11 +75,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	dsDesc.DepthEnable = TRUE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> pDSState;
 	device->CreateDepthStencilState(&dsDesc, &pDSState);
-
-	// bind depth state
-	context->OMSetDepthStencilState(pDSState.Get(), 1);
 
 	// create depth stencil texture
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
@@ -102,8 +98,13 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	descDSV.Texture2D.MipSlice = 0;
 	device->CreateDepthStencilView(pDepthStencil.Get(), &descDSV, &pDSV);
 
-	// bind depth stencil view
-	context->OMSetRenderTargets(1, &rtv, pDSV.Get());
+	viewport = {};
+	viewport.Width = static_cast<float>(screenWidth);
+	viewport.Height = static_cast<float>(screenHeight);
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0;
+	viewport.MaxDepth = 1.0f;
 
 	inputDevice = new InputDevice(this);
 
@@ -181,7 +182,11 @@ void GameFramework::Run()
 			break;
 
 		Update();
-		Render(totalTimeClamped);
+
+		RestoreTargets();
+
+		RenderShadowMap();
+		RenderColor();
 	}
 
 	FreeGameResources();
@@ -228,22 +233,42 @@ void GameFramework::Update()
 	}
 }
 
-void GameFramework::Render(float& totalTimeClamped)
+void GameFramework::RenderShadowMap()
 {
-
 	context->ClearState();
 
-	D3D11_VIEWPORT viewport = {};
-	viewport.Width = static_cast<float>(screenWidth);
-	viewport.Height = static_cast<float>(screenHeight);
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.MinDepth = 0;
-	viewport.MaxDepth = 1.0f;
+	context->OMSetRenderTargets(
+		0,
+		nullptr,
+		dirLight.shadowDepthView
+	);	
 
+	// Set rendering state.
+	context->RSSetState(dirLight.shadowRastState);
+	context->OMSetDepthStencilState(pDSState.Get(), 1);
+	context->RSSetViewports(1, &dirLight.shadowViewport);
+
+	// Send the constant buffers to the Graphics device.
+	context->VSSetConstantBuffers(
+		0,
+		1,
+		&dirLight.constantLightViewProjectionBuffer
+	);
+
+	for (auto gameComponent : gameComponents)
+	{
+		if (gameComponent->castShadows)
+			gameComponent->DrawShadowMap();
+	}
+}
+
+void GameFramework::RenderColor()
+{
+	context->ClearState();
+
+	context->OMSetDepthStencilState(pDSState.Get(), 1);
+	context->OMSetRenderTargets(1, &rtv, pDSV.Get());
 	context->RSSetViewports(1, &viewport);
-
-	RestoreTargets();
 
 	for (auto gameComponent : gameComponents) 
 	{
@@ -337,6 +362,7 @@ void GameFramework::FreeGameResources()
 
 	gameComponents.clear();
 	physicalBoxComponents.clear();
+	physicalSphereComponents.clear();
 
 	delete displayWin;
 	delete inputDevice;
@@ -368,4 +394,5 @@ GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
 	float color[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	context->ClearRenderTargetView(rtv, color);
 	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	context->ClearDepthStencilView(dirLight.shadowDepthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

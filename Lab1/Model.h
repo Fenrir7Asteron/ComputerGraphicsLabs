@@ -25,7 +25,10 @@ template <class T>
 class Model : public GameComponent
 {
 public:
-	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, const LPCWSTR shaderPath, float startScale,
+	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent,
+		DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, 
+		const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+		float startScale,
 		Material* material,
 		const PhongCoefficients phongCoefficients,
 		PhysicalLayer physicalLayer = PhysicalLayer::Default);
@@ -40,6 +43,7 @@ public:
 	GAMEFRAMEWORK_API virtual void Rotate(DirectX::SimpleMath::Vector3 axis, float angle) override;
 	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle) override;
 	GAMEFRAMEWORK_API void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API void DrawShadowMap() override;
 	GAMEFRAMEWORK_API void Draw() override;
 
 	PhysicalComponent<T> physicalComponent;
@@ -52,6 +56,7 @@ private:
 	std::vector<std::unique_ptr<Mesh>> meshPtrs;
 	std::string modelDir;
 	LPCWSTR shaderPath;
+	LPCWSTR depthShaderPath;
 	PhongCoefficients phongCoefficients;
 };
 

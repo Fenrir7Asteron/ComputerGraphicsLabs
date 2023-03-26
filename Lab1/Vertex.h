@@ -1,8 +1,9 @@
 #pragma once
 #include "SimpleMath.h"
 
-struct Vertex
+class Vertex
 {
+public:
 	DirectX::SimpleMath::Vector4 pos;
 	DirectX::SimpleMath::Vector4 col;
 	DirectX::SimpleMath::Vector4 n;

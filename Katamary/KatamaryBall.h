@@ -15,7 +15,8 @@ public:
 		const PhongCoefficients phongCoefficients,
 		const std::string modelDir,
 		const std::string modelName,
-		const LPCWSTR shaderPath, float startScale,
+		const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+		float startScale,
 		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity,
 		Material* material = nullptr,
 		PhysicalLayer physicalLayer = PhysicalLayer::Default);

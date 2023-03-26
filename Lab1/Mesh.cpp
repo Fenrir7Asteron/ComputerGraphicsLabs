@@ -97,31 +97,55 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	phongBufDesc.StructureByteStride = 0;
 	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
 
-	PhongConstantData phong;
-	game_->dirLight.direction.Normalize();
-
-	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
-	phong.direction = game_->dirLight.direction;
-	phong.lightColor = game_->dirLight.lightColor;
-
-	PhongCoefficients phongCoefficients;
-	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
-	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
-	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
-
-	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f };
-
-	D3D11_SUBRESOURCE_DATA phongData = {};
-	phongData.pSysMem = &phong;
-	phongData.SysMemPitch = 0;
-	phongData.SysMemSlicePitch = 0;
-
-	game_->device->CreateBuffer(&phongBufDesc, &phongData, &constantPhongBuffer);
+	game_->device->CreateBuffer(&phongBufDesc, nullptr, &constantPhongBuffer);
 }
 
 void Mesh::Update(float deltaTime)
 {
 
+}
+
+GAMEFRAMEWORK_API void Mesh::DrawShadowMap()
+{
+	DrawShadowMap(Matrix::Identity);
+}
+
+void Mesh::DrawShadowMap(Matrix accumulatedTransform)
+{
+	// Update MVP transform constant buffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	ModelViewProjectionMatrices mvp;
+	mvp.worldMatrix = accumulatedTransform;
+
+	mvp.transposeInverseWorldMatrix = {
+		accumulatedTransform._11, accumulatedTransform._12, accumulatedTransform._13, 0.0f,
+		accumulatedTransform._21, accumulatedTransform._22, accumulatedTransform._23, 0.0f,
+		accumulatedTransform._31, accumulatedTransform._32, accumulatedTransform._33, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+	};
+	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
+
+	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
+	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+
+	game_->context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &mvp, sizeof(mvp));
+	game_->context->Unmap(constantMvpBuffer, 0);
+
+	UINT strides[] = { sizeof(Vertex) };
+	UINT offsets[] = { 0 };
+
+	game_->context->IASetInputLayout(unlitDiffuseMaterial->shadowLayout);
+	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	game_->context->VSSetConstantBuffers(1, 1, &constantMvpBuffer);
+	game_->context->VSSetShader(unlitDiffuseMaterial->vertexDepthShader, nullptr, 0);
+	game_->context->PSSetShader(nullptr, nullptr, 0);
+
+	game_->context->DrawIndexed(indicesLen, 0, 0);
 }
 
 GAMEFRAMEWORK_API void Mesh::Draw()
@@ -185,11 +209,15 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
 	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
+	game_->context->PSSetConstantBuffers(2, 1, &game_->dirLight.constantLightViewProjectionBuffer);
+
 	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
+	game_->context->PSSetShaderResources(1, 1, &game_->dirLight.shadowResourceView);
 	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
+	game_->context->PSSetSamplers(1, 1, game_->dirLight.comparisonSampler.GetAddressOf());
+
 	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
 	game_->context->PSSetShader(material->pixelShader, nullptr, 0);
 
-	game_->context->OMSetRenderTargets(1, &game_->rtv, game_->pDSV.Get());
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 }

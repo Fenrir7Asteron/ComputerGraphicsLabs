@@ -7,6 +7,21 @@ Node::Node(std::vector<Mesh*> meshPtrs, const DirectX::SimpleMath::Matrix& trans
 	this->transform = transform;
 }
 
+void Node::DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform)
+{
+	const auto currentTransform = transform * accumulatedTransform;
+
+	for (const auto pm : meshPtrs)
+	{
+		pm->DrawShadowMap(currentTransform);
+	}
+
+	for (const auto& pc : childPtrs)
+	{
+		pc->DrawShadowMap(currentTransform);
+	}
+}
+
 void Node::Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
 	const auto currentTransform = transform * accumulatedTransform;

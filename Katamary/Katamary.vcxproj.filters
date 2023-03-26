@@ -24,9 +24,6 @@
     <ClInclude Include="KatamaryBall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StaticBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KatamaryGame.cpp">
@@ -41,9 +38,6 @@
     <ClCompile Include="StartGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StaticBox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\KatamaryShader.hlsl">
@@ -53,6 +47,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\TexturedShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\SimpleDepthShader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

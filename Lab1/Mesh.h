@@ -19,6 +19,8 @@ public:
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void DrawShadowMap() override;
+	GAMEFRAMEWORK_API virtual void DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform);
 	GAMEFRAMEWORK_API virtual void Draw() override;
 	GAMEFRAMEWORK_API virtual void Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients);
 

@@ -185,6 +185,9 @@
     <ClInclude Include="PhysicalComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LightViewProjection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">

@@ -4,7 +4,8 @@
 
 using namespace DirectX;
 
-UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, Microsoft::WRL::ComPtr<ID3D11Device> device,
+UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, const LPCWSTR vertexDepthShaderPath,
+	Microsoft::WRL::ComPtr<ID3D11Device> device,
 	DisplayWin* displayWin, const LPCWSTR diffuseTexturePath) : Material::Material()
 {
 	// Create color pass resources
@@ -103,4 +104,37 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 
 	device->CreateSamplerState(&samplerDesc, &pSampler);
+
+
+	vertexDepthBC = nullptr;
+	ID3DBlob* errorVertexDepthCode = nullptr;
+
+	res = D3DCompileFromFile(vertexDepthShaderPath,
+		nullptr /*macros*/,
+		nullptr /*include*/,
+		"VSMain",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&vertexDepthBC,
+		&errorVertexDepthCode);
+
+	CheckShaderCreationSuccess(res, errorVertexDepthCode, vertexDepthShaderPath);
+
+	res = device->CreateVertexShader(
+		vertexDepthBC->GetBufferPointer(),
+		vertexDepthBC->GetBufferSize(),
+		nullptr, &vertexDepthShader);
+
+	if (FAILED(res))
+	{
+		return;
+	}
+
+	device->CreateInputLayout(
+		inputElements,
+		4,
+		vertexDepthBC->GetBufferPointer(),
+		vertexDepthBC->GetBufferSize(),
+		&shadowLayout);
 }
