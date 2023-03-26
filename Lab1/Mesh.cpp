@@ -141,7 +141,9 @@ void Mesh::DrawShadowMap(Matrix accumulatedTransform)
 	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	game_->context->VSSetConstantBuffers(1, 1, &constantMvpBuffer);
 	game_->context->GSSetConstantBuffers(1, 1, &constantMvpBuffer);
+	game_->context->VSSetShader(unlitDiffuseMaterial->vertexDepthShader, nullptr, 0);
 	game_->context->GSSetShader(unlitDiffuseMaterial->geometryDepthShader, nullptr, 0);
 	//game_->context->PSSetShader(nullptr, nullptr, 0);
 

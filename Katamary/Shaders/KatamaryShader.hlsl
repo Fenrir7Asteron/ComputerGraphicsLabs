@@ -51,7 +51,7 @@ cbuffer CascadeData : register(b2)
 };
 
 Texture2D DiffuseMap : register(t0);
-Texture2D ShadowMap : register(t1);
+Texture2DArray ShadowMap : register(t1);
 
 SamplerState Sampler : register(s0);
 SamplerComparisonState ShadowCompSampler : register(s1);
@@ -70,7 +70,7 @@ PS_IN VSMain( VS_IN input )
 	return output;
 }
 
-float offset_lookup(float2 loc, float cmpDepth, float2 offset)
+float offset_lookup(float3 loc, float cmpDepth, float3 offset)
 {
     float depth = ShadowMap.SampleCmpLevelZero(ShadowCompSampler, loc + offset, cmpDepth).x;
     return depth;
@@ -97,32 +97,40 @@ float4 PSMain( PS_IN input ) : SV_Target
     
     
     // Cascade shadows
-    //float4 lightSpacePos;    
-    //for (int i = 0; i < 4; ++i)
-    //{
-    //    lightSpacePos = mul(cascadeData.lightProjection[i], mul(cascadeData.lightView[i], input.worldPos));
-    //    lightSpacePos = lightSpacePos / lightSpacePos.w;
-        
-    //    float depthVal = abs(lightSpacePos.z);
-    //    if (depthVal < cascadeData.distances[i])
-    //    {
-    //        break;
-    //    }
-    //}
-        
+    float4 lightSpacePos;    
+    int cascadeIdx = 3;
+    float de = 0.0f;
+    for (int i = 0; i < 4; ++i)
+    {
+        lightSpacePos = mul(cascadeData.lightProjection[i], mul(cascadeData.lightView[i], input.worldPos));
+        lightSpacePos = lightSpacePos / lightSpacePos.w;
+      
+        float depthVal = abs(lightSpacePos.z);
+        if (depthVal < cascadeData.distances[i])
+        {
+            de = depthVal;
+            cascadeIdx = i;
+            break;
+        }
+    }
+      
     
-    //float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
-    //texCoords.y = 1.0f - texCoords.y;
+    float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
+    texCoords.y = 1.0f - texCoords.y;
     
-    //float shWidth, shHeight;
-    //ShadowMap.GetDimensions(shWidth, shHeight);
+    float shWidth, shHeight;
+    ShadowMap.GetDimensions(cascadeIdx, shWidth, shHeight);
     
-    //float bias = 1.0f;
-    //float shadowCoeff = offset_lookup(texCoords, lightSpacePos.z + cameraPos.w - bias, float2(0.0f, 0.0f));
+    float bias = 1.0f;
+    float shadowCoeff = offset_lookup(float3(texCoords, 0.0f), lightSpacePos.z + cameraPos.w - bias, float3(0.0f, 0.0f, 0.0f));
     
-    //objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
+    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
     
-    objectColor = objectColor * ((diffuseColor + specularColor) + ambientColor);
+    float cascadeDepth = float(cascadeIdx) * 0.25f;
+    objectColor = float3(cascadeDepth, 0.0f, 0.0f);
+    
+    
+    //objectColor = objectColor * ((diffuseColor + specularColor) + ambientColor);
     //return float4(texCoords.x, texCoords.y, 0.0f, 1.0f);
     //return float4(shadowCoeff, shadowCoeff, shadowCoeff, 1.0f);
     return float4(objectColor, 1.0f);

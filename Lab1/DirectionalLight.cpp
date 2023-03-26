@@ -1,3 +1,6 @@
+#define NOMINMAX
+#define _USE_MATH_DEFINES
+
 #include "DirectionalLight.h"
 #include "Camera.h"
 #include "CameraController.h"
@@ -115,12 +118,13 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	viewProjectionConstantBufferDesc.ByteWidth = sizeof(LightViewProjection);
 
 	float cascadeLength = farPlane / ((float) GlobalSettings::CASCADES_COUNT);
+	int currentShadowMapWidth = shadowMapWidth;
 	
 	for (int i = 0; i < GlobalSettings::CASCADES_COUNT; ++i)
 	{
 		float currentNearPlane = i * cascadeLength;
 		float currentFarPlane = (i + 1) * cascadeLength;
-		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth, shadowMapHeight);
+		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth * 4, shadowMapHeight * 4);
 		lightCamera->SetOrthographic(true);
 
 		CameraController camController = CameraController();
@@ -139,9 +143,50 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 		viewProjection.view[i] = lightCamera->GetViewMatrix();
 		viewProjection.projection[i] = lightCamera->GetProjectionMatrix();
-		viewProjection.distances[i] = currentFarPlane;
+		
+
+		/*Matrix view = lightCamera->GetViewMatrix();
+		Matrix projection = lightCamera->GetProjectionMatrix();
+		
+		std::vector<Vector4> corners = GetFrustumCornersWorldSpace(view, projection);
+		Vector3 center = Vector3::Zero;
+		for (const Vector4& v : corners)
+		{
+			center += {v.x, v.y, v.z};
+		}
+		center /= corners.size();
+
+		viewProjection.view[i] = XMMatrixLookAtLH(center, center + cameraForward, Vector3::Up);
+
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::lowest();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::lowest();
+		float minZ = std::numeric_limits<float>::max();
+		float maxZ = std::numeric_limits<float>::lowest();
+
+		for (const Vector4& v : corners)
+		{
+			const Vector4 trf = Vector4::Transform(v, viewProjection.view[i]);
+
+			minX = std::min(minX, trf.x);
+			maxX = std::max(maxX, trf.x);
+			minY = std::min(minY, trf.y);
+			maxY = std::max(maxY, trf.y);
+			minZ = std::min(minZ, trf.z);
+			maxZ = std::max(maxZ, trf.z);
+		}
+
+		constexpr float zMult = 10.0f;
+		minZ = (minZ < 0) ? minZ * zMult : minZ / zMult;
+		maxZ = (maxZ < 0) ? maxZ / zMult : maxZ * zMult;
+
+		viewProjection.projection[i] = XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);*/
+		
+		viewProjection.distances[i] = (float) (i + 1) * (1.0f / GlobalSettings::CASCADES_COUNT);
 
 		delete lightCamera;
+		currentShadowMapWidth /= 2;
 	}
 	
 
@@ -162,4 +207,32 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	shadowViewport.Width = shadowMapHeight;
 	shadowViewport.MinDepth = 0.f;
 	shadowViewport.MaxDepth = 1.f;
+}
+
+GAMEFRAMEWORK_API std::vector<Vector4> DirectionalLight::GetFrustumCornersWorldSpace(const Matrix& view, const Matrix& proj)
+{
+	const auto viewProj = view * proj;
+	const auto inv = viewProj.Invert();
+
+	std::vector<Vector4> frustumCorners;
+	frustumCorners.reserve(8);
+
+	for (unsigned int x = 0; x < 2; ++x)
+	{
+		for (unsigned int y = 0; y < 2; ++y)
+		{
+			for (unsigned int z = 0; z < 2; ++z)
+			{
+				const Vector4 pt =
+					Vector4::Transform(Vector4(
+						2.0f * x - 1.0f,
+						2.0f * y - 1.0f,
+						z,
+						1.0f), inv);
+				frustumCorners.push_back(pt / pt.w);
+			}
+		}
+	}
+
+	return frustumCorners;
 }

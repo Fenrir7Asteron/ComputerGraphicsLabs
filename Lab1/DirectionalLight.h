@@ -3,6 +3,7 @@
 #include "GameFrameworkExports.h"
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <vector>
 #include "LightViewProjection.h"
 #include "GlobalSettings.h"
 
@@ -17,8 +18,13 @@ public:
 		float yawDegree,
 		DirectX::SimpleMath::Vector4 lightColor,
 		float diffuseIntensity, float specularIntensity, float ambientIntensity,
-		float farPlane = 1000000.0f,
-		int shadowMapWidth = 2048, int shadowMapHeight = 2048);
+		float farPlane = 10000.0f,
+		int shadowMapWidth = 4096, int shadowMapHeight = 4096);
+
+	GAMEFRAMEWORK_API std::vector<DirectX::SimpleMath::Vector4>
+		GetFrustumCornersWorldSpace(
+			const DirectX::SimpleMath::Matrix& view,
+			const DirectX::SimpleMath::Matrix& proj);
 
 	DirectX::SimpleMath::Vector4 direction;
 	DirectX::SimpleMath::Vector4 lightColor;

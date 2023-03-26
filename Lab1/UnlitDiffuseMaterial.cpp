@@ -106,8 +106,34 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 	device->CreateSamplerState(&samplerDesc, &pSampler);
 
 
-	geometryDepthBC = nullptr;
+	vertexDepthBC = nullptr;
 	ID3DBlob* errorVertexDepthCode = nullptr;
+
+	res = D3DCompileFromFile(depthShaderPath,
+		nullptr /*macros*/,
+		nullptr /*include*/,
+		"VSMain",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&vertexDepthBC,
+		&errorVertexDepthCode);
+
+	CheckShaderCreationSuccess(res, errorVertexDepthCode, depthShaderPath);
+
+	res = device->CreateVertexShader(
+		vertexDepthBC->GetBufferPointer(),
+		vertexDepthBC->GetBufferSize(),
+		nullptr, &vertexDepthShader);
+
+	if (FAILED(res))
+	{
+		return;
+	}
+
+
+	geometryDepthBC = nullptr;
+	ID3DBlob* errorGeometryDepthCode = nullptr;
 
 	res = D3DCompileFromFile(depthShaderPath,
 		nullptr /*macros*/,
@@ -117,9 +143,9 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&geometryDepthBC,
-		&errorVertexDepthCode);
+		&errorGeometryDepthCode);
 
-	CheckShaderCreationSuccess(res, errorVertexDepthCode, depthShaderPath);
+	CheckShaderCreationSuccess(res, errorGeometryDepthCode, depthShaderPath);
 
 	res = device->CreateGeometryShader(
 		geometryDepthBC->GetBufferPointer(),
@@ -134,7 +160,7 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 	device->CreateInputLayout(
 		inputElements,
 		4,
-		geometryDepthBC->GetBufferPointer(),
-		geometryDepthBC->GetBufferSize(),
+		vertexDepthBC->GetBufferPointer(),
+		vertexDepthBC->GetBufferSize(),
 		&shadowLayout);
 }

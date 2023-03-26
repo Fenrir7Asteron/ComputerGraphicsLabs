@@ -10,7 +10,9 @@ public:
 	ID3D11ShaderResourceView* textureView;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> pSampler;
 
+	ID3DBlob* vertexDepthBC;
 	ID3DBlob* geometryDepthBC;
+	ID3D11VertexShader* vertexDepthShader;
 	ID3D11GeometryShader* geometryDepthShader;
 	ID3D11InputLayout* shadowLayout;
 };
