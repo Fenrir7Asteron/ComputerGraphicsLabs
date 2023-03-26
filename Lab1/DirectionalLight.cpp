@@ -27,9 +27,9 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	// Create shadow map resources
 	D3D11_TEXTURE2D_DESC shadowMapDesc;
 	ZeroMemory(&shadowMapDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	shadowMapDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	shadowMapDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	shadowMapDesc.MipLevels = 1;
-	shadowMapDesc.ArraySize = 1;
+	shadowMapDesc.ArraySize = GlobalSettings::CASCADES_COUNT;
 	shadowMapDesc.SampleDesc.Count = 1;
 	shadowMapDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
 	shadowMapDesc.Height = static_cast<UINT>(shadowMapWidth);
@@ -43,15 +43,20 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	depthStencilViewDesc.Texture2D.MipSlice = 0;
+	depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+	depthStencilViewDesc.Texture2DArray.MipSlice = 0;
+	depthStencilViewDesc.Texture2DArray.FirstArraySlice = 0;
+	depthStencilViewDesc.Texture2DArray.ArraySize = GlobalSettings::CASCADES_COUNT;
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 	ZeroMemory(&shaderResourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	shaderResourceViewDesc.Texture2DArray.MipLevels = 1;
+	shaderResourceViewDesc.Texture2DArray.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0;
+	shaderResourceViewDesc.Texture2DArray.ArraySize = GlobalSettings::CASCADES_COUNT;
 
 	res = device->CreateDepthStencilView(
 		shadowMap,
@@ -109,26 +114,36 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	viewProjectionConstantBufferDesc.StructureByteStride = 0;
 	viewProjectionConstantBufferDesc.ByteWidth = sizeof(LightViewProjection);
 
-
-	Camera* lightCamera = new Camera(1000.0f, farPlane, 90.0f, shadowMapWidth, shadowMapHeight);
-	lightCamera->SetOrthographic(true);
-
-	CameraController camController = CameraController();
-	camController.SetCamera(lightCamera);
+	float cascadeLength = farPlane / ((float) GlobalSettings::CASCADES_COUNT);
 	
-	Vector3 camRight = Vector3::Transform(Vector3::Right, lightCamera->rotation);
-	float pitchRadians = XMConvertToRadians(pitchDegree);
-	camController.Rotate(camRight, pitchRadians);
+	for (int i = 0; i < GlobalSettings::CASCADES_COUNT; ++i)
+	{
+		float currentNearPlane = i * cascadeLength;
+		float currentFarPlane = (i + 1) * cascadeLength;
+		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth, shadowMapHeight);
+		lightCamera->SetOrthographic(true);
 
-	float yawRadians = XMConvertToRadians(yawDegree);
-	camController.Rotate(Vector3::Up, yawRadians);
+		CameraController camController = CameraController();
+		camController.SetCamera(lightCamera);
 
-	Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
-	lightCamera->position = -cameraForward * (farPlane * 0.01f);
-	this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
+		Vector3 camRight = Vector3::Transform(Vector3::Right, lightCamera->rotation);
+		float pitchRadians = XMConvertToRadians(pitchDegree);
+		camController.Rotate(camRight, pitchRadians);
 
-	viewProjection.view = lightCamera->GetViewMatrix();
-	viewProjection.projection = lightCamera->GetProjectionMatrix();
+		float yawRadians = XMConvertToRadians(yawDegree);
+		camController.Rotate(Vector3::Up, yawRadians);
+
+		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
+		lightCamera->position = -cameraForward * (farPlane * 0.01f);
+		this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
+
+		viewProjection.view[i] = lightCamera->GetViewMatrix();
+		viewProjection.projection[i] = lightCamera->GetProjectionMatrix();
+		viewProjection.distances[i] = currentFarPlane;
+
+		delete lightCamera;
+	}
+	
 
 	D3D11_SUBRESOURCE_DATA viewProjectionConstantBufferData = {};
 	viewProjectionConstantBufferData.pSysMem = &viewProjection;

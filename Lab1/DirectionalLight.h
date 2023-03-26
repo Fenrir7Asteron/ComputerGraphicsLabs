@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "LightViewProjection.h"
+#include "GlobalSettings.h"
 
 GAMEFRAMEWORK_API class DirectionalLight
 {

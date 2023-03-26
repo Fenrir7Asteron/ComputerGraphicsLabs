@@ -4,7 +4,7 @@
 
 using namespace DirectX;
 
-UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, const LPCWSTR vertexDepthShaderPath,
+UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const LPCWSTR pixelShaderPath, const LPCWSTR depthShaderPath,
 	Microsoft::WRL::ComPtr<ID3D11Device> device,
 	DisplayWin* displayWin, const LPCWSTR diffuseTexturePath) : Material::Material()
 {
@@ -106,25 +106,25 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 	device->CreateSamplerState(&samplerDesc, &pSampler);
 
 
-	vertexDepthBC = nullptr;
+	geometryDepthBC = nullptr;
 	ID3DBlob* errorVertexDepthCode = nullptr;
 
-	res = D3DCompileFromFile(vertexDepthShaderPath,
+	res = D3DCompileFromFile(depthShaderPath,
 		nullptr /*macros*/,
 		nullptr /*include*/,
-		"VSMain",
-		"vs_5_0",
+		"GSMain",
+		"gs_5_0",
 		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
-		&vertexDepthBC,
+		&geometryDepthBC,
 		&errorVertexDepthCode);
 
-	CheckShaderCreationSuccess(res, errorVertexDepthCode, vertexDepthShaderPath);
+	CheckShaderCreationSuccess(res, errorVertexDepthCode, depthShaderPath);
 
-	res = device->CreateVertexShader(
-		vertexDepthBC->GetBufferPointer(),
-		vertexDepthBC->GetBufferSize(),
-		nullptr, &vertexDepthShader);
+	res = device->CreateGeometryShader(
+		geometryDepthBC->GetBufferPointer(),
+		geometryDepthBC->GetBufferSize(),
+		nullptr, &geometryDepthShader);
 
 	if (FAILED(res))
 	{
@@ -134,7 +134,7 @@ UnlitDiffuseMaterial::UnlitDiffuseMaterial(const LPCWSTR vertexShaderPath, const
 	device->CreateInputLayout(
 		inputElements,
 		4,
-		vertexDepthBC->GetBufferPointer(),
-		vertexDepthBC->GetBufferSize(),
+		geometryDepthBC->GetBufferPointer(),
+		geometryDepthBC->GetBufferSize(),
 		&shadowLayout);
 }

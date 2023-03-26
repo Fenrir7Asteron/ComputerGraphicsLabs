@@ -249,7 +249,7 @@ void GameFramework::RenderShadowMap()
 	context->RSSetViewports(1, &dirLight.shadowViewport);
 
 	// Send the constant buffers to the Graphics device.
-	context->VSSetConstantBuffers(
+	context->GSSetConstantBuffers(
 		0,
 		1,
 		&dirLight.constantLightViewProjectionBuffer

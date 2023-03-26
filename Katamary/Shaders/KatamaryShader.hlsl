@@ -15,6 +15,13 @@ struct PS_IN
     float4 worldPos : POSITIONT;
 };
 
+struct CascadeData
+{
+    float4x4 lightView[4];
+    float4x4 lightProjection[4];
+    float4 distances;
+};
+
 cbuffer VS_CONSTANT_BUFFER : register(b0)
 {
     float4x4 worldMatrix;
@@ -38,10 +45,9 @@ cbuffer PS_CONSTANT_BUFFER : register(b1)
     float4 DSAIntensity;
 };
 
-cbuffer PS_CONSTANT_BUFFER : register(b2)
+cbuffer CascadeData : register(b2)
 {
-    float4x4 lightView;
-    float4x4 lightProjection;
+    CascadeData cascadeData;
 };
 
 Texture2D DiffuseMap : register(t0);
@@ -89,19 +95,34 @@ float4 PSMain( PS_IN input ) : SV_Target
     // Ambient
     float3 ambientColor = lightColor * kA * DSAIntensity.z;
     
-    float4 lightSpacePos = mul(lightProjection, mul(lightView, input.worldPos));
-    lightSpacePos = lightSpacePos / lightSpacePos.w;
     
-    float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
-    texCoords.y = 1.0f - texCoords.y;
+    // Cascade shadows
+    //float4 lightSpacePos;    
+    //for (int i = 0; i < 4; ++i)
+    //{
+    //    lightSpacePos = mul(cascadeData.lightProjection[i], mul(cascadeData.lightView[i], input.worldPos));
+    //    lightSpacePos = lightSpacePos / lightSpacePos.w;
+        
+    //    float depthVal = abs(lightSpacePos.z);
+    //    if (depthVal < cascadeData.distances[i])
+    //    {
+    //        break;
+    //    }
+    //}
+        
     
-    float shWidth, shHeight;
-    ShadowMap.GetDimensions(shWidth, shHeight);
+    //float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
+    //texCoords.y = 1.0f - texCoords.y;
     
-    float bias = 1.0f;
-    float shadowCoeff = offset_lookup(texCoords, lightSpacePos.z + cameraPos.w - bias, float2(0.0f, 0.0f));
+    //float shWidth, shHeight;
+    //ShadowMap.GetDimensions(shWidth, shHeight);
     
-    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
+    //float bias = 1.0f;
+    //float shadowCoeff = offset_lookup(texCoords, lightSpacePos.z + cameraPos.w - bias, float2(0.0f, 0.0f));
+    
+    //objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
+    
+    objectColor = objectColor * ((diffuseColor + specularColor) + ambientColor);
     //return float4(texCoords.x, texCoords.y, 0.0f, 1.0f);
     //return float4(shadowCoeff, shadowCoeff, shadowCoeff, 1.0f);
     return float4(objectColor, 1.0f);
