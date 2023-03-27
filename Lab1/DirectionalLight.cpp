@@ -76,9 +76,9 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 	D3D11_SAMPLER_DESC comparisonSamplerDesc;
 	ZeroMemory(&comparisonSamplerDesc, sizeof(D3D11_SAMPLER_DESC));
-	comparisonSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-	comparisonSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	comparisonSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	comparisonSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	comparisonSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	comparisonSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	comparisonSamplerDesc.BorderColor[0] = 1.0f;
 	comparisonSamplerDesc.BorderColor[1] = 1.0f;
 	comparisonSamplerDesc.BorderColor[2] = 1.0f;
@@ -124,7 +124,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	{
 		float currentNearPlane = i * cascadeLength;
 		float currentFarPlane = (i + 1) * cascadeLength;
-		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth * 4, shadowMapHeight * 4);
+		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth, shadowMapHeight * 5);
 		lightCamera->SetOrthographic(true);
 
 		CameraController camController = CameraController();
@@ -138,7 +138,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 		camController.Rotate(Vector3::Up, yawRadians);
 
 		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
-		lightCamera->position = -cameraForward * (farPlane * 0.01f);
+		lightCamera->position = -cameraForward * (currentFarPlane * 0.1f);
 		this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
 
 		viewProjection.view[i] = lightCamera->GetViewMatrix();
@@ -183,7 +183,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 		viewProjection.projection[i] = XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);*/
 		
-		viewProjection.distances[i] = (float) (i + 1) * (1.0f / GlobalSettings::CASCADES_COUNT);
+		viewProjection.distances[i] = currentFarPlane;
 
 		delete lightCamera;
 		currentShadowMapWidth /= 2;

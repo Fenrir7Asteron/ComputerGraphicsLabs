@@ -24,7 +24,7 @@ struct CascadeData
     float4 distances;
 };
 
-cbuffer CascBuf : register(b0)
+cbuffer GS_CONSTANT_BUFFER : register(b0)
 {
     CascadeData cascadeData;
 }

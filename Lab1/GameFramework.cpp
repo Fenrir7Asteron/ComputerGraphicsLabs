@@ -243,18 +243,11 @@ void GameFramework::RenderShadowMap()
 		dirLight.shadowDepthView
 	);	
 
-	// Set rendering state.
 	context->RSSetState(dirLight.shadowRastState);
 	context->OMSetDepthStencilState(pDSState.Get(), 1);
 	context->RSSetViewports(1, &dirLight.shadowViewport);
 
 	// Send the constant buffers to the Graphics device.
-	context->VSSetConstantBuffers(
-		0,
-		1,
-		&dirLight.constantLightViewProjectionBuffer
-	);
-
 	context->GSSetConstantBuffers(
 		0,
 		1,

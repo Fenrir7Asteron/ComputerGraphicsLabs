@@ -12,7 +12,8 @@ struct PS_IN
  	float4 col : COLOR;
  	float4 norm : NORMAL;
     float4 tex : TEXCOORD;
-    float4 worldPos : POSITIONT;
+    float4 worldPos : POSITION1;
+    float4 viewPos : POSITION2;
 };
 
 struct CascadeData
@@ -61,18 +62,20 @@ PS_IN VSMain( VS_IN input )
 	PS_IN output = (PS_IN)0;
 	
     float4 modelPos = mul(worldMatrix, input.pos);
-    output.pos = mul(projectionMatrix, mul(viewMatrix, modelPos));
+    float4 viewPos = mul(viewMatrix, modelPos);
+    output.pos = mul(projectionMatrix, viewPos);
     output.col = input.col;
     output.norm = mul(transposeInverseWorldMatrix, input.norm);
     output.tex = input.tex;
     output.worldPos = modelPos;
+    output.viewPos = viewPos;
 	
 	return output;
 }
 
-float offset_lookup(float3 loc, float cmpDepth, float3 offset)
+float offset_lookup(float3 loc, float cmpDepth)
 {
-    float depth = ShadowMap.SampleCmpLevelZero(ShadowCompSampler, loc + offset, cmpDepth).x;
+    float depth = ShadowMap.SampleCmpLevelZero(ShadowCompSampler, loc, cmpDepth).x;
     return depth;
 }
 
@@ -97,37 +100,51 @@ float4 PSMain( PS_IN input ) : SV_Target
     
     
     // Cascade shadows
-    float4 lightSpacePos;    
-    int cascadeIdx = 3;
-    float de = 0.0f;
-    for (int i = 0; i < 4; ++i)
+    float4 viewPos = input.viewPos;
+    float depthVal = abs(viewPos.z);
+    float cascadeIdx = 3.0f;
+    float cascadeDepth = 1.0f;
+
+    if (depthVal < cascadeData.distances[0])
     {
-        lightSpacePos = mul(cascadeData.lightProjection[i], mul(cascadeData.lightView[i], input.worldPos));
-        lightSpacePos = lightSpacePos / lightSpacePos.w;
-      
-        float depthVal = abs(lightSpacePos.z);
-        if (depthVal < cascadeData.distances[i])
-        {
-            de = depthVal;
-            cascadeIdx = i;
-            break;
-        }
+        cascadeIdx = 0.0f;
+        cascadeDepth = 0.0f;
+    }
+    else if (depthVal < cascadeData.distances[1])
+    {
+        cascadeIdx = 1.0f;
+        cascadeDepth = 0.25f;
+    }
+    else if(depthVal < cascadeData.distances[2])
+    {
+        cascadeIdx = 2.0f;
+        cascadeDepth = 0.5f;
+    }
+    else if(depthVal < cascadeData.distances[3])
+    {
+        cascadeIdx = 3.0f;
+        cascadeDepth = 0.75f;
     }
       
     
+    float4 lightSpacePos = mul(cascadeData.lightProjection[cascadeIdx], mul(cascadeData.lightView[cascadeIdx], input.worldPos));
+    lightSpacePos = lightSpacePos / lightSpacePos.w;
     float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
     texCoords.y = 1.0f - texCoords.y;
     
-    float shWidth, shHeight;
-    ShadowMap.GetDimensions(cascadeIdx, shWidth, shHeight);
+    float shWidth, shHeight, cascadesCount;
+    ShadowMap.GetDimensions(shWidth, shHeight, cascadesCount);
     
-    float bias = 1.0f;
-    float shadowCoeff = offset_lookup(float3(texCoords, 0.0f), lightSpacePos.z + cameraPos.w - bias, float3(0.0f, 0.0f, 0.0f));
+    float bias = 0.0f;
+    //float shadowCoeff = offset_lookup(float3(texCoords, 0.0f), lightSpacePos.z + cameraPos.w - bias, float3(0.0f, 0.0f, 0.0f));
+    float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z);
     
-    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
+    //objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
     
-    float cascadeDepth = float(cascadeIdx) * 0.25f;
-    objectColor = float3(cascadeDepth, 0.0f, 0.0f);
+    float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
+    objectColor = cascadeVector + ambientColor * (1.0f - shadowCoeff);
+    
+    //objectColor = float3(cascadeDepth, 0.0f, 0.0f);
     
     
     //objectColor = objectColor * ((diffuseColor + specularColor) + ambientColor);
