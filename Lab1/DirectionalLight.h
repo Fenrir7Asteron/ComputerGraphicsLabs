@@ -18,8 +18,8 @@ public:
 		float yawDegree,
 		DirectX::SimpleMath::Vector4 lightColor,
 		float diffuseIntensity, float specularIntensity, float ambientIntensity,
-		float farPlane = 10000.0f,
-		int shadowMapWidth = 4096, int shadowMapHeight = 4096);
+		float nearPlane = 10000.0f, float farPlane = 30000.0f,
+		int shadowMapWidth = 8192, int shadowMapHeight = 8192);
 
 	GAMEFRAMEWORK_API std::vector<DirectX::SimpleMath::Vector4>
 		GetFrustumCornersWorldSpace(

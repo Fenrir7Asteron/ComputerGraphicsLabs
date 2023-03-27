@@ -105,44 +105,33 @@ float4 PSMain( PS_IN input ) : SV_Target
     float cascadeIdx = 3.0f;
     float cascadeDepth = 1.0f;
 
-    if (depthVal < cascadeData.distances[0])
+    for (int i = 0; i < 4; ++i)
     {
-        cascadeIdx = 0.0f;
-        cascadeDepth = 0.0f;
-    }
-    else if (depthVal < cascadeData.distances[1])
-    {
-        cascadeIdx = 1.0f;
-        cascadeDepth = 0.25f;
-    }
-    else if(depthVal < cascadeData.distances[2])
-    {
-        cascadeIdx = 2.0f;
-        cascadeDepth = 0.5f;
-    }
-    else if(depthVal < cascadeData.distances[3])
-    {
-        cascadeIdx = 3.0f;
-        cascadeDepth = 0.75f;
-    }
-      
+        if (depthVal < cascadeData.distances[i])
+        {
+            cascadeIdx = float(i);
+            cascadeDepth = 0.25f * i;
+            break;
+        }
+    }      
     
     float4 lightSpacePos = mul(cascadeData.lightProjection[cascadeIdx], mul(cascadeData.lightView[cascadeIdx], input.worldPos));
     lightSpacePos = lightSpacePos / lightSpacePos.w;
+    lightSpacePos.z = saturate(lightSpacePos.z);
     float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
     texCoords.y = 1.0f - texCoords.y;
     
     float shWidth, shHeight, cascadesCount;
     ShadowMap.GetDimensions(shWidth, shHeight, cascadesCount);
     
-    float bias = 0.0f;
-    //float shadowCoeff = offset_lookup(float3(texCoords, 0.0f), lightSpacePos.z + cameraPos.w - bias, float3(0.0f, 0.0f, 0.0f));
-    float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z);
+    float bias = 0.0005f;
+    float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), saturate(lightSpacePos.z - bias));
+    //float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z);
     
-    //objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
+    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
     
-    float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
-    objectColor = cascadeVector + ambientColor * (1.0f - shadowCoeff);
+    //float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
+    //objectColor = cascadeVector + ambientColor * (1.0f - shadowCoeff);
     
     //objectColor = float3(cascadeDepth, 0.0f, 0.0f);
     

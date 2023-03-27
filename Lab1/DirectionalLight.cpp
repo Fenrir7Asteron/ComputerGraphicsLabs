@@ -18,7 +18,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	float yawDegree,
 	Vector4 lightColor,
 	float diffuseIntensity, float specularIntensity, float ambientIntensity, 
-	float farPlane,
+	float nearPlane, float farPlane,
 	int shadowMapWidth,	int shadowMapHeight)
 {
 	this->lightColor = lightColor;
@@ -76,9 +76,9 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 	D3D11_SAMPLER_DESC comparisonSamplerDesc;
 	ZeroMemory(&comparisonSamplerDesc, sizeof(D3D11_SAMPLER_DESC));
-	comparisonSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	comparisonSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	comparisonSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	comparisonSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	comparisonSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	comparisonSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 	comparisonSamplerDesc.BorderColor[0] = 1.0f;
 	comparisonSamplerDesc.BorderColor[1] = 1.0f;
 	comparisonSamplerDesc.BorderColor[2] = 1.0f;
@@ -117,14 +117,14 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	viewProjectionConstantBufferDesc.StructureByteStride = 0;
 	viewProjectionConstantBufferDesc.ByteWidth = sizeof(LightViewProjection);
 
-	float cascadeLength = farPlane / ((float) GlobalSettings::CASCADES_COUNT);
+	float cascadeLength = (farPlane - nearPlane) / ((float) GlobalSettings::CASCADES_COUNT);
 	int currentShadowMapWidth = shadowMapWidth;
+	float cameraWidthMultiplier = 0.5f;
 	
 	for (int i = 0; i < GlobalSettings::CASCADES_COUNT; ++i)
 	{
-		float currentNearPlane = i * cascadeLength;
 		float currentFarPlane = (i + 1) * cascadeLength;
-		Camera* lightCamera = new Camera(currentNearPlane, currentFarPlane, 90.0f, shadowMapWidth, shadowMapHeight * 5);
+		Camera* lightCamera = new Camera(nearPlane, nearPlane + currentFarPlane, 90.0f, currentShadowMapWidth * cameraWidthMultiplier, currentShadowMapWidth * cameraWidthMultiplier * 5);
 		lightCamera->SetOrthographic(true);
 
 		CameraController camController = CameraController();
@@ -138,7 +138,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 		camController.Rotate(Vector3::Up, yawRadians);
 
 		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
-		lightCamera->position = -cameraForward * (currentFarPlane * 0.1f);
+		lightCamera->position = -cameraForward * (nearPlane) - Vector3::Forward * 500.0f;
 		this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
 
 		viewProjection.view[i] = lightCamera->GetViewMatrix();
@@ -186,7 +186,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 		viewProjection.distances[i] = currentFarPlane;
 
 		delete lightCamera;
-		currentShadowMapWidth /= 2;
+		currentShadowMapWidth *= 2;
 	}
 	
 
