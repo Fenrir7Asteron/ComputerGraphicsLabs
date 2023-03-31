@@ -108,7 +108,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	inputDevice = new InputDevice(this);
 
-	camera = new Camera(100.0f, 10000000.0f, 50.0f, screenWidth, screenHeight);
+	camera = new Camera(200.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
 
 	cameraControllers.emplace_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
 
@@ -240,19 +240,21 @@ void GameFramework::RenderShadowMap()
 	context->OMSetRenderTargets(
 		0,
 		nullptr,
-		dirLight.shadowDepthView
+		dirLight->shadowDepthView
 	);	
 
-	context->RSSetState(dirLight.shadowRastState);
+	context->RSSetState(dirLight->shadowRastState);
 	context->OMSetDepthStencilState(pDSState.Get(), 1);
-	context->RSSetViewports(1, &dirLight.shadowViewport);
+	context->RSSetViewports(1, &dirLight->shadowViewport);
 
 	// Send the constant buffers to the Graphics device.
 	context->GSSetConstantBuffers(
 		0,
 		1,
-		&dirLight.constantLightViewProjectionBuffer
+		&dirLight->constantLightViewProjectionBuffer
 	);
+
+	dirLight->UpdateViewProjection();
 
 	for (auto gameComponent : gameComponents)
 	{
@@ -372,6 +374,9 @@ void GameFramework::FreeGameResources()
 		delete controller;
 	}
 	cameraControllers.clear();
+
+	dirLight->Release();
+	delete dirLight;
 }
 
 GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
@@ -393,5 +398,5 @@ GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
 	float color[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	context->ClearRenderTargetView(rtv, color);
 	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	context->ClearDepthStencilView(dirLight.shadowDepthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }

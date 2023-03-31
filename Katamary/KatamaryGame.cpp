@@ -19,15 +19,15 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 {
 	GameFramework::Init(windowWidth, windowHeight);
 
-	dirLight = {
-		device,
-		30.0f,					   // pitch
-		0.0f,					   // yaw
+	dirLight = new DirectionalLight(
+		this,
+		{0.0f, -1.0f, 1.0f, 1.0f}, // direction
 		{1.0f, 1.0f, 1.0f, 1.0f},  // color
 		01.5f,                     // diffuse
 		00.5f,                     // specular
 		01.0f,                     // ambient
-	};
+		camera
+	);
 
 	PhongCoefficients coeff1 =
 	{
@@ -59,7 +59,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 200.0f, 0.0f, 300.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 600.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 1000.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
-	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 1400.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
+	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 15.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 1400.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 100.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(180.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 0.0f }), "../Assets/Models/Miku/", "Miku.obj", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	
 	Model<BoundingOrientedBox>* floor = new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale({ 100000.0f, 20.0f, 100000.0f }) * Matrix::CreateTranslation({ 0.0f, -200.0f, 5000.0f }), "../Assets/Models/Minecraft_Grass_block/Grass_block/", "Grass_block.fbx", vertexShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1);

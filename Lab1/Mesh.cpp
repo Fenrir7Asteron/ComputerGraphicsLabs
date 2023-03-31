@@ -183,17 +183,17 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 	PhongConstantData phong;
-	game_->dirLight.direction.Normalize();
+	game_->dirLight->direction.Normalize();
 
 	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
-	phong.direction = game_->dirLight.direction;
-	phong.lightColor = game_->dirLight.lightColor;
+	phong.direction = game_->dirLight->direction;
+	phong.lightColor = game_->dirLight->lightColor;
 
 	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
 	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
 	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
 
-	phong.DSAIntensities = { game_->dirLight.diffuseIntensity, game_->dirLight.specularIntensity, game_->dirLight.ambientIntensity, 0.0f};
+	phong.DSAIntensities = { game_->dirLight->diffuseIntensity, game_->dirLight->specularIntensity, game_->dirLight->ambientIntensity, 0.0f};
 
 	game_->context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &phong, sizeof(phong));
@@ -210,12 +210,12 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
 	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
-	game_->context->PSSetConstantBuffers(2, 1, &game_->dirLight.constantLightViewProjectionBuffer);
+	game_->context->PSSetConstantBuffers(2, 1, &game_->dirLight->constantLightViewProjectionBuffer);
 
 	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
-	game_->context->PSSetShaderResources(1, 1, &game_->dirLight.shadowResourceView);
+	game_->context->PSSetShaderResources(1, 1, &game_->dirLight->shadowResourceView);
 	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
-	game_->context->PSSetSamplers(1, 1, game_->dirLight.comparisonSampler.GetAddressOf());
+	game_->context->PSSetSamplers(1, 1, game_->dirLight->comparisonSampler.GetAddressOf());
 
 	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
 	game_->context->PSSetShader(material->pixelShader, nullptr, 0);

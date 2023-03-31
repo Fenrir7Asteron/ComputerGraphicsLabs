@@ -19,8 +19,7 @@ struct GS_OUT
 
 struct CascadeData
 {
-    float4x4 lightView[4];
-    float4x4 lightProjection[4];
+    float4x4 lightViewProjection[4];
     float4 distances;
 };
 
@@ -57,7 +56,7 @@ void GSMain(   triangle GS_IN p[3],
     {
         GS_OUT gs = (GS_OUT) 0;
         float4 worldPos = float4(p[i].pos.xyz, 1.0f);
-        gs.pos = mul(cascadeData.lightProjection[id], mul(cascadeData.lightView[id], worldPos));
+        gs.pos = mul(cascadeData.lightViewProjection[id], worldPos);
         gs.arrInd = id;
         stream.Append(gs);
     }

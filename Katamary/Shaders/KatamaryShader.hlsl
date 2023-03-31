@@ -18,8 +18,7 @@ struct PS_IN
 
 struct CascadeData
 {
-    float4x4 lightView[4];
-    float4x4 lightProjection[4];
+    float4x4 lightViewProjection[4];
     float4 distances;
 };
 
@@ -73,8 +72,33 @@ PS_IN VSMain( VS_IN input )
 	return output;
 }
 
-float offset_lookup(float3 loc, float cmpDepth)
+float PCF(float3 loc, float cmpDepth)
 {
+    float shadow = 0.0f;
+    float shWidth, shHeight, cascadesCount;
+    ShadowMap.GetDimensions(shWidth, shHeight, cascadesCount);
+    
+    float2 texelSize = 1.0f / float2(shWidth, shHeight);
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = ShadowMap.SampleCmpLevelZero(
+                    ShadowCompSampler,
+                    float3(loc.xy + float2(float(x), float(y)) * texelSize, loc.z), \
+                    cmpDepth).r;
+            
+            shadow += (cmpDepth) > pcfDepth ? 1.0f : 0.0f;
+        }
+    }
+    shadow /= 9.0f;
+    
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (cmpDepth > 1.0f)
+    {
+        shadow = 0.0f;
+    }
+    
     float depth = ShadowMap.SampleCmpLevelZero(ShadowCompSampler, loc, cmpDepth).x;
     return depth;
 }
@@ -103,6 +127,7 @@ float4 PSMain( PS_IN input ) : SV_Target
     float4 viewPos = input.viewPos;
     float depthVal = abs(viewPos.z);
     float cascadeIdx = 3.0f;
+    int layer = 3;
     float cascadeDepth = 1.0f;
 
     for (int i = 0; i < 4; ++i)
@@ -110,34 +135,24 @@ float4 PSMain( PS_IN input ) : SV_Target
         if (depthVal < cascadeData.distances[i])
         {
             cascadeIdx = float(i);
+            layer = i;
             cascadeDepth = 0.25f * i;
             break;
         }
     }      
     
-    float4 lightSpacePos = mul(cascadeData.lightProjection[cascadeIdx], mul(cascadeData.lightView[cascadeIdx], input.worldPos));
+    float4 lightSpacePos = mul(cascadeData.lightViewProjection[cascadeIdx], input.worldPos);
     lightSpacePos = lightSpacePos / lightSpacePos.w;
-    lightSpacePos.z = saturate(lightSpacePos.z);
     float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
     texCoords.y = 1.0f - texCoords.y;
     
-    float shWidth, shHeight, cascadesCount;
-    ShadowMap.GetDimensions(shWidth, shHeight, cascadesCount);
+    // calculate bias (based on depth map resolution and slope)
+    float bias = max(0.05 * (1.0 - dot(norm, lightDir.xyz)), 0.005);
+    bias *= 1 / (cascadeData.distances[layer] * 0.5f);
     
-    float bias = 0.0005f;
-    float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), saturate(lightSpacePos.z - bias));
-    //float shadowCoeff = offset_lookup(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z);
+    float shadowCoeff = PCF(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z - bias);
     
-    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
-    
-    //float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
-    //objectColor = cascadeVector + ambientColor * (1.0f - shadowCoeff);
-    
-    //objectColor = float3(cascadeDepth, 0.0f, 0.0f);
-    
-    
-    //objectColor = objectColor * ((diffuseColor + specularColor) + ambientColor);
-    //return float4(texCoords.x, texCoords.y, 0.0f, 1.0f);
-    //return float4(shadowCoeff, shadowCoeff, shadowCoeff, 1.0f);
+    float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
+    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor + cascadeVector);
     return float4(objectColor, 1.0f);
 }

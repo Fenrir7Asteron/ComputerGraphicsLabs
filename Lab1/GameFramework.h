@@ -67,6 +67,6 @@ public:
 
 	DebugRenderSysImpl* debugRender;
 
-	DirectionalLight dirLight;
+	DirectionalLight* dirLight;
 };
 
