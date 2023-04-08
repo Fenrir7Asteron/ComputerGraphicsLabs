@@ -157,7 +157,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\KatamaryShader.hlsl">
+    <None Include="Shaders\DirectionalLightingShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
@@ -176,6 +176,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CascadeGeometryDepthShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\GeometryShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

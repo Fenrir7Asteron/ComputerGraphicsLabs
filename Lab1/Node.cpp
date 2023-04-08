@@ -22,18 +22,18 @@ void Node::DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform)
 	}
 }
 
-void Node::Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
+void Node::GeometryPass(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
 	const auto currentTransform = transform * accumulatedTransform;
 
 	for (const auto pm : meshPtrs)
 	{
-		pm->Draw(currentTransform, phongCoefficients);
+		pm->GeometryPass(currentTransform, phongCoefficients);
 	}
 
 	for (const auto& pc : childPtrs)
 	{
-		pc->Draw(currentTransform, phongCoefficients);
+		pc->GeometryPass(currentTransform, phongCoefficients);
 	}
 }
 

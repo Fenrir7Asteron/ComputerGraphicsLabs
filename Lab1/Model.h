@@ -27,7 +27,7 @@ class Model : public GameComponent
 public:
 	GAMEFRAMEWORK_API Model(GameFramework* game, GameComponent* parent,
 		DirectX::SimpleMath::Matrix transform, const std::string modelDir, const std::string modelName, 
-		const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+		const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
 		float startScale,
 		Material* material,
 		const PhongCoefficients phongCoefficients,
@@ -44,18 +44,19 @@ public:
 	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle) override;
 	GAMEFRAMEWORK_API void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API void DrawShadowMap() override;
-	GAMEFRAMEWORK_API void Draw() override;
+	GAMEFRAMEWORK_API void GeometryPass() override;
 
 	PhysicalComponent<T> physicalComponent;
 	bool invalidateBoundingBox;
 	DirectX::SimpleMath::Vector4 minPos;
 	DirectX::SimpleMath::Vector4 maxPos;
 
+	std::vector<std::unique_ptr<Mesh>> meshPtrs;
+
 private:
 	std::unique_ptr<Node> pRoot;
-	std::vector<std::unique_ptr<Mesh>> meshPtrs;
 	std::string modelDir;
-	LPCWSTR shaderPath;
+	LPCWSTR geometryPassShaderPath;
 	LPCWSTR depthShaderPath;
 	PhongCoefficients phongCoefficients;
 };

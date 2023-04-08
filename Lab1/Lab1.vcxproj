@@ -150,6 +150,7 @@
     <ClCompile Include="FPSCameraController.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="GameComponent.cpp" />
+    <ClCompile Include="GBuffer.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -158,8 +159,8 @@
     <ClCompile Include="PhysicalBoxComponent.cpp" />
     <ClCompile Include="PhysicalComponent.cpp" />
     <ClCompile Include="PhysicalSphereComponent.cpp" />
+    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="SimpleMath.cpp" />
-    <ClCompile Include="UnlitDiffuseMaterial.cpp" />
     <ClCompile Include="VertexPositionColor.cpp" />
     <ClCompile Include="WICTextureLoader.cpp" />
   </ItemGroup>
@@ -177,9 +178,11 @@
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="GameComponent.h" />
     <ClInclude Include="GameFrameworkExports.h" />
+    <ClInclude Include="GBuffer.h" />
     <ClInclude Include="GlobalSettings.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Keys.h" />
+    <ClInclude Include="LightConstantData.h" />
     <ClInclude Include="LightViewProjection.h" />
     <ClInclude Include="LoaderHelpers.h" />
     <ClInclude Include="Material.h" />
@@ -195,8 +198,8 @@
     <ClInclude Include="PhysicalLayer.h" />
     <ClInclude Include="PhysicalSphereComponent.h" />
     <ClInclude Include="PlatformHelpers.h" />
+    <ClInclude Include="PointLight.h" />
     <ClInclude Include="SimpleMath.h" />
-    <ClInclude Include="UnlitDiffuseMaterial.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VertexPositionColor.h" />
     <ClInclude Include="WICTextureLoader.h" />

@@ -20,7 +20,6 @@ public:
 		DirectX::SimpleMath::Vector4 lightColor,
 		float diffuseIntensity, float specularIntensity, float ambientIntensity,
 		Camera* renderCamera,
-		float shadowDistance = 10000.0f,
 		int shadowMapWidth = 1024, int shadowMapHeight = 1024);
 
 	GAMEFRAMEWORK_API std::vector<DirectX::SimpleMath::Vector4>
@@ -48,5 +47,4 @@ public:
 
 	Camera* renderCamera;
 	GameFramework* game;
-	float shadowDistance;
 };

@@ -23,10 +23,10 @@ ID3D11InputLayout* VertexPositionColor::GetLayout(ID3DBlob* signature)
 			D3D11_INPUT_PER_VERTEX_DATA,
 			0}
 	};
-	ID3D11InputLayout* layout;
-	GameFramework::Instance->device->CreateInputLayout(inputElements, 2, signature->GetBufferPointer(), signature->GetBufferSize(), &layout);
+	ID3D11InputLayout* geometryLayout;
+	GameFramework::Instance->device->CreateInputLayout(inputElements, 2, signature->GetBufferPointer(), signature->GetBufferSize(), &geometryLayout);
 	
-	return layout;
+	return geometryLayout;
 }
 
 //void VertexPositionColor::Convert(MeshVertex v)

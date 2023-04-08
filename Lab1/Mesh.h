@@ -21,8 +21,8 @@ public:
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API virtual void DrawShadowMap() override;
 	GAMEFRAMEWORK_API virtual void DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform);
-	GAMEFRAMEWORK_API virtual void Draw() override;
-	GAMEFRAMEWORK_API virtual void Draw(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients);
+	GAMEFRAMEWORK_API virtual void GeometryPass() override;
+	GAMEFRAMEWORK_API virtual void GeometryPass(DirectX::SimpleMath::Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients);
 
 public:
 	std::vector<Vertex> vertices;
@@ -34,7 +34,5 @@ public:
 	ID3D11Buffer* ib;
 	ID3D11Buffer* constantMvpBuffer;
 	ID3D11Buffer* constantPhongBuffer;
-
-	UnlitDiffuseMaterial* unlitDiffuseMaterial;
 };
 

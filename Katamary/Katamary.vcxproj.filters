@@ -40,7 +40,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\KatamaryShader.hlsl">
+    <None Include="Shaders\DirectionalLightingShader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\Simple.hlsl">
@@ -53,6 +53,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\CascadeGeometryDepthShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\GeometryShader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

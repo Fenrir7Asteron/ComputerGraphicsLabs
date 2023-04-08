@@ -19,7 +19,6 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	Vector4 lightColor,
 	float diffuseIntensity, float specularIntensity, float ambientIntensity,
 	Camera* renderCamera,
-	float shadowDistance,
 	int shadowMapWidth,	int shadowMapHeight)
 {
 	this->game = game;
@@ -32,7 +31,6 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	this->specularIntensity = specularIntensity;
 	this->ambientIntensity = ambientIntensity;
 	this->renderCamera = renderCamera;
-	this->shadowDistance = shadowDistance;
 
 
 	// Create shadow map resources
@@ -171,8 +169,6 @@ GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 {
 	float maxCascadeDistance = renderCamera->farZ - renderCamera->nearZ;
 	float cascadeLength = maxCascadeDistance / ((float)GlobalSettings::CASCADES_COUNT);
-	//int currentShadowMapWidth = shadowMapWidth;
-	//float cameraWidthMultiplier = 0.5f;
 	
 	Matrix view = renderCamera->GetViewMatrix();
 	Matrix projection = renderCamera->GetProjectionMatrix();
@@ -200,28 +196,6 @@ GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 			center += {v.x, v.y, v.z};
 		}
 		center /= cornersCopy.size();
-
-		/*
-		Camera* lightCamera = new Camera(nearPlane, nearPlane + currentFarPlane, 90.0f, currentShadowMapWidth * cameraWidthMultiplier, currentShadowMapWidth * cameraWidthMultiplier * 5);
-		lightCamera->SetOrthographic(true);
-
-		CameraController camController = CameraController();
-		camController.SetCamera(lightCamera);
-
-		Vector3 camRight = Vector3::Transform(Vector3::Right, lightCamera->rotation);
-		float pitchRadians = XMConvertToRadians(pitchDegree);
-		camController.Rotate(camRight, pitchRadians);
-
-		float yawRadians = XMConvertToRadians(yawDegree);
-		camController.Rotate(Vector3::Up, yawRadians);
-
-		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, lightCamera->rotation);
-		lightCamera->position = -cameraForward * (nearPlane)-Vector3::Forward * 500.0f;
-		this->direction = { cameraForward.x, cameraForward.y, cameraForward.z, 1.0f };
-
-		viewProjection.view[i] = lightCamera->GetViewMatrix();
-		viewProjection.projection[i] = lightCamera->GetProjectionMatrix();*/
-
 
 		Matrix lightView = XMMatrixLookAtLH(center, center + this->direction, Vector3::Up);
 

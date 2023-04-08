@@ -23,7 +23,7 @@ public:
 
 	// Inherited via GameComponent
 	virtual void Update(float deltaTime) override;
-	virtual void Draw() override;
+	virtual void GeometryPass() override;
 
 	template <class U>
 	void AttachObject(Model<U>* other);

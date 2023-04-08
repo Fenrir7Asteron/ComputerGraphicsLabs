@@ -3,7 +3,6 @@
 #include "KatamaryBall.h"
 #include "GameFramework.h"
 #include "ModelViewProjectionMatrices.h"
-#include "UnlitDiffuseMaterial.h"
 #include "DebugRenderSysImpl.h"
 #include <iostream>
 #include <algorithm>
@@ -180,15 +179,15 @@ void KatamaryBall<BoundingOrientedBox>::IncreaseSize(float sizeDelta)
 	}
 }
 
-void KatamaryBall<BoundingSphere>::Draw()
+void KatamaryBall<BoundingSphere>::GeometryPass()
 {
-	Model<BoundingSphere>::Draw();
+	Model<BoundingSphere>::GeometryPass();
 	this->game_->debugRender->DrawSphere(this->physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(this->physicalComponent.boundingShape.Center), 16);
 }
 
-void KatamaryBall<BoundingOrientedBox>::Draw()
+void KatamaryBall<BoundingOrientedBox>::GeometryPass()
 {
-	Model<BoundingOrientedBox>::Draw();
+	Model<BoundingOrientedBox>::GeometryPass();
 	this->game_->debugRender->DrawSphere(this->physicalComponent.boundingShape.Extents.x, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(this->physicalComponent.boundingShape.Center), 16);
 }
 

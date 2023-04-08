@@ -3,7 +3,6 @@
 #include "Mesh.h"
 #include "GameFramework.h"
 #include "ModelViewProjectionMatrices.h"
-#include "UnlitDiffuseMaterial.h"
 #include "Model.h"
 #include "Vertex.h"
 #include "PhongCoefficients.h"
@@ -26,7 +25,6 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	this->indices = std::move(indices);
 	this->verticesLen = this->vertices.size();
 	this->indicesLen = this->indices.size();
-	this->unlitDiffuseMaterial = dynamic_cast<UnlitDiffuseMaterial*>(material);
 
 	D3D11_BUFFER_DESC vertexBufDesc = {};
 	vertexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -137,24 +135,23 @@ void Mesh::DrawShadowMap(Matrix accumulatedTransform)
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
-	game_->context->IASetInputLayout(unlitDiffuseMaterial->shadowLayout);
+	game_->context->IASetInputLayout(material->shadowLayout);
 	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(1, 1, &constantMvpBuffer);
-	game_->context->VSSetShader(unlitDiffuseMaterial->vertexDepthShader, nullptr, 0);
-	game_->context->GSSetShader(unlitDiffuseMaterial->geometryDepthShader, nullptr, 0);
-	//game_->context->PSSetShader(nullptr, nullptr, 0);
+	game_->context->VSSetShader(material->shadowMappingVertexShader, nullptr, 0);
+	game_->context->GSSetShader(material->shadowMappingGeometryShader, nullptr, 0);
 
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 }
 
-GAMEFRAMEWORK_API void Mesh::Draw()
+GAMEFRAMEWORK_API void Mesh::GeometryPass()
 {
-	Draw(Matrix::Identity, {});
+	GeometryPass(Matrix::Identity, {});
 }
 
-void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
+void Mesh::GeometryPass(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
 	// Update MVP transform constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -182,21 +179,8 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 	// Update Phong directional light constant buffer
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	PhongConstantData phong;
-	game_->dirLight->direction.Normalize();
-
-	phong.cameraPosition = Vector4(game_->camera->position.x, game_->camera->position.y, game_->camera->position.z, 1.0f);
-	phong.direction = game_->dirLight->direction;
-	phong.lightColor = game_->dirLight->lightColor;
-
-	phong.dirLightDiffuseCoefficient = phongCoefficients.dirLightDiffuseCoefficient;
-	phong.dirLightSpecularCoefficient_alpha = phongCoefficients.dirLightSpecularCoefficient_alpha;
-	phong.dirLightAmbientCoefficient = phongCoefficients.dirLightAmbientCoefficient;
-
-	phong.DSAIntensities = { game_->dirLight->diffuseIntensity, game_->dirLight->specularIntensity, game_->dirLight->ambientIntensity, 0.0f};
-
 	game_->context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &phong, sizeof(phong));
+	memcpy(mappedResource.pData, &phongCoefficients, sizeof(phongCoefficients));
 	game_->context->Unmap(constantPhongBuffer, 0);
 
 	UINT strides[] = { sizeof(Vertex) };
@@ -204,21 +188,18 @@ void Mesh::Draw(Matrix accumulatedTransform, const PhongCoefficients& phongCoeff
 
 	game_->context->RSSetState(material->rastState);
 
-	game_->context->IASetInputLayout(material->layout);
+	game_->context->IASetInputLayout(material->geometryLayout);
 	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
 	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
 	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
-	game_->context->PSSetConstantBuffers(2, 1, &game_->dirLight->constantLightViewProjectionBuffer);
 
-	game_->context->PSSetShaderResources(0, 1, &unlitDiffuseMaterial->textureView);
-	game_->context->PSSetShaderResources(1, 1, &game_->dirLight->shadowResourceView);
-	game_->context->PSSetSamplers(0, 1, unlitDiffuseMaterial->pSampler.GetAddressOf());
-	game_->context->PSSetSamplers(1, 1, game_->dirLight->comparisonSampler.GetAddressOf());
+	game_->context->PSSetShaderResources(0, 1, &material->textureView);
+	game_->context->PSSetSamplers(0, 1, material->pSampler.GetAddressOf());
 
-	game_->context->VSSetShader(material->vertexShader, nullptr, 0);
-	game_->context->PSSetShader(material->pixelShader, nullptr, 0);
+	game_->context->VSSetShader(material->geometryPassVertexShader, nullptr, 0);
+	game_->context->PSSetShader(material->geometryPassPixelShader, nullptr, 0);
 
 	game_->context->DrawIndexed(indicesLen, 0, 0);
 }

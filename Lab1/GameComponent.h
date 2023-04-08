@@ -22,7 +22,7 @@ public:
 
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) = 0;
 	GAMEFRAMEWORK_API virtual void DrawShadowMap() = 0;
-	GAMEFRAMEWORK_API virtual void Draw() = 0;
+	GAMEFRAMEWORK_API virtual void GeometryPass() = 0;
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
 	GAMEFRAMEWORK_API virtual void Rotate(DirectX::SimpleMath::Vector3 axis, float angle);
 	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle);

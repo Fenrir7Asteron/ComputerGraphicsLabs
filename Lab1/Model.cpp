@@ -5,7 +5,6 @@
 #include "Model.h"
 #include "GameFramework.h"
 #include "DebugRenderSysImpl.h"
-#include "UnlitDiffuseMaterial.h"
 #include <cmath>
 #include <iostream>
 
@@ -14,14 +13,14 @@ using namespace DirectX::SimpleMath;
 
 GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform,
     const std::string modelDir, const std::string modelName,
-    const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+    const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
     float startScale,
     Material* material,
     const PhongCoefficients phongCoefficients,
     PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
 {
     this->modelDir = modelDir;
-    this->shaderPath = shaderPath;
+    this->geometryPassShaderPath = geometryPassShaderPath;
     this->depthShaderPath = depthShaderPath;
     this->phongCoefficients = phongCoefficients;
 
@@ -53,14 +52,14 @@ GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameFramework* game, GameCom
 
 GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameFramework* game, GameComponent* parent, DirectX::SimpleMath::Matrix transform,
     const std::string modelDir, const std::string modelName,
-    const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+    const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
     float startScale,
     Material* material,
     const PhongCoefficients phongCoefficients,
     PhysicalLayer physicalLayer) : GameComponent(game, parent, transform, material)
 {
     this->modelDir = modelDir;
-    this->shaderPath = shaderPath;
+    this->geometryPassShaderPath = geometryPassShaderPath;
     this->depthShaderPath = depthShaderPath;
     this->phongCoefficients = phongCoefficients;
 
@@ -112,7 +111,7 @@ std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mes
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
+            material = new Material(geometryPassShaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
             useTexture = true;
         }
         else if (pMaterial.GetTexture(aiTextureType_BASE_COLOR, 0, &texFileName) == aiReturn_SUCCESS)
@@ -122,7 +121,7 @@ std::unique_ptr<Mesh> Model<T>::ParseMesh(GameFramework* game, const aiMesh& mes
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new UnlitDiffuseMaterial(shaderPath, shaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
+            material = new Material(geometryPassShaderPath, this->depthShaderPath, game->device, game->displayWin, wtext);
             useTexture = true;
         }
     }
@@ -281,17 +280,17 @@ GAMEFRAMEWORK_API void Model<T>::DrawShadowMap()
 template GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::DrawShadowMap();
 template GAMEFRAMEWORK_API void Model<BoundingSphere>::DrawShadowMap();
 
-GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Draw()
+GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::GeometryPass()
 {
-    pRoot->Draw(GetWorldMatrix(), this->phongCoefficients);
+    pRoot->GeometryPass(GetWorldMatrix(), this->phongCoefficients);
 
     if (enabled)
         game_->debugRender->DrawOrientedBoundingBox(physicalComponent.boundingShape, Matrix::Identity);
 }
 
-GAMEFRAMEWORK_API void Model<BoundingSphere>::Draw()
+GAMEFRAMEWORK_API void Model<BoundingSphere>::GeometryPass()
 {
-    pRoot->Draw(GetWorldMatrix(), this->phongCoefficients);
+    pRoot->GeometryPass(GetWorldMatrix(), this->phongCoefficients);
 
     if (enabled)
         game_->debugRender->DrawSphere(physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(physicalComponent.boundingShape.Center), 16);

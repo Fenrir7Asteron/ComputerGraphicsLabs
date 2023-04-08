@@ -1,19 +1,11 @@
 struct VS_IN
 {
 	float4 pos : POSITION0;
-	float4 col : COLOR0;
-	float4 norm : NORMAL0;
-    float4 tex : TEXCOORD0;
 };
 
 struct PS_IN
 {
 	float4 pos : SV_POSITION;
- 	float4 col : COLOR;
- 	float4 norm : NORMAL;
-    float4 tex : TEXCOORD;
-    float4 worldPos : POSITION1;
-    float4 viewPos : POSITION2;
 };
 
 struct CascadeData
@@ -22,53 +14,63 @@ struct CascadeData
     float4 distances;
 };
 
-cbuffer VS_CONSTANT_BUFFER : register(b0)
-{
-    float4x4 worldMatrix;
-    float4x4 viewMatrix;
-    float4x4 projectionMatrix;
-    float4x4 transposeInverseWorldMatrix;
-};
-
 // Phong directional light parameters
-cbuffer PS_CONSTANT_BUFFER : register(b1)
+cbuffer PS_CONSTANT_BUFFER : register(b0)
 {
     float4 cameraPos;
     
     float4 lightDir;
     float4 lightColor;
-    
-    float4 kD;    
-    float4 kS_alpha; // specular coefficient + shininess    
-    float4 kA; 
-    
+        
     float4 DSAIntensity;
 };
 
-cbuffer CascadeData : register(b2)
+cbuffer CascadeData : register(b1)
 {
     CascadeData cascadeData;
 };
 
-Texture2D DiffuseMap : register(t0);
-Texture2DArray ShadowMap : register(t1);
+Texture2D WorldPosDepthMap : register(t0);
+Texture2D NormalMap        : register(t1);
+Texture2D AlbedoMap        : register(t2);
+Texture2D DiffuseCoeffMap  : register(t3);
+Texture2D SpecularCoeffMap : register(t4);
+Texture2D AmbientCoeffMap  : register(t5);
+
+Texture2DArray ShadowMap   : register(t6);
 
 SamplerState Sampler : register(s0);
 SamplerComparisonState ShadowCompSampler : register(s1);
 
-PS_IN VSMain( VS_IN input )
+struct GBufferData
+{
+    float4 WorldPos_Depth;
+    float3 Normal;
+    float3 AlbedoCol;
+    float3 DiffuseCoeff;
+    float4 SpecularCoeff;
+    float3 AmbientCoeff;
+};
+
+GBufferData ReadGBuffer(float2 screenPos)
+{
+    GBufferData buf = (GBufferData) 0;
+    
+    buf.WorldPos_Depth = WorldPosDepthMap.Load(float3(screenPos, 0.0f));
+    buf.Normal = NormalMap.Load(float3(screenPos, 0.0f)).xyz;
+    buf.AlbedoCol = AlbedoMap.Load(float3(screenPos, 0.0f)).xyz;
+    buf.DiffuseCoeff = DiffuseCoeffMap.Load(float3(screenPos, 0.0f)).xyz;
+    buf.SpecularCoeff = SpecularCoeffMap.Load(float3(screenPos, 0.0f));
+    buf.AmbientCoeff = AmbientCoeffMap.Load(float3(screenPos, 0.0f)).xyz;
+    
+    return buf;
+}
+
+PS_IN VSMain( uint id : SV_VertexID )
 {
 	PS_IN output = (PS_IN)0;
-	
-    float4 modelPos = mul(worldMatrix, input.pos);
-    float4 viewPos = mul(viewMatrix, modelPos);
-    output.pos = mul(projectionMatrix, viewPos);
-    output.col = input.col;
-    output.norm = mul(transposeInverseWorldMatrix, input.norm);
-    output.tex = input.tex;
-    output.worldPos = modelPos;
-    output.viewPos = viewPos;
-	
+    float2 inds = float2(id & 1, (id & 2) >> 1);
+    output.pos = float4(inds * float2(2, -2) + float2(-1, 1), 0, 1);	
 	return output;
 }
 
@@ -105,27 +107,28 @@ float PCF(float3 loc, float cmpDepth)
 
 float4 PSMain( PS_IN input ) : SV_Target
 {
-    float3 norm = normalize(input.norm.xyz);
+    GBufferData gBuffer = ReadGBuffer(input.pos.xy);
+    float3 worldPos = gBuffer.WorldPos_Depth.xyz;
+    float3 norm = normalize(gBuffer.Normal);
     float3 lDir = normalize(lightDir.xyz);
     
     // Texture color
-    float3 objectColor = DiffuseMap.Sample(Sampler, input.tex.xy);
+    float3 objectColor = gBuffer.AlbedoCol;
        
     // Diffuse
-    float3 diffuseColor = lightColor * kD * saturate(dot(norm, -lDir)) * DSAIntensity.x;
+    float3 diffuseColor = lightColor.xyz * gBuffer.DiffuseCoeff * saturate(dot(norm, -lDir)) * DSAIntensity.x;
     
     // Specular
     float3 reflected = normalize(reflect(lDir, norm.xyz));
-    float3 viewDir = normalize(cameraPos.xyz - input.worldPos.xyz);
-    float3 specularColor = lightColor.xyz * kS_alpha.xyz * DSAIntensity.y * pow(saturate(dot(reflected, viewDir)), kS_alpha.w);
+    float3 viewDir = normalize(cameraPos.xyz - worldPos);
+    float3 specularColor = lightColor.xyz * gBuffer.SpecularCoeff.xyz * DSAIntensity.y * pow(saturate(dot(reflected, viewDir)), gBuffer.SpecularCoeff.w);
     
     // Ambient
-    float3 ambientColor = lightColor * kA * DSAIntensity.z;
+    float3 ambientColor = lightColor.xyz * gBuffer.AmbientCoeff * DSAIntensity.z;
     
     
     // Cascade shadows
-    float4 viewPos = input.viewPos;
-    float depthVal = abs(viewPos.z);
+    float depthVal = abs(gBuffer.WorldPos_Depth.w);
     float cascadeIdx = 3.0f;
     int layer = 3;
     float cascadeDepth = 1.0f;
@@ -141,7 +144,7 @@ float4 PSMain( PS_IN input ) : SV_Target
         }
     }      
     
-    float4 lightSpacePos = mul(cascadeData.lightViewProjection[cascadeIdx], input.worldPos);
+    float4 lightSpacePos = mul(cascadeData.lightViewProjection[cascadeIdx], float4(worldPos, 1.0f));
     lightSpacePos = lightSpacePos / lightSpacePos.w;
     float2 texCoords = (lightSpacePos.xy + float2(1.0f, 1.0f)) * 0.5f;
     texCoords.y = 1.0f - texCoords.y;

@@ -600,7 +600,7 @@ namespace DirectX
             // Rotates about y-axis (angles.y), then x-axis (angles.x), then z-axis (angles.z)
             static Matrix CreateFromYawPitchRoll(const Vector3& angles) noexcept;
 
-            static Matrix CreateShadow(const Vector3& lightDir, const Plane& plane) noexcept;
+            static Matrix CreateShadow(const Vector3& lightParam1, const Plane& plane) noexcept;
 
             static Matrix CreateReflection(const Plane& plane) noexcept;
 

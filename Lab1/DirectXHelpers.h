@@ -203,7 +203,7 @@ namespace DirectX
         }
     }
 
-    // Helper for creating a Direct3D input layout to match a shader from an IEffect
+    // Helper for creating a Direct3D input geometryLayout to match a shader from an IEffect
     HRESULT __cdecl CreateInputLayoutFromEffect(_In_ ID3D11Device* device,
         _In_ IEffect* effect,
         _In_reads_(count) const D3D11_INPUT_ELEMENT_DESC* desc,
