@@ -7,17 +7,15 @@ PointLight::PointLight()
 }
 
 PointLight::PointLight(
-	Vector4 lightPos, Vector4 lightColor,
-	float range, float attenuation, float diffuseIntensity, float specularIntensity, float ambientIntensity,
+	Vector3 lightPos, Vector4 lightColor,
+	float range, float diffuseIntensity, float specularIntensity,
 	Model<BoundingSphere>* lightMesh
 )
 {
 	this->lightPos = lightPos;
 	this->lightColor = lightColor;
 	this->range = range;
-	this->attenuation = attenuation;
 	this->diffuseIntensity = diffuseIntensity;
 	this->specularIntensity = specularIntensity;
-	this->ambientIntensity = ambientIntensity;
 	this->lightMesh = lightMesh;
 }

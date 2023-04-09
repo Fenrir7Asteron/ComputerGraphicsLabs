@@ -18,10 +18,8 @@ struct CascadeData
 cbuffer PS_CONSTANT_BUFFER : register(b0)
 {
     float4 cameraPos;
-    
     float4 lightDir;
     float4 lightColor;
-        
     float4 DSAIntensity;
 };
 
@@ -39,8 +37,7 @@ Texture2D AmbientCoeffMap  : register(t5);
 
 Texture2DArray ShadowMap   : register(t6);
 
-SamplerState Sampler : register(s0);
-SamplerComparisonState ShadowCompSampler : register(s1);
+SamplerComparisonState ShadowCompSampler : register(s0);
 
 struct GBufferData
 {
@@ -156,6 +153,6 @@ float4 PSMain( PS_IN input ) : SV_Target
     float shadowCoeff = PCF(float3(texCoords.x, texCoords.y, cascadeIdx), lightSpacePos.z - bias);
     
     float3 cascadeVector = float3(cascadeDepth, 0.0f, 0.0f);
-    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor + cascadeVector);
+    objectColor = objectColor * ((diffuseColor + specularColor) * shadowCoeff + ambientColor);
     return float4(objectColor, 1.0f);
 }

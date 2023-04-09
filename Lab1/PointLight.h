@@ -11,17 +11,16 @@ public:
 	GAMEFRAMEWORK_API PointLight();
 
 	GAMEFRAMEWORK_API PointLight(
-		DirectX::SimpleMath::Vector4 lightPos,
+		DirectX::SimpleMath::Vector3 lightPos,
 		DirectX::SimpleMath::Vector4 lightColor,
-		float range, float attenuation,
-		float diffuseIntensity, float specularIntensity, float ambientIntensity,
+		float range,
+		float diffuseIntensity, float specularIntensity,
 		Model<BoundingSphere>* lightMesh
 	);
 
-	DirectX::SimpleMath::Vector4 lightPos;
+	DirectX::SimpleMath::Vector3 lightPos;
 	DirectX::SimpleMath::Vector4 lightColor;
 	float range;
-	float attenuation;
 	float diffuseIntensity;
 	float specularIntensity;
 	float ambientIntensity;

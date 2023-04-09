@@ -6,7 +6,6 @@ GAMEFRAMEWORK_API struct LightConstantData
 {
 	DirectX::SimpleMath::Vector4 cameraPos;
 	DirectX::SimpleMath::Vector4 lightParam1;
-	DirectX::SimpleMath::Vector4 lightParam2;
 	DirectX::SimpleMath::Vector4 lightColor;
 	DirectX::SimpleMath::Vector4 DSAIntensity;
 };

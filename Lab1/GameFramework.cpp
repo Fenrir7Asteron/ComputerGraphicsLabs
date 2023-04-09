@@ -402,7 +402,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 		&directionalLightLayout);
 
 	directionalLightVertexBC = nullptr;
-	ID3DBlob* errorVertexCode = nullptr;
+	errorVertexCode = nullptr;
 
 
 	const LPCWSTR pointLightingPassShaderPath = L"./Shaders/PointLightingShader.hlsl";
@@ -420,7 +420,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	CheckShaderCreationSuccess(res, errorVertexCode, pointLightingPassShaderPath);
 
 	pointLightPixelBC = nullptr;
-	ID3DBlob* errorPixelCode = nullptr;
+	errorPixelCode = nullptr;
 
 	res = D3DCompileFromFile(pointLightingPassShaderPath, nullptr /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pointLightPixelBC, &errorPixelCode);
 	CheckShaderCreationSuccess(res, errorPixelCode, pointLightingPassShaderPath);
@@ -664,7 +664,6 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 	LightConstantData lightData;
 	lightData.cameraPos = Vector4(camera->position.x, camera->position.y, camera->position.z, 1.0f);
 	lightData.lightParam1 = dirLight->direction;
-	lightData.lightParam2 = Vector4::Zero;
 	lightData.lightColor = dirLight->lightColor;
 	lightData.DSAIntensity = Vector4(dirLight->diffuseIntensity, dirLight->specularIntensity, dirLight->ambientIntensity, 0.0f);
 
@@ -674,6 +673,8 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	context->PSSetConstantBuffers(0, 1, &constantLightBuffer);
 	context->PSSetConstantBuffers(1, 1, &dirLight->constantLightViewProjectionBuffer);
+
+	context->PSSetSamplers(0, 1, dirLight->comparisonSampler.GetAddressOf());
 
 	context->VSSetShader(directionalLightVertexShader, nullptr, 0);
 	context->PSSetShader(directionalLightPixelShader, nullptr, 0);
@@ -685,6 +686,8 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	for (PointLight* pointLight : pointLights)
 	{
+		//context->ClearState();
+
 		context->RSSetState(rastStateCullFront);
 
 		context->OMSetDepthStencilState(depthStateLightingGreater.Get(), 0);
@@ -694,17 +697,15 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 		LightConstantData lightData;
 		lightData.cameraPos = Vector4(camera->position.x, camera->position.y, camera->position.z, 1.0f);
-		lightData.lightParam1 = pointLight->lightPos;
-		lightData.lightParam2 = {pointLight->range, pointLight->attenuation, 0.0f, 0.0f};
-		lightData.lightColor = dirLight->lightColor;
-		lightData.DSAIntensity = Vector4(dirLight->diffuseIntensity, dirLight->specularIntensity, dirLight->ambientIntensity, 0.0f);
+		lightData.lightParam1 = Vector4(pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z, pointLight->range);
+		lightData.lightColor = pointLight->lightColor;
+		lightData.DSAIntensity = Vector4(pointLight->diffuseIntensity, pointLight->specularIntensity, 0.0f, 0.0f);
 
 		context->Map(constantLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		memcpy(mappedResource.pData, &lightData, sizeof(lightData));
 		context->Unmap(constantLightBuffer, 0);
 
 		context->PSSetConstantBuffers(0, 1, &constantLightBuffer);
-		context->PSSetConstantBuffers(1, 1, &dirLight->constantLightViewProjectionBuffer);
 
 		context->VSSetShader(pointLightVertexShader, nullptr, 0);
 		context->PSSetShader(pointLightPixelShader, nullptr, 0);
@@ -719,6 +720,7 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 		context->DrawIndexed(pointLight->lightMesh->meshPtrs[0].get()->indicesLen, 0, 0);
 
+		debugRender->DrawSphere(2.0f, pointLight->lightColor, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
 		debugRender->DrawSphere(pointLight->range, { 0.0f, 1.0f, 1.0f, 1.0f }, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
 	}
 
