@@ -41,7 +41,6 @@ GAMEFRAMEWORK_API GameComponent::GameComponent(GameFramework* game, GameComponen
 GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
 {
 	positionOffset += positionDelta;
-	worldMatrixIsDirty_ = true;
 }
 
 GAMEFRAMEWORK_API void GameComponent::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
@@ -55,8 +54,6 @@ GAMEFRAMEWORK_API void GameComponent::Rotate(DirectX::SimpleMath::Vector3 axis, 
 
 	rotation *= delta;
 	rotation.Normalize();
-
-	worldMatrixIsDirty_ = true;
 }
 
 GAMEFRAMEWORK_API void GameComponent::RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle)
@@ -75,20 +72,16 @@ GAMEFRAMEWORK_API void GameComponent::RotateAroundPoint(DirectX::SimpleMath::Vec
 
 	newPosition = Vector3::Transform(newPosition, rot);
 	positionOffset = newPosition + point;
-	worldMatrixIsDirty_ = true;
 }
 
 GAMEFRAMEWORK_API void GameComponent::SetParent(GameComponent* newParent)
 {
 	this->parent = newParent;
-	worldMatrixIsDirty_ = true;
 }
 
 GAMEFRAMEWORK_API void GameComponent::UpdateWorldMatrix()
 {
 	this->objectToWorldMatrix_ = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(positionOffset);
-
-	worldMatrixIsDirty_ = false;
 
 	if (parent != nullptr)
 		this->objectToWorldMatrix_ = this->objectToWorldMatrix_ 
@@ -98,13 +91,9 @@ GAMEFRAMEWORK_API void GameComponent::UpdateWorldMatrix()
 
 GAMEFRAMEWORK_API const Matrix& GameComponent::GetWorldMatrix()
 {
-	bool isDirty = false;
 	GameComponent* cur = this;
 	while (cur != nullptr)
 	{
-		if (cur->worldMatrixIsDirty_)
-			isDirty = true;
-
 		cur = cur->parent;
 	}
 

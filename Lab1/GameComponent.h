@@ -43,6 +43,5 @@ public:
 protected:
 	GameFramework* game_;
 	DirectX::SimpleMath::Matrix objectToWorldMatrix_;
-	bool worldMatrixIsDirty_;
 };
 

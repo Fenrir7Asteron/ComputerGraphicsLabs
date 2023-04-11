@@ -17,6 +17,13 @@ cbuffer PS_CONSTANT_BUFFER : register(b0)
     float4 DSAIntensity;
 };
 
+cbuffer VS_CONSTANT_BUFFER : register(b1)
+{
+    float4x4 worldMatrix;
+    float4x4 viewMatrix;
+    float4x4 projectionMatrix;
+};
+
 Texture2D WorldPosDepthMap : register(t0);
 Texture2D NormalMap        : register(t1);
 Texture2D AlbedoMap        : register(t2);
@@ -45,14 +52,14 @@ GBufferData ReadGBuffer(float2 screenPos)
     return buf;
 }
 
-PS_IN VSMain( uint id : SV_VertexID )
+PS_IN VSMain( VS_IN input )
 {
 	PS_IN output = (PS_IN)0;
-    float2 inds = float2(id & 1, (id & 2) >> 1);
-    output.pos = float4(inds * float2(2, -2) + float2(-1, 1), 0, 1);	
+    output.pos = mul(projectionMatrix, mul(viewMatrix, mul(worldMatrix, input.pos)));
 	return output;
 }
 
+[earlydepthstencil]
 float4 PSMain( PS_IN input ) : SV_Target
 {
     GBufferData gBuffer = ReadGBuffer(input.pos.xy);
@@ -60,8 +67,9 @@ float4 PSMain( PS_IN input ) : SV_Target
     float3 norm = normalize(gBuffer.Normal);
     float3 toLight = lightPos.xyz - worldPos;
     float distToLight = length(toLight);
-    float distToLightSquared = max(dot(toLight, toLight), 0.00001f);\
+    float distToLightSquared = max(dot(toLight, toLight), 0.00001f);
     float radius = lightPos.w;
+    //float radius = 100.0f;
     
     toLight = normalize(toLight);
         
@@ -78,7 +86,8 @@ float4 PSMain( PS_IN input ) : SV_Target
     
     float tmp = distToLightSquared / (radius * radius);
     float rangeAttenuation = pow(saturate(1.0f - tmp * tmp), 2.0f);
-    float attenuation = rangeAttenuation / (1.0f + 0.1f * distToLight);
+    float attenuation = saturate(1.0f - distToLight / radius);
+    attenuation *= attenuation;
   
     objectColor = attenuation * objectColor * (diffuseColor + specularColor);
     return float4(objectColor, 1.0f);

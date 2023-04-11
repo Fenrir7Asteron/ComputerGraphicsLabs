@@ -94,6 +94,7 @@ public:
 	ID3D11InputLayout* pointLightLayout;
 
 	ID3D11Buffer* constantLightBuffer;
+	ID3D11Buffer* constantPointLightBuffer;
 
 	ID3D11RasterizerState* rastStateCullBack;
 	ID3D11RasterizerState* rastStateCullFront;

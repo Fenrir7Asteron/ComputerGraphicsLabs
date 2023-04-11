@@ -188,7 +188,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	D3D11_TEXTURE2D_DESC worldPosMapDesc;
 	ZeroMemory(&worldPosMapDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	worldPosMapDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	worldPosMapDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	worldPosMapDesc.MipLevels = 1;
 	worldPosMapDesc.ArraySize = 1;
 	worldPosMapDesc.SampleDesc.Count = 1;
@@ -280,7 +280,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	D3D11_SHADER_RESOURCE_VIEW_DESC worldPosSRVDesc;
 	ZeroMemory(&worldPosSRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 	worldPosSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	worldPosSRVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	worldPosSRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	worldPosSRVDesc.Texture2D.MipLevels = 1;
 	worldPosSRVDesc.Texture2D.MostDetailedMip = 0;
 
@@ -326,7 +326,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	inputDevice = new InputDevice(this);
 
-	camera = new Camera(200.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
+	camera = new Camera(20.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
 
 	cameraControllers.emplace_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
 
@@ -463,6 +463,15 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	device->CreateBuffer(&constantLightBufDesc, nullptr, &constantLightBuffer);
 
+	D3D11_BUFFER_DESC constantPointLightBufDesc = {};
+	constantPointLightBufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	constantPointLightBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantPointLightBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	constantPointLightBufDesc.MiscFlags = 0;
+	constantPointLightBufDesc.StructureByteStride = 0;
+	constantPointLightBufDesc.ByteWidth = sizeof(PointLightConstantData);
+
+	device->CreateBuffer(&constantPointLightBufDesc, nullptr, &constantPointLightBuffer);
 
 	CD3D11_RASTERIZER_DESC rastCullBackDesc = {};
 	rastCullBackDesc.CullMode = D3D11_CULL_BACK;
@@ -657,7 +666,6 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	context->RSSetViewports(1, &viewport);
 
-
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
@@ -666,6 +674,7 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 	lightData.lightParam1 = dirLight->direction;
 	lightData.lightColor = dirLight->lightColor;
 	lightData.DSAIntensity = Vector4(dirLight->diffuseIntensity, dirLight->specularIntensity, dirLight->ambientIntensity, 0.0f);
+	lightData.CameraView = camera->GetViewMatrix();
 
 	context->Map(constantLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &lightData, sizeof(lightData));
@@ -686,12 +695,20 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	for (PointLight* pointLight : pointLights)
 	{
-		//context->ClearState();
+		context->ClearState();
+
+		context->OMSetBlendState(blendStateLight, nullptr, 0xffffffff);
 
 		context->RSSetState(rastStateCullFront);
 
+		ID3D11ShaderResourceView* SRVsPoint[] = { gBuffer.worldPos_DepthSRV, gBuffer.normalSRV, gBuffer.albedoSRV, gBuffer.diffuseCoeffSRV, gBuffer.specularCoeffSRV };
+		context->PSSetShaderResources(0, 5, SRVsPoint);
+
+		context->OMSetRenderTargets(1, &rtv, nullptr);
+
 		context->OMSetDepthStencilState(depthStateLightingGreater.Get(), 0);
-		context->OMSetRenderTargets(1, &rtv, pDSV.Get());
+
+		context->RSSetViewports(1, &viewport);
 
 		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
@@ -700,17 +717,29 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		lightData.lightParam1 = Vector4(pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z, pointLight->range);
 		lightData.lightColor = pointLight->lightColor;
 		lightData.DSAIntensity = Vector4(pointLight->diffuseIntensity, pointLight->specularIntensity, 0.0f, 0.0f);
+		lightData.CameraView = camera->GetViewMatrix();
 
 		context->Map(constantLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		memcpy(mappedResource.pData, &lightData, sizeof(lightData));
 		context->Unmap(constantLightBuffer, 0);
 
-		context->PSSetConstantBuffers(0, 1, &constantLightBuffer);
+		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-		context->VSSetShader(pointLightVertexShader, nullptr, 0);
-		context->PSSetShader(pointLightPixelShader, nullptr, 0);
+		
+		pointLight->pointLightMvp.worldMatrix = pointLight->lightMesh->GetWorldMatrix();
+		pointLight->pointLightMvp.viewMatrix = camera->GetViewMatrix();
+		pointLight->pointLightMvp.projectionMatrix = camera->GetProjectionMatrix();
+		
+
+		context->Map(constantPointLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &pointLight->pointLightMvp, sizeof(pointLight->pointLightMvp));
+		context->Unmap(constantPointLightBuffer, 0);
+
+		context->PSSetConstantBuffers(0, 1, &constantLightBuffer);
+		context->VSSetConstantBuffers(1, 1, &constantPointLightBuffer);
+
 		context->IASetInputLayout(pointLightLayout);
-		context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+		context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		UINT strides[] = { sizeof(Vertex) };
 		UINT offsets[] = { 0 };
@@ -718,16 +747,20 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		context->IASetIndexBuffer(pointLight->lightMesh->meshPtrs[0].get()->ib, DXGI_FORMAT_R32_UINT, 0);
 		context->IASetVertexBuffers(0, 1, &pointLight->lightMesh->meshPtrs[0].get()->vb, strides, offsets);
 
+		context->VSSetShader(pointLightVertexShader, nullptr, 0);
+		context->PSSetShader(pointLightPixelShader, nullptr, 0);
+
 		context->DrawIndexed(pointLight->lightMesh->meshPtrs[0].get()->indicesLen, 0, 0);
 
 		debugRender->DrawSphere(2.0f, pointLight->lightColor, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
-		debugRender->DrawSphere(pointLight->range, { 0.0f, 1.0f, 1.0f, 1.0f }, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
+		//debugRender->DrawSphere(pointLight->range, { 0.0f, 1.0f, 1.0f, 1.0f }, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
 	}
 
 	debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
 	debugRender->Draw(deltaTime);
 
 	context->OMSetRenderTargets(0, nullptr, nullptr);
+
 
 	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 	debugRender->Clear();
@@ -846,8 +879,8 @@ GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
 	float color[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	context->ClearRenderTargetView(rtv, color);
 	gBuffer.Clear(context, color);
-	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 GAMEFRAMEWORK_API void GameFramework::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName)

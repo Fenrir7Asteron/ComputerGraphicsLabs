@@ -2,6 +2,7 @@
 #include "GameFrameworkExports.h"
 #include "SimpleMath.h"
 #include "Model.h"
+#include "PointLightConstantData.h"
 
 class GameFramework;
 
@@ -25,5 +26,7 @@ public:
 	float specularIntensity;
 	float ambientIntensity;
 	Model<BoundingSphere>* lightMesh;
+
+	PointLightConstantData pointLightMvp;
 };
 

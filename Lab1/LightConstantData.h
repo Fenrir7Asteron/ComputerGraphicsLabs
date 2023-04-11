@@ -8,4 +8,5 @@ GAMEFRAMEWORK_API struct LightConstantData
 	DirectX::SimpleMath::Vector4 lightParam1;
 	DirectX::SimpleMath::Vector4 lightColor;
 	DirectX::SimpleMath::Vector4 DSAIntensity;
+	DirectX::SimpleMath::Matrix CameraView;
 };

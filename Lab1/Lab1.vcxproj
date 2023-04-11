@@ -199,6 +199,7 @@
     <ClInclude Include="PhysicalSphereComponent.h" />
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="PointLight.h" />
+    <ClInclude Include="PointLightConstantData.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VertexPositionColor.h" />
