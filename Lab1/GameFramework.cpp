@@ -11,6 +11,7 @@
 #include <d3dcompiler.h>
 #include "LightConstantData.h"
 #include "PointLight.h"
+#include "MacrosParser.h"
 
 using namespace DirectX::SimpleMath;
 
@@ -340,43 +341,58 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 
 	// Create lighting pass resources shaders
-	directionalLightVertexBC = nullptr;
+	ID3DBlob* vertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 
-	const LPCWSTR lightingPassShaderPath = L"./Shaders/DirectionalLightingShader.hlsl";
+	const LPCWSTR lightingPassShaderPath = L"./Shaders/LightingShader.hlsl";
 
-	res = D3DCompileFromFile(lightingPassShaderPath,
-		nullptr /*macros*/,
-		nullptr /*include*/,
-		"VSMain",
-		"vs_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		&directionalLightVertexBC,
-		&errorVertexCode);
-
-	CheckShaderCreationSuccess(res, errorVertexCode, lightingPassShaderPath);
-
-	directionalLightPixelBC = nullptr;
-	ID3DBlob* errorPixelCode = nullptr;
-
-	res = D3DCompileFromFile(lightingPassShaderPath, nullptr /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &directionalLightPixelBC, &errorPixelCode);
-	CheckShaderCreationSuccess(res, errorPixelCode, lightingPassShaderPath);
-
-	res = device->CreateVertexShader(
-		directionalLightVertexBC->GetBufferPointer(),
-		directionalLightVertexBC->GetBufferSize(),
-		nullptr, &directionalLightVertexShader);
-
-	if (FAILED(res))
+	for (auto flag : vsLightingFlags)
 	{
-		return;
+		auto macros = MacrosParser::GetMacros(flag);
+
+		res = D3DCompileFromFile(lightingPassShaderPath,
+			&macros[0],
+			nullptr /*include*/,
+			"VSMain",
+			"vs_5_0",
+			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+			0,
+			&vertexBC,
+			&errorVertexCode);
+
+		CheckShaderCreationSuccess(res, errorVertexCode, lightingPassShaderPath);
+
+		res = device->CreateVertexShader(
+			vertexBC->GetBufferPointer(),
+			vertexBC->GetBufferSize(),
+			nullptr, &lightingVertexShaders[flag]);
 	}
 
-	res = device->CreatePixelShader(
-		directionalLightPixelBC->GetBufferPointer(),
-		directionalLightPixelBC->GetBufferSize(),
-		nullptr, &directionalLightPixelShader);
+	ID3DBlob* pixelBC = nullptr;
+	ID3DBlob* errorPixelCode = nullptr;
+
+
+	for (auto flag : psLightingFlags)
+	{
+		auto macros = MacrosParser::GetMacros(flag);
+
+		res = D3DCompileFromFile(lightingPassShaderPath,
+			&macros[0] /*macros*/,
+			nullptr /*include*/,
+			"PSMain",
+			"ps_5_0",
+			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+			0,
+			&pixelBC,
+			&errorPixelCode);
+
+		CheckShaderCreationSuccess(res, errorPixelCode, lightingPassShaderPath);
+
+		res = device->CreatePixelShader(
+			pixelBC->GetBufferPointer(),
+			pixelBC->GetBufferSize(),
+			nullptr, &lightingPixelShaders[flag]);
+	}
 
 	if (FAILED(res))
 	{
@@ -397,60 +413,9 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	device->CreateInputLayout(
 		inputElements,
 		1,
-		directionalLightVertexBC->GetBufferPointer(),
-		directionalLightVertexBC->GetBufferSize(),
-		&directionalLightLayout);
-
-	directionalLightVertexBC = nullptr;
-	errorVertexCode = nullptr;
-
-
-	const LPCWSTR pointLightingPassShaderPath = L"./Shaders/PointLightingShader.hlsl";
-
-	res = D3DCompileFromFile(pointLightingPassShaderPath,
-		nullptr /*macros*/,
-		nullptr /*include*/,
-		"VSMain",
-		"vs_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		&pointLightVertexBC,
-		&errorVertexCode);
-
-	CheckShaderCreationSuccess(res, errorVertexCode, pointLightingPassShaderPath);
-
-	pointLightPixelBC = nullptr;
-	errorPixelCode = nullptr;
-
-	res = D3DCompileFromFile(pointLightingPassShaderPath, nullptr /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &pointLightPixelBC, &errorPixelCode);
-	CheckShaderCreationSuccess(res, errorPixelCode, pointLightingPassShaderPath);
-
-	res = device->CreateVertexShader(
-		pointLightVertexBC->GetBufferPointer(),
-		pointLightVertexBC->GetBufferSize(),
-		nullptr, &pointLightVertexShader);
-
-	if (FAILED(res))
-	{
-		return;
-	}
-
-	res = device->CreatePixelShader(
-		pointLightPixelBC->GetBufferPointer(),
-		pointLightPixelBC->GetBufferSize(),
-		nullptr, &pointLightPixelShader);
-
-	if (FAILED(res))
-	{
-		return;
-	}
-
-	device->CreateInputLayout(
-		inputElements,
-		1,
-		pointLightVertexBC->GetBufferPointer(),
-		pointLightVertexBC->GetBufferSize(),
-		&pointLightLayout);
+		vertexBC->GetBufferPointer(),
+		vertexBC->GetBufferSize(),
+		&lightingLayout);
 
 
 	D3D11_BUFFER_DESC constantLightBufDesc = {};
@@ -685,8 +650,8 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	context->PSSetSamplers(0, 1, dirLight->comparisonSampler.GetAddressOf());
 
-	context->VSSetShader(directionalLightVertexShader, nullptr, 0);
-	context->PSSetShader(directionalLightPixelShader, nullptr, 0);
+	context->VSSetShader(lightingVertexShaders[VertexLightingShaderFlags::SCREEN_QUAD], nullptr, 0);
+	context->PSSetShader(lightingPixelShaders[PixelLightingShaderFlags::DIRECTIONAL], nullptr, 0);
 	context->IASetInputLayout(nullptr);
 	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
@@ -736,9 +701,9 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		context->Unmap(constantPointLightBuffer, 0);
 
 		context->PSSetConstantBuffers(0, 1, &constantLightBuffer);
-		context->VSSetConstantBuffers(1, 1, &constantPointLightBuffer);
+		context->VSSetConstantBuffers(2, 1, &constantPointLightBuffer);
 
-		context->IASetInputLayout(pointLightLayout);
+		context->IASetInputLayout(lightingLayout);
 		context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		UINT strides[] = { sizeof(Vertex) };
@@ -747,8 +712,8 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		context->IASetIndexBuffer(pointLight->lightMesh->meshPtrs[0].get()->ib, DXGI_FORMAT_R32_UINT, 0);
 		context->IASetVertexBuffers(0, 1, &pointLight->lightMesh->meshPtrs[0].get()->vb, strides, offsets);
 
-		context->VSSetShader(pointLightVertexShader, nullptr, 0);
-		context->PSSetShader(pointLightPixelShader, nullptr, 0);
+		context->VSSetShader(lightingVertexShaders[VertexLightingShaderFlags::NONE], nullptr, 0);
+		context->PSSetShader(lightingPixelShaders[PixelLightingShaderFlags::POINT], nullptr, 0);
 
 		context->DrawIndexed(pointLight->lightMesh->meshPtrs[0].get()->indicesLen, 0, 0);
 

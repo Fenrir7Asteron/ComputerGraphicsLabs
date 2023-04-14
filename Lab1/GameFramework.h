@@ -13,6 +13,8 @@
 #include "Model.h"
 #include "GBuffer.h"
 #include "PointLight.h"
+#include "ShaderFlags.h"
+#include <map>
 
 class DebugRenderSysImpl;
 
@@ -81,17 +83,20 @@ public:
 	DirectionalLight* dirLight;
 	std::vector<PointLight*> pointLights;
 
-	ID3DBlob* directionalLightVertexBC;
-	ID3D11VertexShader* directionalLightVertexShader;
-	ID3DBlob* directionalLightPixelBC;
-	ID3D11PixelShader* directionalLightPixelShader;
-	ID3D11InputLayout* directionalLightLayout;
+	ID3D11InputLayout* lightingLayout;
 
-	ID3DBlob* pointLightVertexBC;
-	ID3D11VertexShader* pointLightVertexShader;
-	ID3DBlob* pointLightPixelBC;
-	ID3D11PixelShader* pointLightPixelShader;
-	ID3D11InputLayout* pointLightLayout;
+	std::map<VertexLightingShaderFlags, ID3D11VertexShader*> lightingVertexShaders;
+	std::map<PixelLightingShaderFlags, ID3D11PixelShader*> lightingPixelShaders;
+
+	std::vector<VertexLightingShaderFlags> vsLightingFlags = {
+		VertexLightingShaderFlags::NONE,
+		VertexLightingShaderFlags::SCREEN_QUAD
+	};
+
+	std::vector<PixelLightingShaderFlags> psLightingFlags = {
+		PixelLightingShaderFlags::DIRECTIONAL,
+		PixelLightingShaderFlags::POINT
+	};
 
 	ID3D11Buffer* constantLightBuffer;
 	ID3D11Buffer* constantPointLightBuffer;

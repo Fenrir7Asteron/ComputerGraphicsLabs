@@ -157,7 +157,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\DirectionalLightingShader.hlsl">
+    <None Include="Shaders\LightingShader.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

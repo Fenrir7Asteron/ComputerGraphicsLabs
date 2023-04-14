@@ -144,6 +144,7 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 			0}
 	};
 
+
 	device->CreateInputLayout(
 		inputElements1,
 		4,

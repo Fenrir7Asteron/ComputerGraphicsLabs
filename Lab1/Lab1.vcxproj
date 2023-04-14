@@ -89,6 +89,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GAMEFRAMEWORK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>/std:c++17</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -185,6 +186,8 @@
     <ClInclude Include="LightConstantData.h" />
     <ClInclude Include="LightViewProjection.h" />
     <ClInclude Include="LoaderHelpers.h" />
+    <ClInclude Include="MacrosParser.h" />
+    <ClInclude Include="magic_enum.hpp" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
@@ -200,6 +203,7 @@
     <ClInclude Include="PlatformHelpers.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="PointLightConstantData.h" />
+    <ClInclude Include="ShaderFlags.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VertexPositionColor.h" />
