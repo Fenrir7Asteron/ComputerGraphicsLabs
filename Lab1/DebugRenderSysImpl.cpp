@@ -19,7 +19,7 @@ DebugRenderSysImpl::DebugRenderSysImpl(GameFramework* inGame) : game(inGame)
 	game->device->CreateBuffer(&constDesc, nullptr, &constBuf);
 	
 	InitPrimitives();
-	//InitQuads();
+	InitQuads();
 }
 
 

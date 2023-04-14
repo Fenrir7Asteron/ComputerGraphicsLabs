@@ -342,6 +342,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	// Create lighting pass resources shaders
 	ID3DBlob* vertexBC = nullptr;
+	ID3DBlob* lightingSignature = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 
 	const LPCWSTR lightingPassShaderPath = L"./Shaders/LightingShader.hlsl";
@@ -366,6 +367,11 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 			vertexBC->GetBufferPointer(),
 			vertexBC->GetBufferSize(),
 			nullptr, &lightingVertexShaders[flag]);
+
+		if (flag == VertexLightingShaderFlags::NONE)
+		{
+			lightingSignature = vertexBC;
+		}
 	}
 
 	ID3DBlob* pixelBC = nullptr;
@@ -413,8 +419,8 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	device->CreateInputLayout(
 		inputElements,
 		1,
-		vertexBC->GetBufferPointer(),
-		vertexBC->GetBufferSize(),
+		lightingSignature->GetBufferPointer(),
+		lightingSignature->GetBufferSize(),
 		&lightingLayout);
 
 
