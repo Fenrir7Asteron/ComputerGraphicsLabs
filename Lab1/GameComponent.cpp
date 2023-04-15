@@ -38,6 +38,11 @@ GAMEFRAMEWORK_API GameComponent::GameComponent(GameFramework* game, GameComponen
 	this->material = material;
 }
 
+GAMEFRAMEWORK_API void GameComponent::DrawShadowMap()
+{
+	
+}
+
 GAMEFRAMEWORK_API void GameComponent::Move(DirectX::SimpleMath::Vector3 positionDelta)
 {
 	positionOffset += positionDelta;

@@ -3,6 +3,7 @@
 #include "KatamaryBall.h"
 #include "Model.h"
 #include "PointLight.h"
+#include "ParticleSystem.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -54,7 +55,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	Material* katamaryMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/sphere_texture.jpg");
 	Material* whiteMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/White.png");
 	KatamaryBall<BoundingSphere>* katamary = new KatamaryBall<BoundingSphere>(this, 50.0f, 500.0f, coeff2, "../Assets/Models/", "sphere.fbx", geometryPassShaderPath, depthShaderPath, 0.01f, Matrix::Identity, katamaryMat, PhysicalLayer::Player);
-	AddComponent(katamary);
+	//AddComponent(katamary);
 
 	Material* tableMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/wood1.jpg");
 
@@ -115,4 +116,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 
 	Vector4 direction = { 1.0f, -0.5f, 1.0f, 0.0f };
 	direction.Normalize();
+
+
+	AddParticleSystem(new ParticleSystem(this, nullptr, Vector3::Up * 100.0f, Quaternion::Identity, Vector3::One, camera));
 }

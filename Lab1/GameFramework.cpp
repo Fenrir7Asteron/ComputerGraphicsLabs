@@ -524,6 +524,19 @@ void GameFramework::Run()
 		RenderShadowMap();
 		GeometryPass();
 		LightingPass();
+
+		ParticleSystemPass();
+
+		context->ClearState();
+		context->OMSetRenderTargets(1, &rtv, pDSV.Get());
+
+		debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
+		debugRender->Draw(deltaTime);
+
+		context->OMSetRenderTargets(0, nullptr, nullptr);
+
+		swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
+		debugRender->Clear();
 	}
 
 	FreeGameResources();
@@ -554,6 +567,11 @@ void GameFramework::Update()
 			gameComponent->Update(deltaTime);
 	}
 
+	for (auto particleSystem : particleSystems)
+	{
+		particleSystem->Update(deltaTime);
+	}
+
 	for (auto cameraController : cameraControllers)
 	{
 		cameraController->Update(deltaTime);
@@ -569,6 +587,7 @@ void GameFramework::Update()
 		camera->SetOrthographic(true);
 	}
 }
+	
 
 void GameFramework::RenderShadowMap()
 {
@@ -726,20 +745,25 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		debugRender->DrawSphere(2.0f, pointLight->lightColor, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
 		//debugRender->DrawSphere(pointLight->range, { 0.0f, 1.0f, 1.0f, 1.0f }, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
 	}
+}
 
-	debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
-	debugRender->Draw(deltaTime);
-
-	context->OMSetRenderTargets(0, nullptr, nullptr);
-
-
-	swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
-	debugRender->Clear();
+GAMEFRAMEWORK_API void GameFramework::ParticleSystemPass()
+{
+	for (auto particleSystem : particleSystems)
+	{
+		particleSystem->GeometryPass();
+		std::cout << "Current particles alive: " << particleSystem->ParticlesCount << std::endl;
+	}
 }
 
 GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 {
 	gameComponents.push_back(gameComponent);
+}
+
+GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystem* particleSystem)
+{
+	particleSystems.push_back(particleSystem);
 }
 
 template<> GAMEFRAMEWORK_API void GameFramework::AddComponent(Model<BoundingOrientedBox>* gameComponent)

@@ -21,7 +21,7 @@ public:
 		Material* material = nullptr);
 
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) = 0;
-	GAMEFRAMEWORK_API virtual void DrawShadowMap() = 0;
+	GAMEFRAMEWORK_API virtual void DrawShadowMap();
 	GAMEFRAMEWORK_API virtual void GeometryPass() = 0;
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
 	GAMEFRAMEWORK_API virtual void Rotate(DirectX::SimpleMath::Vector3 axis, float angle);
