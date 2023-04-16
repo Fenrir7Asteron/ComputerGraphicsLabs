@@ -8,6 +8,8 @@ class KatamaryGame : public GameFramework
 public:
 	KatamaryGame(LPCWSTR applicationName);
 	void Init(int windowWidth, int windowHeight) override;
+	void Update() override;
 
 	OrbitalCameraController* orbitalCamController;
+	ParticleSystem* fountainPS;
 };

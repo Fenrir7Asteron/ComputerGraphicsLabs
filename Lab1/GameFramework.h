@@ -13,6 +13,9 @@
 #include "Model.h"
 #include "GBuffer.h"
 #include "PointLight.h"
+#include "ShaderFlags.h"
+#include <map>
+#include "ParticleSystem.h"
 
 class DebugRenderSysImpl;
 
@@ -27,7 +30,9 @@ public:
 	GAMEFRAMEWORK_API virtual void RenderShadowMap();
 	GAMEFRAMEWORK_API virtual void GeometryPass();
 	GAMEFRAMEWORK_API virtual void LightingPass();
+	GAMEFRAMEWORK_API virtual void ParticleSystemPass();
 	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
+	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystem* particleSystem);
 
 	template <typename T>
 	GAMEFRAMEWORK_API void AddComponent(Model<T>* gameComponent);
@@ -60,6 +65,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateGeometry;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateLightingLess;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateLightingGreater;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
 	D3D11_VIEWPORT viewport;
 
@@ -67,6 +74,7 @@ public:
 	ID3D11BlendState* blendStateLight;
 
 	std::vector<GameComponent*> gameComponents;
+	std::vector<ParticleSystem*> particleSystems;
 	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;
 	std::vector<PhysicalComponent<BoundingSphere>*> physicalSphereComponents;
 
@@ -81,17 +89,20 @@ public:
 	DirectionalLight* dirLight;
 	std::vector<PointLight*> pointLights;
 
-	ID3DBlob* directionalLightVertexBC;
-	ID3D11VertexShader* directionalLightVertexShader;
-	ID3DBlob* directionalLightPixelBC;
-	ID3D11PixelShader* directionalLightPixelShader;
-	ID3D11InputLayout* directionalLightLayout;
+	ID3D11InputLayout* lightingLayout;
 
-	ID3DBlob* pointLightVertexBC;
-	ID3D11VertexShader* pointLightVertexShader;
-	ID3DBlob* pointLightPixelBC;
-	ID3D11PixelShader* pointLightPixelShader;
-	ID3D11InputLayout* pointLightLayout;
+	std::map<VertexLightingShaderFlags, ID3D11VertexShader*> lightingVertexShaders;
+	std::map<PixelLightingShaderFlags, ID3D11PixelShader*> lightingPixelShaders;
+
+	std::vector<VertexLightingShaderFlags> vsLightingFlags = {
+		VertexLightingShaderFlags::NONE,
+		VertexLightingShaderFlags::SCREEN_QUAD
+	};
+
+	std::vector<PixelLightingShaderFlags> psLightingFlags = {
+		PixelLightingShaderFlags::DIRECTIONAL,
+		PixelLightingShaderFlags::POINT
+	};
 
 	ID3D11Buffer* constantLightBuffer;
 	ID3D11Buffer* constantPointLightBuffer;

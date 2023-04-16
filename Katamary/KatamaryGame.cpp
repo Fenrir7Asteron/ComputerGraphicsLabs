@@ -1,8 +1,11 @@
+#define _USE_MATH_DEFINES
+
 #include "KatamaryGame.h"
 #include "PhongCoefficients.h"
 #include "KatamaryBall.h"
 #include "Model.h"
 #include "PointLight.h"
+#include "ParticleSystem.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -115,4 +118,45 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 
 	Vector4 direction = { 1.0f, -0.5f, 1.0f, 0.0f };
 	direction.Normalize();
+
+	fountainPS = new ParticleSystem(this, nullptr, Vector3::Up * 100.0f, Quaternion::Identity, Vector3::One, camera);
+	AddParticleSystem(fountainPS);
+}
+
+void KatamaryGame::Update()
+{
+	GameFramework::Update();
+
+	if (fountainPS != nullptr)
+	{
+		for (int i = 0; i < 1; ++i)
+		{
+			ParticleSystem::Particle p;
+	
+			Vector3 pos = fountainPS->GetWorldMatrix().Translation();
+			p.Position = { pos.x, pos.y, pos.z, 1.0f };
+
+			Vector3 upVector = Vector3::Transform(Vector3::Up, fountainPS->rotation);
+			Vector3 rightVector = Vector3::Transform(Vector3::Right, fountainPS->rotation);
+			Vector3 forwardVector = Vector3::Transform(Vector3::Forward, fountainPS->rotation);
+
+			Vector3 velocity = upVector * 1000.0f;
+			float angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI * 2.0f;
+			float offsetPower = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 300.0f;
+			velocity += rightVector * sin(angle) * offsetPower;
+			velocity += forwardVector * cos(angle) * offsetPower;
+			p.Velocity = { velocity.x, velocity.y, velocity.z, 0.0f };
+
+			float g0 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 0.1f;
+			float b0 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 0.1f;
+			p.Color0 = { 0.0f, g0, b0, 1.0f };
+			p.Color1 = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+			p.Size0Size1 = { 10.0f, 1.0f };
+
+			p.LifeTime = 2.0f;
+
+			fountainPS->AddParticle(p);
+		}
+	}
 }
