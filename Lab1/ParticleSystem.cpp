@@ -68,7 +68,7 @@ void ParticleSystem::GetGroupSize(int particlesCount, int& groupSizeX, int& grou
 
 void ParticleSystem::Update(float deltaTime)
 {
-	if (game_->inputDevice->IsKeyDown(Keys::H))
+	if (game_->inputDevice->IsKeyDown(Keys::Space))
 		deltaTime = 0.0f;
 
 	int groupSizeX, groupSizeY;
@@ -325,7 +325,7 @@ void ParticleSystem::CreateBuffers()
 
 GAMEFRAMEWORK_API void ParticleSystem::AddParticle(const Particle& p)
 {
-	if (game_->inputDevice->IsKeyDown(Keys::H))
+	if (game_->inputDevice->IsKeyDown(Keys::Space))
 		return;
 
 	if (injectionCount < MaxParticlesInjectionCount && ParticlesCount + injectionCount < MaxParticlesCount)
