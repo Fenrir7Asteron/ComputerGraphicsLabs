@@ -65,6 +65,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateGeometry;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateLightingLess;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStateLightingGreater;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
 	D3D11_VIEWPORT viewport;
 

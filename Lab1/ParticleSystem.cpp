@@ -3,6 +3,7 @@
 #include <d3dcompiler.h>
 #include "magic_enum.hpp"
 #include "MacrosParser.h"
+#include <iostream>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -30,7 +31,7 @@ ParticleSystem::ParticleSystem(GameFramework* game,
 	auto blendStateDesc = D3D11_BLEND_DESC();
 	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
 	blendStateDesc.RenderTarget[0].BlendEnable = true;
-	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
@@ -43,20 +44,26 @@ ParticleSystem::ParticleSystem(GameFramework* game,
 	auto depthDesc = D3D11_DEPTH_STENCIL_DESC();
 	depthDesc.DepthEnable = true;
 	depthDesc.StencilEnable = false;
-	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	depthDesc.StencilReadMask = 0x00;
-	depthDesc.StencilWriteMask = 0x00;
+	//depthDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	//depthDesc.StencilWriteMask = 0x00;
 
 	game->device->CreateDepthStencilState(&depthDesc, &depthState);
 }
 
 void ParticleSystem::GetGroupSize(int particlesCount, int& groupSizeX, int& groupSizeY)
 {
-	int numGroups = (particlesCount % THREAD_IN_GROUP_TOTAL != 0) ? ((particlesCount / THREAD_IN_GROUP_TOTAL) + 1) : (particlesCount / THREAD_IN_GROUP_TOTAL);
-	double secondRoot = pow((double)numGroups, (double)(1.0f / 2.0f));
-	secondRoot = ceil(secondRoot);
-	groupSizeX = groupSizeY = (int)secondRoot;
+	if (particlesCount <= 0)
+	{
+		groupSizeX = 0;
+		groupSizeY = 0;
+	}
+	else
+	{
+		groupSizeX = (particlesCount - 1) / THREAD_IN_GROUP_TOTAL + 1;
+		groupSizeY = 1;
+	}
 }
 
 void ParticleSystem::Update(float deltaTime)
@@ -70,7 +77,7 @@ void ParticleSystem::Update(float deltaTime)
 	constData.World = GetWorldMatrix();
 	constData.View = camera->GetViewMatrix();
 	constData.Projection = camera->GetProjectionMatrix();
-	constData.DeltatimeMaxparticlesGroupdim = { deltaTime, (float) ParticlesCount, (float) groupSizeY, 0.0f };
+	constData.DeltatimeMaxparticlesGroupdim = { deltaTime, (float) ParticlesCount, (float) groupSizeX, 0.0f };
 
 	game_->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 
@@ -82,7 +89,7 @@ void ParticleSystem::Update(float deltaTime)
 	game_->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue);
 	game_->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);
 
-	game_->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION], nullptr, 0);
+	game_->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY], nullptr, 0);
 
 	// simulate particles
 	if (groupSizeX > 0)
@@ -91,23 +98,29 @@ void ParticleSystem::Update(float deltaTime)
 	// inject new particles
 	if (injectionCount > 0)
 	{
-		game_->context->CSSetConstantBuffers(0, 1, nullptr);
-
 		int injSizeX, injSizeY;
 		GetGroupSize(injectionCount, injSizeX, injSizeY);
 
-		constData.DeltatimeMaxparticlesGroupdim = { deltaTime, (float)injectionCount, (float)injSizeY, 0.0f };
+		constData.DeltatimeMaxparticlesGroupdim = { deltaTime, (float)injectionCount, (float)injSizeX, 0.0f };
 
 		game_->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 		game_->context->CSSetConstantBuffers(0, 1, &constBuf);
 
-		game_->context->UpdateSubresource(injectionBuf, 0, nullptr, &injectionParticles, 0, 0);
+		for (int i = 0; i < injectionCount; ++i) {
+			Particle temp = injectionParticles[i];
+			int k = 2;
+		}
+
+		game_->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
 
 		game_->context->CSSetUnorderedAccessViews(0, 1, &injUav, &injectionCount);
+		//game_->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterKeepValue);
 
 		game_->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0);
 
 		game_->context->Dispatch(injSizeX, injSizeY, 1);
+
+		std::cout << injectionCount << std::endl;
 
 		injectionCount = 0;
 	}
@@ -132,26 +145,19 @@ void ParticleSystem::Update(float deltaTime)
 void ParticleSystem::GeometryPass()
 {
 	game_->context->ClearState();
-	//game_->RestoreTargets();
 
-	ID3D11RasterizerState* oldState = nullptr;
-	game_->context->RSGetState(&oldState);
+	float color[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
 	game_->context->RSSetState(rastState);
-
-	ID3D11BlendState* oldBlend = nullptr;
-	UINT oldMask = 0;
-	float oldBlendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	game_->context->OMGetBlendState(&oldBlend, oldBlendFactor, &oldMask);
 
 	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	game_->context->OMSetBlendState(blendState, blendFactor, 0xffffffff);
 
-	ID3D11DepthStencilState* oldDepthState = nullptr;
-	UINT oldStencilRef = 0;
-	game_->context->OMGetDepthStencilState(&oldDepthState, &oldStencilRef);
-	game_->context->OMGetDepthStencilState(&depthState, 0);
+	game_->context->OMSetDepthStencilState(depthState, 0);
 
-	game_->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	game_->context->IASetInputLayout(nullptr);
+	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	game_->context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
 
 	game_->context->VSSetShader(vertShader, nullptr, 0);
 	game_->context->GSSetShader(geomShader, nullptr, 0);
@@ -164,19 +170,6 @@ void ParticleSystem::GeometryPass()
 	game_->context->RSSetViewports(1, &game_->viewport);
 
 	game_->context->Draw(ParticlesCount, 0);
-
-	game_->context->OMSetBlendState(oldBlend, oldBlendFactor, oldMask);
-	game_->context->RSSetState(oldState);
-	game_->context->OMSetDepthStencilState(oldDepthState, oldStencilRef);
-
-	if (oldState != NULL)
-		oldState->Release();
-
-	if (oldBlend != NULL)
-		oldBlend->Release();
-
-	if (oldDepthState != NULL)
-		oldDepthState->Release();
 }
 
 void ParticleSystem::LoadShaders()
@@ -270,28 +263,8 @@ void ParticleSystem::CreateBuffers()
 	bufDesc.StructureByteStride = sizeof(Particle);
 	bufDesc.ByteWidth = MaxParticlesCount * sizeof(Particle);
 
-	Particle* startParticles = new Particle[1];
-	startParticles[0].Position = Vector4::Zero;
-
-	Vector4 velocity = Vector4::Zero;
-	velocity.y = 0.0f;
-
-	startParticles[0].Velocity = velocity;
-	startParticles[0].Color0 = { 1.0f, 0.0f, 0.0f, 1.0f };
-	startParticles[0].Color1 = { 1.0f, 1.0f, 0.0f, 1.0f };
-	startParticles[0].Size0Size1 = { 100.0f, 50.0f };
-	startParticles[0].LifeTime = 10.0f;
-
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = &startParticles[0];
-	data.SysMemPitch = 0;
-	data.SysMemSlicePitch = 0;
-
-	game_->device->CreateBuffer(&bufDesc, &data, &bufFirst);
+	game_->device->CreateBuffer(&bufDesc, nullptr, &bufFirst);
 	game_->device->CreateBuffer(&bufDesc, nullptr, &bufSecond);
-
-	delete[] startParticles;
-
 
 	game_->device->CreateShaderResourceView(bufFirst, nullptr, &srvFirst);
 	game_->device->CreateShaderResourceView(bufSecond, nullptr, &srvSecond);
@@ -314,8 +287,8 @@ void ParticleSystem::CreateBuffers()
 	uavDst = uavSecond;
 
 	ID3D11UnorderedAccessView* nuPtr = nullptr;
-	game_->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &StartParticlesCount);
-	game_->context->CSSetUnorderedAccessViews(1, 1, &nuPtr, nullptr);
+	game_->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, nullptr);
+	game_->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, nullptr);
 
 	D3D11_BUFFER_DESC countBufDesc;
 	countBufDesc.BindFlags = 0;
@@ -348,6 +321,18 @@ void ParticleSystem::CreateBuffers()
 	};
 
 	game_->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
+}
+
+GAMEFRAMEWORK_API void ParticleSystem::AddParticle(const Particle& p)
+{
+	if (game_->inputDevice->IsKeyDown(Keys::H))
+		return;
+
+	if (injectionCount < MaxParticlesInjectionCount && ParticlesCount + injectionCount < MaxParticlesCount)
+	{
+		injectionParticles[injectionCount] = p;
+		injectionCount++;
+	}
 }
 
 void ParticleSystem::SwapBuffers()

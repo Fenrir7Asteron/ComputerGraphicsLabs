@@ -83,18 +83,18 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	D3D11_DEPTH_STENCIL_DESC dsDescLess = {};
 	dsDescLess.DepthEnable = TRUE;
-	dsDescLess.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDescLess.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDescLess.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&dsDescLess, &depthStateLightingLess);
 
 	D3D11_DEPTH_STENCIL_DESC dsDescGreater = {};
 	dsDescGreater.DepthEnable = TRUE;
-	dsDescGreater.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDescGreater.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDescGreater.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
 	device->CreateDepthStencilState(&dsDescGreater, &depthStateLightingGreater);
 
 	// create depth stencil texture
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
+
 	D3D11_TEXTURE2D_DESC descDepth = {};
 	descDepth.Width = screenWidth;
 	descDepth.Height = screenHeight;
@@ -327,7 +327,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	inputDevice = new InputDevice(this);
 
-	camera = new Camera(20.0f, 10000.0f, 50.0f, screenWidth, screenHeight);
+	camera = new Camera(0.1f, 10000.0f, 50.0f, screenWidth, screenHeight);
 
 	cameraControllers.emplace_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
 
@@ -529,10 +529,10 @@ void GameFramework::Run()
 
 		context->ClearState();
 		context->OMSetRenderTargets(1, &rtv, pDSV.Get());
-
+		
 		debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
 		debugRender->Draw(deltaTime);
-
+		
 		context->OMSetRenderTargets(0, nullptr, nullptr);
 
 		swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
@@ -567,14 +567,14 @@ void GameFramework::Update()
 			gameComponent->Update(deltaTime);
 	}
 
-	for (auto particleSystem : particleSystems)
-	{
-		particleSystem->Update(deltaTime);
-	}
-
 	for (auto cameraController : cameraControllers)
 	{
 		cameraController->Update(deltaTime);
+	}
+
+	for (auto particleSystem : particleSystems)
+	{
+		particleSystem->Update(deltaTime);
 	}
 
 	if (inputDevice->IsKeyDown(Keys::P))
