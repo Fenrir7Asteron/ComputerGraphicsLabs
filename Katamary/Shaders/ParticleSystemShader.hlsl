@@ -31,6 +31,12 @@ struct Particle
     float LifeTime;
 };
 
+struct GBufferData
+{
+    float4 WorldPos_Depth;
+    float3 Normal;
+};
+
 cbuffer CONSTANT_BUFFER : register(b0)
 {
     ConstParams Params;
@@ -39,6 +45,19 @@ cbuffer CONSTANT_BUFFER : register(b0)
 StructuredBuffer<Particle>        renderBufSrc    : register(t0);
 ConsumeStructuredBuffer<Particle> particlesBufSrc : register(u0);
 AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
+
+Texture2D WorldPosDepthMap : register(t1);
+Texture2D NormalMap : register(t2);
+
+GBufferData ReadGBuffer(float2 screenPos)
+{
+    GBufferData buf = (GBufferData) 0;
+    
+    buf.WorldPos_Depth = WorldPosDepthMap.Load(float3(screenPos, 0.0f));
+    buf.Normal = NormalMap.Load(float3(screenPos, 0.0f)).xyz;
+    
+    return buf;
+}
 
 
 GS_IN VSMain(uint id : SV_VertexID)
@@ -136,7 +155,36 @@ void CSMain(
     #ifdef ADD_GRAVITY
         p.Velocity += float4(0, -980.0f * deltaTime, 0, 0);
     #endif
-        p.Position.xyz += (p.Velocity * deltaTime).xyz;
+        
+        float4 newPosition = p.Position + (p.Velocity * deltaTime);
+        
+        float4 viewPos = mul(Params.View, newPosition);
+        float4 cameraPos = mul(Params.Projection, viewPos);
+        cameraPos /= cameraPos.w;
+        
+        cameraPos.xy = (cameraPos.xy + 1.0f) * 0.5f;
+        cameraPos.y = 1.0f - cameraPos.y;
+        float gBufferWidth, gBufferHeight;
+        NormalMap.GetDimensions(gBufferWidth, gBufferHeight);
+        
+        cameraPos.xy *= float2(gBufferWidth, gBufferHeight);
+        
+        GBufferData gBuffer = ReadGBuffer(cameraPos.xy);
+        
+        float depthVal = gBuffer.WorldPos_Depth.w;
+        
+        if (viewPos.z + 0.005f > depthVal 
+            && cameraPos.x >= 0.0f && cameraPos.x <= gBufferWidth
+            && cameraPos.y >= 0.0f && cameraPos.y <= gBufferHeight
+            )
+        {
+            float3 norm = normalize(gBuffer.Normal);
+            
+            p.Velocity.xyz = reflect(p.Velocity.xyz, norm).xyz;
+            newPosition = p.Position;
+        }
+        
+        p.Position.xyz = newPosition.xyz;
         particlesBufDst.Append(p);
     }
 #endif

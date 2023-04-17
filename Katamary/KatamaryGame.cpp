@@ -119,7 +119,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	Vector4 direction = { 1.0f, -0.5f, 1.0f, 0.0f };
 	direction.Normalize();
 
-	fountainPS = new ParticleSystem(this, nullptr, Vector3::Up * 100.0f, Quaternion::Identity, Vector3::One, camera);
+	fountainPS = new ParticleSystem(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f, Quaternion::Identity, Vector3::One, camera);
 	AddParticleSystem(fountainPS);
 }
 
@@ -129,7 +129,7 @@ void KatamaryGame::Update()
 
 	if (fountainPS != nullptr)
 	{
-		for (int i = 0; i < 1; ++i)
+		for (int i = 0; i < 10; ++i)
 		{
 			ParticleSystem::Particle p;
 	
@@ -154,7 +154,7 @@ void KatamaryGame::Update()
 
 			p.Size0Size1 = { 10.0f, 1.0f };
 
-			p.LifeTime = 2.0f;
+			p.LifeTime = 15.0f;
 
 			fountainPS->AddParticle(p);
 		}

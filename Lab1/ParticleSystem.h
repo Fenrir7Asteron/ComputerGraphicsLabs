@@ -13,7 +13,7 @@ public:
 	ID3D11ShaderResourceView *srvFirst, *srvSecond, *srvSrc, *srvDst;
 	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
 
-	const unsigned int MaxParticlesCount = 1000;
+	const unsigned int MaxParticlesCount = 100000;
 	const unsigned int MaxParticlesInjectionCount = 100;
 	static const int THREAD_IN_GROUP_TOTAL = 256;
 

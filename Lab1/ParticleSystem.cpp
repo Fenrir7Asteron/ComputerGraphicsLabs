@@ -82,6 +82,9 @@ void ParticleSystem::Update(float deltaTime)
 	game_->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 
 	game_->context->CSSetConstantBuffers(0, 1, &constBuf);
+	
+	ID3D11ShaderResourceView* SRVs[] = { game_->gBuffer.worldPos_DepthSRV, game_->gBuffer.normalSRV };
+	game_->context->CSSetShaderResources(1, 2, SRVs);
 
 	const UINT counterKeepValue = -1;
 	const UINT counterZero = 0;
@@ -105,11 +108,6 @@ void ParticleSystem::Update(float deltaTime)
 
 		game_->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 		game_->context->CSSetConstantBuffers(0, 1, &constBuf);
-
-		for (int i = 0; i < injectionCount; ++i) {
-			Particle temp = injectionParticles[i];
-			int k = 2;
-		}
 
 		game_->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
 
@@ -228,7 +226,7 @@ void ParticleSystem::LoadShaders()
 
 		ID3DBlob* computeBC = nullptr;
 
-		D3DCompileFromFile(shaderPath,
+		HRESULT res = D3DCompileFromFile(shaderPath,
 			&macros[0],
 			nullptr /*include*/,
 			"CSMain",
@@ -237,6 +235,8 @@ void ParticleSystem::LoadShaders()
 			0,
 			&computeBC,
 			&errorCode);
+
+		game_->CheckShaderCreationSuccess(res, errorCode, shaderPath);
 
 		game_->device->CreateComputeShader(computeBC->GetBufferPointer(), computeBC->GetBufferSize(), nullptr, &ComputeShaders[flag]);
 		computeBC->Release();
@@ -302,12 +302,12 @@ void ParticleSystem::CreateBuffers()
 
 
 	D3D11_BUFFER_DESC injBufDesc;
-	injBufDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+	injBufDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
 	injBufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	injBufDesc.Usage = D3D11_USAGE_DEFAULT;
 	injBufDesc.CPUAccessFlags = 0;
 	injBufDesc.StructureByteStride = sizeof(Particle);
-	injBufDesc.ByteWidth = MaxParticlesCount * sizeof(Particle);
+	injBufDesc.ByteWidth = MaxParticlesInjectionCount * sizeof(Particle);
 
 	game_->device->CreateBuffer(&injBufDesc, nullptr, &injectionBuf);
 

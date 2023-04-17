@@ -572,11 +572,6 @@ void GameFramework::Update()
 		cameraController->Update(deltaTime);
 	}
 
-	for (auto particleSystem : particleSystems)
-	{
-		particleSystem->Update(deltaTime);
-	}
-
 	if (inputDevice->IsKeyDown(Keys::P))
 	{
 		camera->SetOrthographic(false);
@@ -749,6 +744,11 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 GAMEFRAMEWORK_API void GameFramework::ParticleSystemPass()
 {
+	for (auto particleSystem : particleSystems)
+	{
+		particleSystem->Update(deltaTime);
+	}
+
 	for (auto particleSystem : particleSystems)
 	{
 		particleSystem->GeometryPass();
