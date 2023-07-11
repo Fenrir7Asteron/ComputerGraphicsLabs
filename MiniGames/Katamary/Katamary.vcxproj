@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f15e78ed-393d-4972-85b7-e8fb3d552f7a}</ProjectGuid>
-    <RootNamespace>StartGame</RootNamespace>
+    <ProjectGuid>{931966ca-c47a-4c2e-b23a-fef8d78602df}</ProjectGuid>
+    <RootNamespace>Katamary</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\projects\ITMO\ComputerGraphicsLabs\Lab1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\Engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,6 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\magistr\source\repos\FedotovBogdan\ComputerGraphicsLabs\Lab1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,23 +141,58 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AwesomeGameComponent.cpp" />
-    <ClCompile Include="MyGame.cpp" />
+    <ClInclude Include="KatamaryBall.h" />
+    <ClInclude Include="KatamaryGame.h" />
+    <ClInclude Include="OrbitalCameraController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="KatamaryBall.cpp" />
+    <ClCompile Include="KatamaryGame.cpp" />
+    <ClCompile Include="OrbitalCameraController.cpp" />
     <ClCompile Include="StartGame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lab1\Lab1.vcxproj">
-      <Project>{1e982842-fa27-4031-b753-f1e9af152997}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AwesomeGameComponent.h" />
-    <ClInclude Include="MyGame.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\MyVeryFirstShader.hlsl">
+    <None Include="Shaders\LightingShader.hlsl">
       <FileType>Document</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Simple.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\TexturedShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\SimpleDepthShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\CascadeGeometryDepthShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\GeometryShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\PointLightingShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ParticleSystemShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Engine\Engine.vcxproj">
+      <Project>{1e982842-fa27-4031-b753-f1e9af152997}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

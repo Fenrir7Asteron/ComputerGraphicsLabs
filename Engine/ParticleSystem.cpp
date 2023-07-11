@@ -118,8 +118,6 @@ void ParticleSystem::Update(float deltaTime)
 
 		game_->context->Dispatch(injSizeX, injSizeY, 1);
 
-		std::cout << injectionCount << std::endl;
-
 		injectionCount = 0;
 	}
 
