@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32228.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameFramework", "Engine.vcxproj", "{1E982842-FA27-4031-B753-F1E9AF152997}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Katamary", "Katamary.vcxproj", "{931966CA-C47A-4C2E-B23A-FEF8D78602DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameFramework", "..\..\Engine\Engine.vcxproj", "{1E982842-FA27-4031-B753-F1E9AF152997}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x64.ActiveCfg = Debug|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x64.Build.0 = Debug|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x86.ActiveCfg = Debug|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Debug|x86.Build.0 = Debug|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x64.ActiveCfg = Release|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x64.Build.0 = Release|x64
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x86.ActiveCfg = Release|Win32
+		{931966CA-C47A-4C2E-B23A-FEF8D78602DF}.Release|x86.Build.0 = Release|Win32
 		{1E982842-FA27-4031-B753-F1E9AF152997}.Debug|x64.ActiveCfg = Debug|x64
 		{1E982842-FA27-4031-B753-F1E9AF152997}.Debug|x64.Build.0 = Debug|x64
 		{1E982842-FA27-4031-B753-F1E9AF152997}.Debug|x86.ActiveCfg = Debug|Win32
@@ -26,6 +36,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {2EC5B661-4A09-44C1-B00F-2417D819EC0F}
+		SolutionGuid = {1982928C-6434-45B3-80F1-1582D256B593}
 	EndGlobalSection
 EndGlobal
