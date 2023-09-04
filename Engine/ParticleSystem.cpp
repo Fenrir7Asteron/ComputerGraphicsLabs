@@ -61,7 +61,7 @@ void ParticleSystem::GetGroupSize(int particlesCount, int& groupSizeX, int& grou
 	}
 	else
 	{
-		groupSizeX = (particlesCount - 1) / THREAD_IN_GROUP_TOTAL + 1;
+		groupSizeX = (particlesCount - 1) / ThreadInGroupTotal + 1;
 		groupSizeY = 1;
 	}
 }
@@ -321,7 +321,7 @@ void ParticleSystem::CreateBuffers()
 	game_->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
 }
 
-GAMEFRAMEWORK_API void ParticleSystem::AddParticle(const Particle& p)
+void ParticleSystem::AddParticle(const Particle& p)
 {
 	if (game_->inputDevice->IsKeyDown(Keys::Space))
 		return;

@@ -15,7 +15,7 @@
 #include "PointLight.h"
 #include "ShaderFlags.h"
 #include <map>
-#include "ParticleSystem.h"
+#include "ParticleSystemSorted.h"
 
 class DebugRenderSysImpl;
 
@@ -32,7 +32,7 @@ public:
 	GAMEFRAMEWORK_API virtual void LightingPass();
 	GAMEFRAMEWORK_API virtual void ParticleSystemPass();
 	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystem* particleSystem);
+	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystemSorted* particleSystem);
 
 	template <typename T>
 	GAMEFRAMEWORK_API void AddComponent(Model<T>* gameComponent);
@@ -74,7 +74,7 @@ public:
 	ID3D11BlendState* blendStateLight;
 
 	std::vector<GameComponent*> gameComponents;
-	std::vector<ParticleSystem*> particleSystems;
+	std::vector<ParticleSystemSorted*> particleSystems;
 	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;
 	std::vector<PhysicalComponent<BoundingSphere>*> physicalSphereComponents;
 

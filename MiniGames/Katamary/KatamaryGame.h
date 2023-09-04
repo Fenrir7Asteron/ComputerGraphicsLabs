@@ -11,5 +11,5 @@ public:
 	void Update() override;
 
 	OrbitalCameraController* orbitalCamController;
-	ParticleSystem* fountainPS;
+	ParticleSystemSorted* fountainPS;
 };

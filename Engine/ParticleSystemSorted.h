@@ -1,25 +1,28 @@
 #pragma once
+
 #include "GameComponent.h"
 #include <map>
+#include "BitonicSort.h"
 
 class Camera;
 
-class ParticleSystem : public GameComponent
+class ParticleSystemSorted : public GameComponent
 {
 public:
+	ID3D11Buffer *particlesPool, *sortBuffer, *deadBuf, *injectionBuf, *constBuf, *countBuf, *debugBuf;
 
-	ID3D11Buffer* bufFirst, * bufSecond, * countBuf, * injectionBuf, * constBuf;
+	ID3D11ShaderResourceView* srvSorted, * srvPool;
+	ID3D11UnorderedAccessView* uavDead, * uavSorted, *uavSortedRW, *injUav, *uavPool;
 
-	ID3D11ShaderResourceView *srvFirst, *srvSecond, *srvSrc, *srvDst;
-	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
+	DirectX::SimpleMath::Vector3 Position;
+	float Width, Height, Length;
 
-	const unsigned int MaxParticlesCount = 100000;
-	const unsigned int MaxParticlesInjectionCount = 100;
+	const unsigned int MaxParticlesCount = 256 * 256 * 16;
+	const unsigned int MaxParticlesInjectionCount = 10000;
 	static const int ThreadInGroupTotal = 256;
-
+	UINT ParticlesCount = 0;
+	UINT ParticlesDeadCount = 0;
 	UINT injectionCount = 0;
-
-	int ParticlesCount = 1;
 
 #pragma pack(push, 4)
 	struct Particle
@@ -41,7 +44,8 @@ public:
 		DirectX::SimpleMath::Matrix World;
 		DirectX::SimpleMath::Matrix View;
 		DirectX::SimpleMath::Matrix Projection;
-		DirectX::SimpleMath::Vector4 DeltatimeMaxparticlesGroupdim;
+		DirectX::SimpleMath::Vector4 DeltaTimeMaxParticlesGroupdim;
+		DirectX::SimpleMath::Vector4 CameraPosX;
 	};
 #pragma pack(pop)
 
@@ -68,7 +72,9 @@ public:
 
 	Camera* camera;
 
-	GAMEFRAMEWORK_API ParticleSystem(GameFramework* game,
+	BitonicSort* sort;
+
+	GAMEFRAMEWORK_API ParticleSystemSorted(GameFramework* game,
 		GameComponent* parent,
 		DirectX::SimpleMath::Vector3 position,
 		DirectX::SimpleMath::Quaternion rotation,
@@ -80,9 +86,10 @@ public:
 	GAMEFRAMEWORK_API void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API void GeometryPass() override;
 
-	GAMEFRAMEWORK_API void LoadShaders();
-	GAMEFRAMEWORK_API void CreateBuffers();
 	GAMEFRAMEWORK_API void AddParticle(const Particle& p);
-	GAMEFRAMEWORK_API void SwapBuffers();
+
+private:
+	void LoadShaders();
+	void CreateBuffers();
 };
 

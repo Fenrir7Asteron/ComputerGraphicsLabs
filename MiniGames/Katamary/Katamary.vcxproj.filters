@@ -64,5 +64,11 @@
     <None Include="Shaders\ParticleSystemShader.hlsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Shaders\BitonicSort.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\ParticleSystemSortedShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

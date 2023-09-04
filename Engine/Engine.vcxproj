@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BitonicSort.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
@@ -158,6 +159,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="ParticleSystemSorted.cpp" />
     <ClCompile Include="PhysicalBoxComponent.cpp" />
     <ClCompile Include="PhysicalComponent.cpp" />
     <ClCompile Include="PhysicalSphereComponent.cpp" />
@@ -167,6 +169,7 @@
     <ClCompile Include="WICTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BitonicSort.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="DDS.h" />
@@ -195,6 +198,7 @@
     <ClInclude Include="ModelViewProjectionMatrices.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="ParticleSystemSorted.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhongCoefficients.h" />
     <ClInclude Include="PhongConstantData.h" />
@@ -212,6 +216,7 @@
     <ClInclude Include="WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="SimpleMath.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

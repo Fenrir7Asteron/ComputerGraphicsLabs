@@ -752,7 +752,7 @@ GAMEFRAMEWORK_API void GameFramework::ParticleSystemPass()
 	for (auto particleSystem : particleSystems)
 	{
 		particleSystem->GeometryPass();
-		std::cout << "Current particles alive: " << particleSystem->ParticlesCount << std::endl;
+		std::cout << "Current particles total: " << particleSystem->ParticlesCount << ", dead: " << particleSystem->ParticlesDeadCount << std::endl;
 	}
 }
 
@@ -761,7 +761,7 @@ GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 	gameComponents.push_back(gameComponent);
 }
 
-GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystem* particleSystem)
+GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystemSorted* particleSystem)
 {
 	particleSystems.push_back(particleSystem);
 }

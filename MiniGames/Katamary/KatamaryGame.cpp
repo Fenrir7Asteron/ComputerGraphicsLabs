@@ -5,7 +5,7 @@
 #include "KatamaryBall.h"
 #include "Model.h"
 #include "PointLight.h"
-#include "ParticleSystem.h"
+#include "ParticleSystemSorted.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -119,7 +119,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	Vector4 direction = { 1.0f, -0.5f, 1.0f, 0.0f };
 	direction.Normalize();
 
-	fountainPS = new ParticleSystem(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f + Vector3::Right * 500.0f, Quaternion::Identity, Vector3::One, camera);
+	fountainPS = new ParticleSystemSorted(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f + Vector3::Right * 500.0f, Quaternion::Identity, Vector3::One, camera);
 	AddParticleSystem(fountainPS);
 }
 
@@ -131,7 +131,7 @@ void KatamaryGame::Update()
 	{
 		for (int i = 0; i < 5; ++i)
 		{
-			ParticleSystem::Particle p;
+			ParticleSystemSorted::Particle p;
 	
 			Vector3 pos = fountainPS->GetWorldMatrix().Translation();
 			p.Position = { pos.x, pos.y, pos.z, 1.0f };
