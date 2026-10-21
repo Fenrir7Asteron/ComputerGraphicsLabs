@@ -119,8 +119,8 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	Vector4 direction = { 1.0f, -0.5f, 1.0f, 0.0f };
 	direction.Normalize();
 
-	fountainPS = new ParticleSystemSorted(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f + Vector3::Right * 500.0f, Quaternion::Identity, Vector3::One, camera);
-	AddParticleSystem(fountainPS);
+	/*fountainPS = new ParticleSystemSorted(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f + Vector3::Right * 500.0f, Quaternion::Identity, Vector3::One, camera);
+	AddParticleSystem(fountainPS);*/
 }
 
 void KatamaryGame::Update()
