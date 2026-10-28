@@ -20,4 +20,5 @@ public:
 	PhysicalLayer physicalLayer = PhysicalLayer::Default;
 	GameComponent* parent;
 	DirectX::SimpleMath::Matrix transform;
+	bool enabled = true;
 };

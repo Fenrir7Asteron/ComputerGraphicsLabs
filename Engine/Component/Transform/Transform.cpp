@@ -17,6 +17,7 @@ GAMEFRAMEWORK_API void Transform::Update(float deltaTime)
 GAMEFRAMEWORK_API void Transform::Destroy()
 {
 	m_onTransformChangedCallbacks.clear();
+	children.clear();
 }
 
 GAMEFRAMEWORK_API void Transform::Move(DirectX::SimpleMath::Vector3 positionDelta)
@@ -60,9 +61,29 @@ GAMEFRAMEWORK_API void Transform::RotateAroundPoint(DirectX::SimpleMath::Vector3
 	OnTransformChanged();
 }
 
+GAMEFRAMEWORK_API void Transform::ApplyTransform(DirectX::SimpleMath::Matrix m)
+{
+	auto newTransform = GetWorldMatrix() * m;
+	newTransform.Decompose(scale, rotation, positionOffset);
+
+	OnTransformChanged();
+}
+
 GAMEFRAMEWORK_API void Transform::SetParent(Transform* newParent)
 {
+	auto newParentM = newParent->GetWorldMatrix();
+	auto newParentInverseM = newParentM.Invert();
+	ApplyTransform(newParentInverseM);
+
+	// Exclude this Transform from old parent's children list
+	if (parent != nullptr)
+		parent->children.erase(std::remove(parent->children.begin(), parent->children.end(), this));
+
+	newParent->children.push_back(this);
+
 	this->parent = newParent;
+	
+	
 	OnTransformChanged();
 }
 
@@ -71,9 +92,7 @@ GAMEFRAMEWORK_API void Transform::UpdateWorldMatrix()
 	this->m_objectToWorldMatrix = Matrix::CreateScale(scale) * Matrix::CreateFromQuaternion(rotation) * Matrix::CreateTranslation(positionOffset);
 
 	if (parent != nullptr)
-		this->m_objectToWorldMatrix = this->m_objectToWorldMatrix
-		* Matrix::CreateFromQuaternion(parent->rotation)
-		* Matrix::CreateTranslation(parent->GetWorldMatrix().Translation());
+		this->m_objectToWorldMatrix = this->m_objectToWorldMatrix * parent->GetWorldMatrix();
 }
 
 GAMEFRAMEWORK_API const Matrix& Transform::GetWorldMatrix()
@@ -89,9 +108,19 @@ GAMEFRAMEWORK_API const Matrix& Transform::GetWorldMatrix()
 	return m_objectToWorldMatrix;
 }
 
-GAMEFRAMEWORK_API void Transform::SubscribeToTransformChange(TransformChanged cb)
+GAMEFRAMEWORK_API int Transform::SubscribeToTransformChange(TransformChanged callback)
 {
-	m_onTransformChangedCallbacks.push_back(cb);
+	m_onTransformChangedCallbacks[m_subscribersCount] = (std::move(callback));
+	return m_subscribersCount++;
+}
+
+GAMEFRAMEWORK_API void Transform::UnsubscribeFromTransformChange(int subscriberId)
+{
+	if (subscriberId >= m_subscribersCount || subscriberId < 0)
+		return;
+
+	m_onTransformChangedCallbacks.erase(m_onTransformChangedCallbacks.find(m_subscribersCount - 1));
+	m_subscribersCount--;
 }
 
 GAMEFRAMEWORK_API void Transform::OnTransformChanged()
@@ -99,5 +128,10 @@ GAMEFRAMEWORK_API void Transform::OnTransformChanged()
 	for (int i = 0; i < m_onTransformChangedCallbacks.size(); ++i)
 	{
 		m_onTransformChangedCallbacks[i]();
+	}
+
+	for (auto child : children)
+	{
+		child->OnTransformChanged();
 	}
 }

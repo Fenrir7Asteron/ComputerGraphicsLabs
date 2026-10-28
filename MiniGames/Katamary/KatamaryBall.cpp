@@ -67,12 +67,14 @@ void KatamaryBall<BoundingOrientedBox>::Bind(float radius, float moveSpeed,
 template <class T>
 void KatamaryBall<T>::Update(float deltaTime)
 {
-	float volume = Volume();
+	Model<T>::Update(deltaTime);
+
+	/*float volume = Volume();
 	if (volume + 0.001f < targetVolume)
 	{
 		float scaleDelta = std::min((float) std::pow((targetVolume - volume) / M_PI * (3.0f / 4.0f), 1.0f / 3.0f), deltaTime * 5.0f);
 		IncreaseSize(scaleDelta);
-	}
+	}*/
 
 	Vector3 moveDir = Vector3::Zero;
 
@@ -97,13 +99,6 @@ void KatamaryBall<T>::Update(float deltaTime)
 	transform->Move(moveDir * moveDelta);
 	transform->Rotate(rotationAxis, -moveDelta / radius);
 
-	for (auto attached : attachedObjects)
-	{
-		auto* attachedTransform = attached->m_gameObject->GetTransform();
-		attachedTransform->Move(moveDir * moveDelta);
-		attachedTransform->RotateAroundPoint(attachedTransform->GetWorldMatrix().Translation(), rotationAxis, -moveDelta / radius);
-	}
-
 	GameComponent* other = GameFramework::Instance->Intersects(&(this->m_physicalComponent));
 	if (other != nullptr)
 	{
@@ -111,7 +106,7 @@ void KatamaryBall<T>::Update(float deltaTime)
 		if (boxModel != nullptr)
 		{
 			float otherVolume = GetOtherObjectVolume(boxModel);
-			if (volume > otherVolume * 2.0f)
+			if (targetVolume > otherVolume * 2.0f)
 				AttachObject(boxModel);
 		}
 		else
@@ -120,7 +115,7 @@ void KatamaryBall<T>::Update(float deltaTime)
 			if (sphereModel != nullptr)
 			{
 				float otherVolume = GetOtherObjectVolume(sphereModel);
-				if (volume > otherVolume * 2.0f)
+				if (targetVolume > otherVolume * 2.0f)
 					AttachObject(sphereModel);
 			}
 		}
@@ -131,8 +126,9 @@ template <class T>
 template <class U>
 void KatamaryBall<T>::AttachObject(Model<U>* other)
 {
-	attachedObjects.push_back(other);
-	other->enabled = false;
+	other->m_gameObject->GetTransform()->SetParent(this->m_gameObject->GetTransform());
+	other->m_drawBoundary = false;
+	other->m_physicalComponent.enabled = false;
 
 	targetVolume += GetOtherObjectVolume(other);
 }
@@ -165,15 +161,6 @@ void KatamaryBall<BoundingSphere>::IncreaseSize(float sizeDelta)
 	transform->positionOffset += Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Center = this->m_physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Radius = this->radius;
-
-	for (auto attached : attachedObjects)
-	{
-		auto* attachedTransform = attached->m_gameObject->GetTransform();
-		Vector3 moveDir = attachedTransform->GetWorldMatrix().Translation() - transform->GetWorldMatrix().Translation();
-		moveDir.Normalize();
-
-		attachedTransform->Move(moveDir * sizeDelta);
-	}
 }
 
 void KatamaryBall<BoundingOrientedBox>::IncreaseSize(float sizeDelta)
@@ -185,15 +172,6 @@ void KatamaryBall<BoundingOrientedBox>::IncreaseSize(float sizeDelta)
 	transform->positionOffset += Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Center = this->m_physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Extents = Vector3::One * this->radius;
-
-	for (auto attached : attachedObjects)
-	{
-		auto* attachedTransform = attached->m_gameObject->GetTransform();
-		Vector3 moveDir = attachedTransform->GetWorldMatrix().Translation() - transform->GetWorldMatrix().Translation();
-		moveDir.Normalize();
-
-		attachedTransform->Move(moveDir * sizeDelta);
-	}
 }
 
 void KatamaryBall<BoundingSphere>::GeometryPass()

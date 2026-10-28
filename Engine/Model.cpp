@@ -49,14 +49,11 @@ GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Bind(
 
     m_pRoot = ParseNode(*pScene->mRootNode);
 
-    m_invalidateBoundingBox = true;
-    UpdateBoundingBoxBorders(m_pRoot.get(), Matrix::Identity);
-
-    BoundingBox aabbBoundingBox;
-    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
-    BoundingOrientedBox::CreateFromBoundingBox(m_physicalComponent.boundingShape, aabbBoundingBox);
-    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m_gameObject->GetTransform()->GetWorldMatrix());
     m_physicalComponent.parent = this;
+
+    m_subscriptionId = m_gameObject->GetTransform()->SubscribeToTransformChange([this]() { OnTransformChange(); });
+    m_invalidateBoundingBox = true;
+    UpdateBoundary();
 }
 
 GAMEFRAMEWORK_API void Model<BoundingSphere>::Bind(
@@ -88,14 +85,11 @@ GAMEFRAMEWORK_API void Model<BoundingSphere>::Bind(
 
     m_pRoot = ParseNode(*pScene->mRootNode);
 
-    m_invalidateBoundingBox = true;
-    UpdateBoundingBoxBorders(m_pRoot.get(), m_gameObject->GetTransform()->GetWorldMatrix());
-
-    BoundingBox aabbBoundingBox;
-    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
-    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m_gameObject->GetTransform()->GetWorldMatrix());
-    m_physicalComponent.boundingShape.Radius = aabbBoundingBox.Extents.x;
     m_physicalComponent.parent = this;
+
+    m_subscriptionId = m_gameObject->GetTransform()->SubscribeToTransformChange([this]() { OnTransformChange(); });
+    m_invalidateBoundingBox = true;
+    UpdateBoundary();
 }
 
 template <class T>
@@ -254,15 +248,62 @@ GAMEFRAMEWORK_API void Model<T>::ElementWiseMax(DirectX::SimpleMath::Vector4& ou
     out.w = std::max(vec1.w, vec2.w);
 }
 
-template <class T>
-GAMEFRAMEWORK_API void Model<T>::Update(float deltaTime)
+GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Update(float deltaTime)
 {
+    if (!m_invalidateBoundingBox)
+        return;
 
+    UpdateBoundary();
+}
+
+GAMEFRAMEWORK_API void Model<BoundingSphere>::Update(float deltaTime)
+{
+    if (!m_invalidateBoundingBox)
+        return;
+
+    UpdateBoundary();
+}
+
+template<>
+GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::UpdateBoundary()
+{
+    UpdateBoundingBoxBorders(m_pRoot.get(), Matrix::Identity);
+
+    BoundingBox aabbBoundingBox;
+    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
+    BoundingOrientedBox::CreateFromBoundingBox(m_physicalComponent.boundingShape, aabbBoundingBox);
+
+    auto* transform = m_gameObject->GetTransform();
+    auto m = transform->GetWorldMatrix();
+    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
+    m_offset = m_physicalComponent.boundingShape.Center - transform->positionOffset;
+
+    m_invalidateBoundingBox = false;
+}
+
+template<>
+GAMEFRAMEWORK_API void Model<BoundingSphere>::UpdateBoundary()
+{
+    UpdateBoundingBoxBorders(m_pRoot.get(), Matrix::Identity);
+
+    BoundingBox aabbBoundingBox;
+    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
+    BoundingSphere::CreateFromBoundingBox(m_physicalComponent.boundingShape, aabbBoundingBox);
+
+    m_physicalComponent.boundingShape.Radius = aabbBoundingBox.Extents.x;
+
+    auto* transform = m_gameObject->GetTransform();
+    auto m = transform->GetWorldMatrix();
+    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
+    m_offset = m_physicalComponent.boundingShape.Center - transform->positionOffset;
+
+    m_invalidateBoundingBox = false;
 }
 
 template<class T>
 GAMEFRAMEWORK_API void Model<T>::Destroy()
 {
+    m_gameObject->GetTransform()->UnsubscribeFromTransformChange(m_subscriptionId);
 }
 
 template <class T>
@@ -284,7 +325,14 @@ GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::GeometryPass()
 
     m_pRoot->GeometryPass(m_gameObject->GetTransform()->GetWorldMatrix(), this->m_phongCoefficients);
 
-    GameFramework::Instance->debugRender->DrawOrientedBoundingBox(m_physicalComponent.boundingShape, Matrix::Identity);
+    if (m_drawBoundary)
+        GameFramework::Instance->debugRender->DrawOrientedBoundingBox(m_physicalComponent.boundingShape, Matrix::Identity);
+}
+
+template<class T>
+void Model<T>::OnTransformChange()
+{
+    m_invalidateBoundingBox = true;
 }
 
 GAMEFRAMEWORK_API void Model<BoundingSphere>::GeometryPass()
@@ -294,5 +342,8 @@ GAMEFRAMEWORK_API void Model<BoundingSphere>::GeometryPass()
 
     m_pRoot->GeometryPass(m_gameObject->GetTransform()->GetWorldMatrix(), this->m_phongCoefficients);
 
-    GameFramework::Instance->debugRender->DrawSphere(m_physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent.boundingShape.Center), 16);
+    if (m_drawBoundary)
+    {
+        GameFramework::Instance->debugRender->DrawSphere(m_physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent.boundingShape.Center), 16);
+    }
 }

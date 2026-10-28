@@ -40,6 +40,8 @@ public:
 	GAMEFRAMEWORK_API void ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2);
 	GAMEFRAMEWORK_API void ElementWiseMax(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2);
 
+	GAMEFRAMEWORK_API void UpdateBoundary();
+
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
 	GAMEFRAMEWORK_API virtual void Destroy() override;
@@ -52,12 +54,17 @@ public:
 	DirectX::SimpleMath::Vector4 m_minPos;
 	DirectX::SimpleMath::Vector4 m_maxPos;
 	std::vector<std::unique_ptr<Mesh>> m_meshPtrs;
+	bool m_drawBoundary = true;
 
 private:
+	GAMEFRAMEWORK_API void OnTransformChange();
+
 	std::unique_ptr<Node> m_pRoot;
 	std::string m_modelDir;
 	LPCWSTR m_geometryPassShaderPath;
 	LPCWSTR m_depthShaderPath;
 	PhongCoefficients m_phongCoefficients;
+	DirectX::SimpleMath::Vector3 m_offset;
+	int m_subscriptionId = -1;
 };
 
