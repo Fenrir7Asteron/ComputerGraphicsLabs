@@ -37,7 +37,7 @@ void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& m
 	{
 		offsetFromCenter.x = std::max(-10.0f, offsetFromCenter.x);
 		offsetFromCenter.x = std::min(10.0f, offsetFromCenter.x);
-		Rotate(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
+		RotateAxis(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
 	}
 
 	if (std::abs(offsetFromCenter.y) > 0)
@@ -45,7 +45,7 @@ void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& m
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f, offsetFromCenter.y);
 		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
-		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
+		RotateAxis(camRight, offsetFromCenter.y * mouseSensitivity);
 	}
 
 	if (!isTransitioning && std::abs(mouseMoveData.WheelDelta) > 0)

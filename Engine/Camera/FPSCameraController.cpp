@@ -29,7 +29,7 @@ GAMEFRAMEWORK_API void FPSCameraController::MouseMove(const InputDevice::MouseMo
 	{
 		offsetFromCenter.x = std::max(-10.0f, offsetFromCenter.x);
 		offsetFromCenter.x = std::min(10.0f, offsetFromCenter.x);
-		Rotate(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
+		RotateAxis(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
 	}
 		
 
@@ -38,7 +38,7 @@ GAMEFRAMEWORK_API void FPSCameraController::MouseMove(const InputDevice::MouseMo
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f,  offsetFromCenter.y);
 		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
-		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
+		RotateAxis(camRight, offsetFromCenter.y * mouseSensitivity);
 	}
 }
 

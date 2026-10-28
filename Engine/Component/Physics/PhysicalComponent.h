@@ -13,7 +13,7 @@ public:
 		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity);
 
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
-	GAMEFRAMEWORK_API virtual void Rotate(DirectX::SimpleMath::Vector3 axis, float angle);
+	GAMEFRAMEWORK_API virtual void RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle);
 	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle);
 
 	T boundingShape;

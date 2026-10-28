@@ -717,7 +717,7 @@ GAMEFRAMEWORK_API void GameFramework::PointLightLightingPass()
 
 		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-		auto lightPos = pointLight->m_gameObject->GetTransform()->positionOffset;
+		auto lightPos = pointLight->m_gameObject->GetTransform()->GetPosition();
 
 		LightConstantData lightData;
 		lightData.cameraPos = Vector4(camera->m_position.x, camera->m_position.y, camera->m_position.z, 1.0f);

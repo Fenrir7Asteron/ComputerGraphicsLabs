@@ -16,7 +16,7 @@ GAMEFRAMEWORK_API void CameraController::Move(DirectX::SimpleMath::Vector3 posit
 	camera->m_position += positionDelta;
 }
 
-GAMEFRAMEWORK_API void CameraController::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
+GAMEFRAMEWORK_API void CameraController::RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle)
 {
 	if (camera == nullptr)
 		return;

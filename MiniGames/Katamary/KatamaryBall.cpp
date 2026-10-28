@@ -36,7 +36,7 @@ void KatamaryBall<BoundingSphere>::Bind(float radius, float moveSpeed,
 	this->radius = radius;
 
 	auto* transform = m_gameObject->GetTransform();
-	transform->scale = Vector3::One * radius;
+	transform->SetScale(Vector3::One * radius);
 	this->moveSpeed = moveSpeed;
 	this->targetVolume = Volume();
 
@@ -97,7 +97,7 @@ void KatamaryBall<T>::Update(float deltaTime)
 
 	auto* transform = this->m_gameObject->GetTransform();
 	transform->Move(moveDir * moveDelta);
-	transform->Rotate(rotationAxis, -moveDelta / radius);
+	transform->RotateAxis(rotationAxis, -moveDelta / radius);
 
 	GameComponent* other = GameFramework::Instance->Intersects(&(this->m_physicalComponent));
 	if (other != nullptr)
@@ -157,8 +157,8 @@ void KatamaryBall<BoundingSphere>::IncreaseSize(float sizeDelta)
 	this->radius += sizeDelta;
 
 	auto* transform = m_gameObject->GetTransform();
-	transform->scale += Vector3::One * sizeDelta;
-	transform->positionOffset += Vector3::Up * sizeDelta;
+	transform->SetScale(Vector3::One * sizeDelta);
+	transform->Move(Vector3::Up * sizeDelta);
 	this->m_physicalComponent.boundingShape.Center = this->m_physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Radius = this->radius;
 }
@@ -168,8 +168,8 @@ void KatamaryBall<BoundingOrientedBox>::IncreaseSize(float sizeDelta)
 	this->radius += sizeDelta;
 
 	auto* transform = m_gameObject->GetTransform();
-	transform->scale += Vector3::One * sizeDelta;
-	transform->positionOffset += Vector3::Up * sizeDelta;
+	transform->SetScale(Vector3::One * sizeDelta);
+	transform->Move(Vector3::Up * sizeDelta);
 	this->m_physicalComponent.boundingShape.Center = this->m_physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
 	this->m_physicalComponent.boundingShape.Extents = Vector3::One * this->radius;
 }
