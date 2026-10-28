@@ -1,10 +1,11 @@
 #pragma once
-#include "GameComponent.h"
+#include "Component/GameComponent.h"
+#include "Component/Render/RenderComponent.h"
 #include <map>
 
 class Camera;
 
-class ParticleSystem : public GameComponent
+class ParticleSystem : public GameComponent, public RenderComponent
 {
 public:
 
@@ -68,21 +69,21 @@ public:
 
 	Camera* camera;
 
-	GAMEFRAMEWORK_API ParticleSystem(GameFramework* game,
-		GameComponent* parent,
-		DirectX::SimpleMath::Vector3 position,
-		DirectX::SimpleMath::Quaternion rotation,
-		DirectX::SimpleMath::Vector3 scale,
-		Camera* camera);
+	GAMEFRAMEWORK_API ParticleSystem(GameObject* gameObject, Camera* camera);
 
 	GAMEFRAMEWORK_API static void GetGroupSize(int particlesCount, int& groupSizeX, int& groupSizeY);
 
-	GAMEFRAMEWORK_API void Update(float deltaTime) override;
-	GAMEFRAMEWORK_API void GeometryPass() override;
+	// Inherited via GameComponent
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Destroy() override;
 
 	GAMEFRAMEWORK_API void LoadShaders();
 	GAMEFRAMEWORK_API void CreateBuffers();
 	GAMEFRAMEWORK_API void AddParticle(const Particle& p);
 	GAMEFRAMEWORK_API void SwapBuffers();
+
+	// Inherited via RenderComponent
+	GAMEFRAMEWORK_API virtual void DrawShadowMap() override;
+	GAMEFRAMEWORK_API virtual void GeometryPass() override;
 };
 

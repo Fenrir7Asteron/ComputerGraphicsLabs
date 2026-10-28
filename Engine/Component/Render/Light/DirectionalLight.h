@@ -1,5 +1,5 @@
 #pragma once
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 #include "GameFrameworkExports.h"
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -9,18 +9,20 @@
 
 class GameFramework;
 
-class DirectionalLight
+class DirectionalLight : public GameComponent
 {
 public:
-	GAMEFRAMEWORK_API DirectionalLight();
+	GAMEFRAMEWORK_API DirectionalLight(GameObject* gameObject);
 
-	GAMEFRAMEWORK_API DirectionalLight(
-		GameFramework* game,
+	GAMEFRAMEWORK_API void Bind(
 		DirectX::SimpleMath::Vector4 lightDir,
 		DirectX::SimpleMath::Vector4 lightColor,
 		float diffuseIntensity, float specularIntensity, float ambientIntensity,
-		Camera* renderCamera,
-		int shadowMapWidth = 1024, int shadowMapHeight = 1024);
+		Camera* renderCamera);
+
+	// Inherited via GameComponent
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Destroy() override;
 
 	GAMEFRAMEWORK_API std::vector<DirectX::SimpleMath::Vector4>
 		GetFrustumCornersWorldSpace(
@@ -28,7 +30,6 @@ public:
 			const DirectX::SimpleMath::Matrix& proj);
 
 	GAMEFRAMEWORK_API void UpdateViewProjection();
-	GAMEFRAMEWORK_API void Release();
 
 	DirectX::SimpleMath::Vector4 direction;
 	DirectX::SimpleMath::Vector4 lightColor;
@@ -46,5 +47,4 @@ public:
 	LightViewProjection viewProjection;
 
 	Camera* renderCamera;
-	GameFramework* game;
 };

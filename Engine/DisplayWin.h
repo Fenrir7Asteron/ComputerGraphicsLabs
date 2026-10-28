@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <WinUser.h>
 #include "GameFrameworkExports.h"
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 
 class DisplayWin
 {

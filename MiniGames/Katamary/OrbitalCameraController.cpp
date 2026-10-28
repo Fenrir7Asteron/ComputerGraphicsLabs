@@ -2,6 +2,9 @@
 #define _USE_MATH_DEFINES
 
 #include "OrbitalCameraController.h"
+#include "DisplayWin.h"
+#include "Camera/Camera.h"
+#include "Component/GameObject.h"
 #include <iostream>
 #include <cmath>
 
@@ -41,7 +44,7 @@ void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& m
 	{
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f, offsetFromCenter.y);
-		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->rotation);
+		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
 		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
 	}
 
@@ -57,11 +60,11 @@ void OrbitalCameraController::Update(float deltaTime)
 	if (camera == nullptr || attachedToBody == nullptr)
 		return;
 
-	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->rotation);
+	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->m_rotation);
 
-	Vector3 bodyPosition = attachedToBody->GetWorldMatrix().Translation();
+	Vector3 bodyPosition = attachedToBody->m_gameObject->GetTransform()->GetWorldMatrix().Translation();
 	Vector3 cameraMoveTarget = bodyPosition - camForward * (distanceToBodySurface);
-	Vector3 offsetToTarget = cameraMoveTarget - camera->position;
+	Vector3 offsetToTarget = cameraMoveTarget - camera->m_position;
 
 	float moveSpeed;
 	float moveDistance;

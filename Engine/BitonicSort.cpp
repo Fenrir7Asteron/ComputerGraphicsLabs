@@ -4,10 +4,8 @@
 #include "magic_enum.hpp"
 #include "MacrosParser.h"
 
-BitonicSort::BitonicSort(GameFramework* game)
+BitonicSort::BitonicSort()
 {
-    this->game = game;
-
     LoadShaders();
     CreateBuffers();
 }
@@ -33,9 +31,9 @@ void BitonicSort::Dispose()
 
 void BitonicSort::Sort(ID3D11UnorderedAccessView* uav, ID3D11ShaderResourceView* srv)
 {
-    ID3D11DeviceContext* context = game->context;
+    ID3D11DeviceContext* context = GameFramework::Instance->context;
     context->ClearState();
-	game->RestoreTargets();
+    GameFramework::Instance->RestoreTargets();
 
 	UINT initialCount = -1;
 
@@ -115,9 +113,9 @@ void BitonicSort::LoadShaders()
             &computeBC,
             &errorCode);
 
-        game->CheckShaderCreationSuccess(res, errorCode, shaderPath);
+        GameFramework::Instance->CheckShaderCreationSuccess(res, errorCode, shaderPath);
 
-        game->device->CreateComputeShader(computeBC->GetBufferPointer(), computeBC->GetBufferSize(), nullptr, &ComputeShaders[flag]);
+        GameFramework::Instance->device->CreateComputeShader(computeBC->GetBufferPointer(), computeBC->GetBufferSize(), nullptr, &ComputeShaders[flag]);
         computeBC->Release();
     }
 }
@@ -132,7 +130,7 @@ void BitonicSort::CreateBuffers()
     constBufDesc.MiscFlags = 0;
     constBufDesc.ByteWidth = sizeof(Params);
 
-    game->device->CreateBuffer(&constBufDesc, nullptr, &paramsCB);
+    GameFramework::Instance->device->CreateBuffer(&constBufDesc, nullptr, &paramsCB);
 
 
     D3D11_BUFFER_DESC buffer2Desc;
@@ -143,14 +141,14 @@ void BitonicSort::CreateBuffers()
     buffer2Desc.StructureByteStride = sizeof(Particle);
     buffer2Desc.ByteWidth = MaxParticlesCount * sizeof(Particle);
 
-    game->device->CreateBuffer(&buffer2Desc, nullptr, &buffer2);
+    GameFramework::Instance->device->CreateBuffer(&buffer2Desc, nullptr, &buffer2);
 
-    game->device->CreateShaderResourceView(buffer2, nullptr, &srvBuf);
-    game->device->CreateUnorderedAccessView(buffer2, nullptr, &uavBuf);
+    GameFramework::Instance->device->CreateShaderResourceView(buffer2, nullptr, &srvBuf);
+    GameFramework::Instance->device->CreateUnorderedAccessView(buffer2, nullptr, &uavBuf);
 }
 
 void BitonicSort::SetConstants(const UINT& level, const UINT& levelMask, const UINT& width, const UINT& height)
 {
     Params constants = { level, levelMask, width, height };
-    game->context->UpdateSubresource(paramsCB, 0, nullptr, &constants, 0, 0);
+    GameFramework::Instance->context->UpdateSubresource(paramsCB, 0, nullptr, &constants, 0, 0);
 }

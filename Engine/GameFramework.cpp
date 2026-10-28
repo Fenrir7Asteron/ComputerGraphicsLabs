@@ -4,13 +4,15 @@
 #pragma comment(lib, "dxguid.lib")
 
 #include "GameFramework.h"
-#include "FPSCameraController.h"
-#include "DebugRenderSysImpl.h"
+#include "Camera/Camera.h"
+#include "Camera/FPSCameraController.h"
+#include "Render/Debug/DebugRenderSysImpl.h"
+#include "Component/GameObject.h"
+#include "Component/Render/Light/PointLight.h"
+#include "Component/Render/Light/LightConstantData.h"
 #include "windowsx.h"
 #include <iostream>
 #include <d3dcompiler.h>
-#include "LightConstantData.h"
-#include "PointLight.h"
 #include "MacrosParser.h"
 
 using namespace DirectX::SimpleMath;
@@ -329,7 +331,7 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 
 	camera = new Camera(0.1f, 10000.0f, 50.0f, screenWidth, screenHeight);
 
-	cameraControllers.emplace_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
+	cameraControllers.push_back(new FPSCameraController(inputDevice, displayWin, 0.005f, 20000.0f));
 
 	for (CameraController* controller : cameraControllers)
 	{
@@ -536,7 +538,6 @@ void GameFramework::Run()
 		context->OMSetRenderTargets(0, nullptr, nullptr);
 
 		swapChain->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
-		debugRender->Clear();
 	}
 
 	FreeGameResources();
@@ -588,29 +589,32 @@ void GameFramework::RenderShadowMap()
 {
 	context->ClearState();
 
-	context->OMSetRenderTargets(
-		0,
-		nullptr,
-		dirLight->shadowDepthView
-	);	
-
-	context->RSSetState(dirLight->shadowRastState);
-	context->OMSetDepthStencilState(depthStateGeometry.Get(), 1);
-	context->RSSetViewports(1, &dirLight->shadowViewport);
-
-	// Send the constant buffers to the Graphics device.
-	context->GSSetConstantBuffers(
-		0,
-		1,
-		&dirLight->constantLightViewProjectionBuffer
-	);
-
-	dirLight->UpdateViewProjection();
-
-	for (auto gameComponent : gameComponents)
+	if (dirLight != nullptr && dirLight->enabled)
 	{
-		if (gameComponent->castShadows)
-			gameComponent->DrawShadowMap();
+		context->OMSetRenderTargets(
+			0,
+			nullptr,
+			dirLight->shadowDepthView
+		);
+
+		context->RSSetState(dirLight->shadowRastState);
+		context->OMSetDepthStencilState(depthStateGeometry.Get(), 1);
+		context->RSSetViewports(1, &dirLight->shadowViewport);
+
+		// Send the constant buffers to the Graphics device.
+		context->GSSetConstantBuffers(
+			0,
+			1,
+			&dirLight->constantLightViewProjectionBuffer
+		);
+
+		dirLight->UpdateViewProjection();
+	}
+
+	for (auto renderComponent : renderComponents)
+	{
+		if (renderComponent->castShadows)
+			renderComponent->DrawShadowMap();
 	}
 }
 
@@ -625,9 +629,9 @@ GAMEFRAMEWORK_API void GameFramework::GeometryPass()
 	context->OMSetRenderTargets(6, RTVs, pDSV.Get());
 	context->RSSetViewports(1, &viewport);
 
-	for (auto gameComponent : gameComponents)
+	for (auto renderComponent : renderComponents)
 	{
-		gameComponent->GeometryPass();
+		renderComponent->GeometryPass();
 	}
 
 	//debugRender->DrawGrid(20000.0f, 1000.0f, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -655,7 +659,7 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 	LightConstantData lightData;
-	lightData.cameraPos = Vector4(camera->position.x, camera->position.y, camera->position.z, 1.0f);
+	lightData.cameraPos = Vector4(camera->m_position.x, camera->m_position.y, camera->m_position.z, 1.0f);
 	lightData.lightParam1 = dirLight->direction;
 	lightData.lightColor = dirLight->lightColor;
 	lightData.DSAIntensity = Vector4(dirLight->diffuseIntensity, dirLight->specularIntensity, dirLight->ambientIntensity, 0.0f);
@@ -680,6 +684,9 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 	for (PointLight* pointLight : pointLights)
 	{
+		if (!pointLight->enabled)
+			continue;
+
 		context->ClearState();
 
 		context->OMSetBlendState(blendStateLight, nullptr, 0xffffffff);
@@ -697,9 +704,11 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 
 		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
+		auto lightPos = pointLight->m_gameObject->GetTransform()->positionOffset;
+
 		LightConstantData lightData;
-		lightData.cameraPos = Vector4(camera->position.x, camera->position.y, camera->position.z, 1.0f);
-		lightData.lightParam1 = Vector4(pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z, pointLight->range);
+		lightData.cameraPos = Vector4(camera->m_position.x, camera->m_position.y, camera->m_position.z, 1.0f);
+		lightData.lightParam1 = Vector4(lightPos.x, lightPos.y, lightPos.z, pointLight->range);
 		lightData.lightColor = pointLight->lightColor;
 		lightData.DSAIntensity = Vector4(pointLight->diffuseIntensity, pointLight->specularIntensity, 0.0f, 0.0f);
 		lightData.CameraView = camera->GetViewMatrix();
@@ -711,7 +720,7 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 		
-		pointLight->pointLightMvp.worldMatrix = pointLight->lightMesh->GetWorldMatrix();
+		pointLight->pointLightMvp.worldMatrix = pointLight->m_gameObject->GetTransform()->GetWorldMatrix();
 		pointLight->pointLightMvp.viewMatrix = camera->GetViewMatrix();
 		pointLight->pointLightMvp.projectionMatrix = camera->GetProjectionMatrix();
 		
@@ -729,16 +738,15 @@ GAMEFRAMEWORK_API void GameFramework::LightingPass()
 		UINT strides[] = { sizeof(Vertex) };
 		UINT offsets[] = { 0 };
 
-		context->IASetIndexBuffer(pointLight->lightMesh->meshPtrs[0].get()->ib, DXGI_FORMAT_R32_UINT, 0);
-		context->IASetVertexBuffers(0, 1, &pointLight->lightMesh->meshPtrs[0].get()->vb, strides, offsets);
+		context->IASetIndexBuffer(pointLight->lightMesh->m_meshPtrs[0].get()->ib, DXGI_FORMAT_R32_UINT, 0);
+		context->IASetVertexBuffers(0, 1, &pointLight->lightMesh->m_meshPtrs[0].get()->vb, strides, offsets);
 
 		context->VSSetShader(lightingVertexShaders[VertexLightingShaderFlags::NONE], nullptr, 0);
 		context->PSSetShader(lightingPixelShaders[PixelLightingShaderFlags::POINT], nullptr, 0);
 
-		context->DrawIndexed(pointLight->lightMesh->meshPtrs[0].get()->indicesLen, 0, 0);
+		context->DrawIndexed(pointLight->lightMesh->m_meshPtrs[0].get()->indicesLen, 0, 0);
 
-		debugRender->DrawSphere(2.0f, pointLight->lightColor, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
-		//debugRender->DrawSphere(pointLight->range, { 0.0f, 1.0f, 1.0f, 1.0f }, Matrix::CreateTranslation({ pointLight->lightPos.x, pointLight->lightPos.y, pointLight->lightPos.z }), 16);
+		debugRender->DrawSphere(pointLight->range, pointLight->lightColor, Matrix::CreateTranslation({ lightPos.x, lightPos.y, lightPos.z }), 16);
 	}
 }
 
@@ -756,26 +764,38 @@ GAMEFRAMEWORK_API void GameFramework::ParticleSystemPass()
 	}
 }
 
+GameObject* GameFramework::CreateGameObject(std::string name)
+{
+	auto* gameObject = new GameObject(name);
+	gameObjects.push_back(gameObject);
+	return gameObject;
+}
+
 GAMEFRAMEWORK_API void GameFramework::AddComponent(GameComponent* gameComponent)
 {
+	AddComponentInternal(gameComponent);
+}
+
+GAMEFRAMEWORK_API void GameFramework::AddComponentInternal(GameComponent* gameComponent)
+{
 	gameComponents.push_back(gameComponent);
+
+	auto* renderComponent = dynamic_cast<RenderComponent*>(gameComponent);
+	if (renderComponent != nullptr)
+		renderComponents.push_back(renderComponent);
+
+	auto* boundingOrientedBoxComponent = dynamic_cast<Model<BoundingOrientedBox>*>(gameComponent);
+	if (boundingOrientedBoxComponent != nullptr)
+		physicalBoxComponents.push_back(&(boundingOrientedBoxComponent->m_physicalComponent));
+
+	auto* boundingSphereComponent = dynamic_cast<Model<BoundingSphere>*>(gameComponent);
+	if (boundingSphereComponent != nullptr)
+		physicalSphereComponents.push_back(&(boundingSphereComponent->m_physicalComponent));
 }
 
 GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystemSorted* particleSystem)
 {
 	particleSystems.push_back(particleSystem);
-}
-
-template<> GAMEFRAMEWORK_API void GameFramework::AddComponent(Model<BoundingOrientedBox>* gameComponent)
-{
-	gameComponents.push_back(gameComponent);
-	physicalBoxComponents.emplace_back(&(gameComponent->physicalComponent));
-}
-
-template<> GAMEFRAMEWORK_API void GameFramework::AddComponent(Model<BoundingSphere>* gameComponent)
-{
-	gameComponents.push_back(gameComponent);
-	physicalSphereComponents.emplace_back(&(gameComponent->physicalComponent));
 }
 
 template<typename T>
@@ -832,11 +852,12 @@ void GameFramework::FreeGameResources()
 	backTex->Release();
 	rtv->Release();
 
-	for (auto gameComponent : gameComponents)
+	for (auto* gameObject: gameObjects)
 	{
-		delete gameComponent;
+		gameObject->Destroy();
 	}
 
+	gameObjects.clear();
 	gameComponents.clear();
 	physicalBoxComponents.clear();
 	physicalSphereComponents.clear();
@@ -850,9 +871,6 @@ void GameFramework::FreeGameResources()
 		delete controller;
 	}
 	cameraControllers.clear();
-
-	dirLight->Release();
-	delete dirLight;
 }
 
 GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
@@ -876,6 +894,7 @@ GAMEFRAMEWORK_API void GameFramework::RestoreTargets()
 	gBuffer.Clear(context, color);
 	context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	debugRender->Clear();
 }
 
 GAMEFRAMEWORK_API void GameFramework::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName)

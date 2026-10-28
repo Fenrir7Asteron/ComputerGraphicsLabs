@@ -1,6 +1,6 @@
 #pragma once
 #include "GameFramework.h"
-#include "Camera.h"
+#include "Camera/Camera.h"
 #include "OrbitalCameraController.h"
 
 class KatamaryGame : public GameFramework

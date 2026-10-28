@@ -1,6 +1,7 @@
 #pragma once
-#include "Camera.h"
+#include "Utils/SimpleMath.h"
 
+class Camera;
 
 class CameraController
 {

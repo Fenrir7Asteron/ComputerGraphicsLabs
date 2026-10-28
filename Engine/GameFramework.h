@@ -5,14 +5,15 @@
 #include <vector>
 
 #include "DisplayWin.h"
-#include "PhysicalBoxComponent.h"
-#include "PhysicalSphereComponent.h"
+#include "Component/Physics/PhysicalBoxComponent.h"
+#include "Component/Physics/PhysicalSphereComponent.h"
+#include "Camera/CameraController.h"
+#include "Component/Render/RenderComponent.h"
+#include "Component/Render/Light/DirectionalLight.h"
+#include "Component/Render/Light/PointLight.h"
 #include "InputDevice.h"
-#include "CameraController.h"
-#include "DirectionalLight.h"
 #include "Model.h"
 #include "GBuffer.h"
-#include "PointLight.h"
 #include "ShaderFlags.h"
 #include <map>
 #include "ParticleSystemSorted.h"
@@ -31,11 +32,9 @@ public:
 	GAMEFRAMEWORK_API virtual void GeometryPass();
 	GAMEFRAMEWORK_API virtual void LightingPass();
 	GAMEFRAMEWORK_API virtual void ParticleSystemPass();
-	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
-	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystemSorted* particleSystem);
 
-	template <typename T>
-	GAMEFRAMEWORK_API void AddComponent(Model<T>* gameComponent);
+	GAMEFRAMEWORK_API virtual GameObject* CreateGameObject(std::string name);
+	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystemSorted* particleSystem);
 
 	template <typename T>
 	GAMEFRAMEWORK_API GameComponent* Intersects(PhysicalComponent<T>* queryingObject);
@@ -73,7 +72,9 @@ public:
 	ID3D11BlendState* blendStateOpaque;
 	ID3D11BlendState* blendStateLight;
 
+	std::vector<GameObject*> gameObjects;
 	std::vector<GameComponent*> gameComponents;
+	std::vector<RenderComponent*> renderComponents;
 	std::vector<ParticleSystemSorted*> particleSystems;
 	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;
 	std::vector<PhysicalComponent<BoundingSphere>*> physicalSphereComponents;
@@ -109,5 +110,11 @@ public:
 
 	ID3D11RasterizerState* rastStateCullBack;
 	ID3D11RasterizerState* rastStateCullFront;
+
+private:
+	GAMEFRAMEWORK_API virtual void AddComponent(GameComponent* gameComponent);
+	GAMEFRAMEWORK_API void AddComponentInternal(GameComponent* gameComponent);
+
+	friend class GameObject;
 };
 

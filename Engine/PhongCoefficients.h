@@ -1,8 +1,8 @@
 #pragma once
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 #include "GameFrameworkExports.h"
 
-GAMEFRAMEWORK_API class PhongCoefficients
+class PhongCoefficients
 {
 public:
 	DirectX::SimpleMath::Vector4 dirLightDiffuseCoefficient;

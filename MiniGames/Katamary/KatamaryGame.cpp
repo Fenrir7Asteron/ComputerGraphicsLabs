@@ -4,8 +4,10 @@
 #include "PhongCoefficients.h"
 #include "KatamaryBall.h"
 #include "Model.h"
-#include "PointLight.h"
+#include "Component/GameObject.h"
+#include "Component/Render/Light/PointLight.h"
 #include "ParticleSystemSorted.h"
+#include <iostream>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -21,16 +23,17 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 {
 	GameFramework::Init(windowWidth, windowHeight);
 
-	dirLight = new DirectionalLight(
-		this,
-		{1.0f, -0.5f, 1.0f, 1.0f}, // direction
-		{1.0f, 1.0f, 1.0f, 1.0f},  // color
-		01.5f,                     // diffuse
-		00.5f,                     // specular
-		01.0f,                     // ambient
+	auto dirLightObject = CreateGameObject("DirectionalLight");	
+	dirLight = dirLightObject->AddComponent<DirectionalLight>();
+	dirLight->Bind(
+		{ 1.0f, -0.5f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f, 1.0f }, 
+		01.5f,                    
+		00.5f,                 
+		01.0f,                    
 		camera
 	);
-
+	dirLight->enabled = false;
 
 
 	PhongCoefficients coeff1 =
@@ -56,42 +59,71 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 
 	Material* katamaryMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/sphere_texture.jpg");
 	Material* whiteMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/White.png");
-	KatamaryBall<BoundingSphere>* katamary = new KatamaryBall<BoundingSphere>(this, 50.0f, 500.0f, coeff2, "../Assets/Models/", "sphere.fbx", geometryPassShaderPath, depthShaderPath, 0.01f, Matrix::Identity, katamaryMat, PhysicalLayer::Player);
-	AddComponent(katamary);
+
+	auto* katamaryObject = CreateGameObject("Katamary");
+	auto* katamary = katamaryObject->AddComponent<KatamaryBall<BoundingSphere>>();
+	katamary->Bind(50.0f, 500.0f, coeff2, "../Assets/Models/", "sphere.fbx", geometryPassShaderPath, depthShaderPath, 0.01f, katamaryMat, PhysicalLayer::Player);
 
 	Material* tableMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/wood1.jpg");
 
-	int lightRows = 3;
-	int lightColumns = 3;
+	int lightRows = 1;
+	int lightColumns = 1;
 	float verticalRange = 500.0f;
 	float horizontalRange = 500.0f;
 	float verticalStep = 2.0f * verticalRange / lightRows;
 	float horizontalStep = 2.0f *  horizontalRange / lightColumns;
 	float radius = 500.0f;
 	
-	float intensity = 4.0f;
+	float intensity = 40.0f;
+	int pointLightCount = 0;
 	for (float i = -verticalRange; i < verticalRange; i += verticalStep)
 	{
 		for (float j = -horizontalRange; j < horizontalRange; j += horizontalStep)
 		{
+			pointLightCount++;
+
 			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			
 			Vector3 pos = { j, radius * 0.5f, i };
-			Model<BoundingSphere>* pointLightSphereMesh = new Model<BoundingSphere>(this, nullptr, Matrix::CreateScale(Vector3::One * radius) * Matrix::CreateTranslation(pos), "../Assets/Models/", "sphere.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1);
-			pointLights.push_back(new PointLight(
-				pos,
+
+			auto pointLightObject = new GameObject("PointLight " + std::to_string(pointLightCount));
+			pointLightObject->GetTransform()->Move(pos);
+
+			Model<BoundingSphere>* pointLightSphereMesh = pointLightObject->AddComponent<Model<BoundingSphere>>();
+			pointLightSphereMesh->Bind(
+				"../Assets/Models/", "sphere.fbx",
+				geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1);
+			pointLightSphereMesh->enabled = false;
+
+			PointLight* pointLight = pointLightObject->AddComponent<PointLight>();
+			pointLight->Bind(
 				{ r, g, b, 1.0f },
 				radius,
 				intensity, intensity,
 				pointLightSphereMesh
-			));
+			);
+			
+			pointLights.push_back(pointLight);
 		}
 	}
 
-	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 100.0f) * Matrix::CreateTranslation({ -200.0f, 0.0f, 0.0f }), "../Assets/Models/", "pen.obj", geometryPassShaderPath, depthShaderPath, 100.0f, katamaryMat, coeff1));
-	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateRotationY(XMConvertToRadians(0.0f)) * Matrix::CreateTranslation({ 200.0f, 0.0f, 0.0f }), "../Assets/Models/Banana/", "banana.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
+
+	auto* penObject = new GameObject("Pen");
+	auto* penTransform = penObject->GetTransform();
+	penTransform->scale = Vector3::One * 100.0f;
+	penTransform->positionOffset = { -200.0f, 0.0f, 0.0f };
+	auto* pen = penObject->AddComponent<Model<BoundingOrientedBox>>();
+	pen->Bind("../Assets/Models/", "pen.obj", geometryPassShaderPath, depthShaderPath, 100.0f, katamaryMat, coeff1);
+
+	auto* bananaObject = new GameObject("Banana");
+	auto* bananaTransform = bananaObject->GetTransform();
+	bananaTransform->positionOffset = { 200.0f, 0.0f, 0.0f };
+	auto* banana = bananaObject->AddComponent<Model<BoundingOrientedBox>>();
+	banana->Bind("../Assets/Models/Banana/", "banana.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1);
+
+	/*AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateRotationY(XMConvertToRadians(0.0f)) * Matrix::CreateTranslation({ 200.0f, 0.0f, 0.0f }), "../Assets/Models/Banana/", "banana.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 0.75f) * Matrix::CreateRotationY(XMConvertToRadians(0.0f)) * Matrix::CreateTranslation({ -200.0f, 0.0f, -200.0f }), "../Assets/Models/Banana/", "banana.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 5.0f) * Matrix::CreateTranslation({ 0.0f, 0.0f, -200.0f }), "../Assets/Models/Minecraft_Grass_block/Grass_block/", "Grass_block.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff2));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 7.5f) * Matrix::CreateTranslation({ 100.0f, 0.0f, -300.0f }), "../Assets/Models/Minecraft_Grass_block/Grass_block/", "Grass_block.fbx", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
@@ -101,12 +133,14 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 600.0f }), "../Assets/Models/Miku/", "Miku.obj", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff2));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 3.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ -100.0f, 0.0f, 100.0f }), "../Assets/Models/Miku/", "Miku.obj", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
 	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 15.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(220.0f)) * Matrix::CreateTranslation({ -150.0f, 0.0f, -200.0f }), "../Assets/Models/Miku/", "Miku.obj", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff2));
-	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 100.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(180.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 0.0f }), "../Assets/Models/Miku/", "Miku.obj", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));
+	AddComponent(new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale(Vector3::One * 100.0f) * Matrix::CreateRotationX(XMConvertToRadians(-90.0f)) * Matrix::CreateRotationY(XMConvertToRadians(180.0f)) * Matrix::CreateTranslation({ 0.0f, 0.0f, 0.0f }), "../Assets/Models/Miku/", "Miku.obj", geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1));*/
 	
-	Model<BoundingOrientedBox>* floor = new Model<BoundingOrientedBox>(this, nullptr, Matrix::CreateScale({ 100.0f, 1.0f, 100.0f }) * Matrix::CreateTranslation({ -2000.0f, -100.0f, -2000.0f }), "../Assets/Models/", "cube.obj", geometryPassShaderPath, depthShaderPath, 100.0f, whiteMat, coeff3);
-	floor->enabled = false;
-	floor->castShadows = false;
-	AddComponent(floor);
+	auto* floorObject = new GameObject("Floor");
+	auto* floorTransform = floorObject->GetTransform();
+	floorTransform->scale = { 100.0f, 1.0f, 100.0f };
+	floorTransform->positionOffset = { -2000.0f, -100.0f, -2000.0f };
+	auto* floor = floorObject->AddComponent<Model<BoundingOrientedBox>>();
+	floor->Bind("../Assets/Models/", "cube.obj", geometryPassShaderPath, depthShaderPath, 100.0f, whiteMat, coeff3);
 
 	this->orbitalCamController = new OrbitalCameraController(inputDevice, displayWin, 0.005f, 500.0f, 100.0f, katamary, 1000.0f,
 		200.0f,  // minDistanceToBodySurface
@@ -133,12 +167,13 @@ void KatamaryGame::Update()
 		{
 			ParticleSystemSorted::Particle p;
 	
-			Vector3 pos = fountainPS->GetWorldMatrix().Translation();
+			Transform* transform = fountainPS->m_gameObject->GetTransform();
+			Vector3 pos = transform->GetWorldMatrix().Translation();
 			p.Position = { pos.x, pos.y, pos.z, 1.0f };
 
-			Vector3 upVector = Vector3::Transform(Vector3::Up, fountainPS->rotation);
-			Vector3 rightVector = Vector3::Transform(Vector3::Right, fountainPS->rotation);
-			Vector3 forwardVector = Vector3::Transform(Vector3::Forward, fountainPS->rotation);
+			Vector3 upVector = Vector3::Transform(Vector3::Up, transform->rotation);
+			Vector3 rightVector = Vector3::Transform(Vector3::Right, transform->rotation);
+			Vector3 forwardVector = Vector3::Transform(Vector3::Forward, transform->rotation);
 
 			Vector3 velocity = upVector * 1000.0f;
 			float angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI * 2.0f;

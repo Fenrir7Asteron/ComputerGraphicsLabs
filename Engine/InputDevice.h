@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_set>
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 #include "Delegates.h"
 #include "Keys.h"
 #include "GameFrameworkExports.h"
@@ -9,7 +9,7 @@
 
 class GameFramework;
 
-class GAMEFRAMEWORK_API InputDevice
+class InputDevice
 {
 	friend class GameFramework;
 	
@@ -34,13 +34,13 @@ public:
 	
 public:
 	
-	InputDevice(GameFramework* inGame);
-	~InputDevice();
+	GAMEFRAMEWORK_API InputDevice(GameFramework* inGame);
+	GAMEFRAMEWORK_API ~InputDevice();
 
 
-	void AddPressedKey(Keys key);
-	void RemovePressedKey(Keys key);
-	bool IsKeyDown(Keys key);
+	GAMEFRAMEWORK_API void AddPressedKey(Keys key);
+	GAMEFRAMEWORK_API void RemovePressedKey(Keys key);
+	GAMEFRAMEWORK_API bool IsKeyDown(Keys key);
 
 protected:
 	struct KeyboardInputEventArgs {
@@ -112,8 +112,8 @@ protected:
 		int Y;
 	};
 
-	void OnKeyDown(KeyboardInputEventArgs args);
-	void OnMouseMove(RawMouseEventArgs args);
+	GAMEFRAMEWORK_API void OnKeyDown(KeyboardInputEventArgs args);
+	GAMEFRAMEWORK_API void OnMouseMove(RawMouseEventArgs args);
 };
 
 /*

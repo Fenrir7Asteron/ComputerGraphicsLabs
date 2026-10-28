@@ -1,6 +1,6 @@
 #pragma once
 #include "GameFrameworkExports.h"
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 #include <map>
 #include <d3d11.h>
 
@@ -8,8 +8,6 @@ class GameFramework;
 
 class BitonicSort
 {
-	GameFramework* game;
-
 public:
 	struct Params
 	{
@@ -54,7 +52,7 @@ public:
 
 	std::map<ComputeFlags, ID3D11ComputeShader*> ComputeShaders;
 
-	GAMEFRAMEWORK_API BitonicSort(GameFramework* game);
+	GAMEFRAMEWORK_API BitonicSort();
 
 	GAMEFRAMEWORK_API void Dispose();
 

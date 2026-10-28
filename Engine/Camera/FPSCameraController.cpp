@@ -2,6 +2,8 @@
 #define _USE_MATH_DEFINES
 
 #include "FPSCameraController.h"
+#include "DisplayWin.h"
+#include "Camera.h"
 #include <iostream>
 
 using namespace DirectX::SimpleMath;
@@ -35,7 +37,7 @@ GAMEFRAMEWORK_API void FPSCameraController::MouseMove(const InputDevice::MouseMo
 	{
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f,  offsetFromCenter.y);
-		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->rotation);
+		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
 		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
 	}
 }
@@ -47,25 +49,25 @@ GAMEFRAMEWORK_API void FPSCameraController::Update(float deltaTime)
 
 	if (inputDevice->IsKeyDown(Keys::W))
 	{
-		Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->rotation);
+		Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->m_rotation);
 		Move(camForward * deltaTime * cameraSpeed);
 	}
 
 	if (inputDevice->IsKeyDown(Keys::S))
 	{
-		Vector3 camBackward = Vector3::Transform(Vector3::Backward, camera->rotation);
+		Vector3 camBackward = Vector3::Transform(Vector3::Backward, camera->m_rotation);
 		Move(camBackward * deltaTime * cameraSpeed);
 	}
 
 	if (inputDevice->IsKeyDown(Keys::A))
 	{
-		Vector3 camLeft= Vector3::Transform(Vector3::Left, camera->rotation);
+		Vector3 camLeft= Vector3::Transform(Vector3::Left, camera->m_rotation);
 		Move(camLeft * deltaTime * cameraSpeed);
 	}
 
 	if (inputDevice->IsKeyDown(Keys::D))
 	{
-		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->rotation);
+		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
 		Move(camRight * deltaTime * cameraSpeed);
 	}
 

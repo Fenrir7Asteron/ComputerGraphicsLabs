@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d11.h>
-#include "GameComponent.h"
+#include "Component/GameComponent.h"
+#include "Component/Render/RenderComponent.h"
 #include <vector>
 #include <string>
 
@@ -8,10 +9,11 @@ class UnlitDiffuseMaterial;
 class Vertex;
 class PhongCoefficients;
 
-class Mesh : public GameComponent
+class Mesh : public GameComponent, public RenderComponent
 {
 public:
-	GAMEFRAMEWORK_API Mesh(GameFramework* game,
+	GAMEFRAMEWORK_API Mesh(
+		GameObject* gameObject,
 		DirectX::SimpleMath::Matrix transform,
 		Material* material,
 		std::vector<Vertex>& vertices,
@@ -19,6 +21,8 @@ public:
 
 	// Inherited via GameComponent
 	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Destroy() override;
+
 	GAMEFRAMEWORK_API virtual void DrawShadowMap() override;
 	GAMEFRAMEWORK_API virtual void DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform);
 	GAMEFRAMEWORK_API virtual void GeometryPass() override;
@@ -34,5 +38,7 @@ public:
 	ID3D11Buffer* ib;
 	ID3D11Buffer* constantMvpBuffer;
 	ID3D11Buffer* constantPhongBuffer;
+
+	Material* material;
 };
 

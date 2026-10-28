@@ -1,5 +1,5 @@
 #include "PhysicalComponent.h"
-#include "GameComponent.h"
+#include "Component/GameComponent.h"
 #include <cmath>
 
 using namespace DirectX;
@@ -9,9 +9,6 @@ template<class T>
 GAMEFRAMEWORK_API PhysicalComponent<T>::PhysicalComponent()
 {
 }
-
-template GAMEFRAMEWORK_API PhysicalComponent<BoundingOrientedBox>::PhysicalComponent();
-template GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent();
 
 GAMEFRAMEWORK_API PhysicalComponent<BoundingOrientedBox>::PhysicalComponent(GameComponent* parent, PhysicalLayer physicalLayer, DirectX::SimpleMath::Matrix transform)
 {
@@ -34,7 +31,7 @@ GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent(GameCompo
 	Vector3 scale;
 	Quaternion rotation;
 	transform.Decompose(scale, rotation, center);
-	
+
 	float radius = scale.x;
 	if (scale.y > radius)
 		radius = scale.y;
@@ -43,6 +40,11 @@ GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent(GameCompo
 
 	this->boundingShape = BoundingSphere(center, radius);
 }
+
+template GAMEFRAMEWORK_API PhysicalComponent<BoundingOrientedBox>::PhysicalComponent();
+template GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent();
+
+
 
 template<class T>
 GAMEFRAMEWORK_API void PhysicalComponent<T>::Move(DirectX::SimpleMath::Vector3 positionDelta)
