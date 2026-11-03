@@ -2,13 +2,16 @@
 #define _USE_MATH_DEFINES
 
 #include "OrbitalCameraController.h"
+#include "DisplayWin.h"
+#include "Camera/Camera.h"
+#include "Component/GameObject.h"
 #include <iostream>
 #include <cmath>
 
 using namespace DirectX::SimpleMath;
 
 OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, DisplayWin* displayWin, float mouseSensitivity, float maxCameraMoveSpeedDuringTransition, float cameraCloseupSpeed,
-	GameComponent* attachedToBody, float startDistanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface)
+	GameObject* attachedToBody, float startDistanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface)
 {
 	inputDevice->MouseMove.AddRaw(this, &OrbitalCameraController::MouseMove);
 
@@ -34,15 +37,15 @@ void OrbitalCameraController::MouseMove(const InputDevice::MouseMoveEventArgs& m
 	{
 		offsetFromCenter.x = std::max(-10.0f, offsetFromCenter.x);
 		offsetFromCenter.x = std::min(10.0f, offsetFromCenter.x);
-		Rotate(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
+		RotateAxis(Vector3::Up, offsetFromCenter.x * mouseSensitivity);
 	}
 
 	if (std::abs(offsetFromCenter.y) > 0)
 	{
 		offsetFromCenter.y = std::max(-10.0f, offsetFromCenter.y);
 		offsetFromCenter.y = std::min(10.0f, offsetFromCenter.y);
-		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->rotation);
-		Rotate(camRight, offsetFromCenter.y * mouseSensitivity);
+		Vector3 camRight = Vector3::Transform(Vector3::Right, camera->m_rotation);
+		RotateAxis(camRight, offsetFromCenter.y * mouseSensitivity);
 	}
 
 	if (!isTransitioning && std::abs(mouseMoveData.WheelDelta) > 0)
@@ -57,11 +60,11 @@ void OrbitalCameraController::Update(float deltaTime)
 	if (camera == nullptr || attachedToBody == nullptr)
 		return;
 
-	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->rotation);
+	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->m_rotation);
 
-	Vector3 bodyPosition = attachedToBody->GetWorldMatrix().Translation();
+	Vector3 bodyPosition = attachedToBody->GetTransform()->GetWorldMatrix().Translation();
 	Vector3 cameraMoveTarget = bodyPosition - camForward * (distanceToBodySurface);
-	Vector3 offsetToTarget = cameraMoveTarget - camera->position;
+	Vector3 offsetToTarget = cameraMoveTarget - camera->m_position;
 
 	float moveSpeed;
 	float moveDistance;
@@ -83,7 +86,7 @@ void OrbitalCameraController::Update(float deltaTime)
 	}
 }
 
-void OrbitalCameraController::SetTargetBody(GameComponent* targetBody)
+void OrbitalCameraController::SetTargetBody(GameObject* targetBody)
 {
 	this->attachedToBody = targetBody;
 }

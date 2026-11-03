@@ -1,6 +1,6 @@
 #pragma once
 #include "GlobalSettings.h"
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 
 struct LightViewProjection
 {

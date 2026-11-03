@@ -1,6 +1,8 @@
 #include "d3dcompiler.h"
-#include "WICTextureLoader.h"
+#include "Render/Texture/Loader/WICTextureLoader.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include "Material.h"
+#include "GameFramework.h"
 #include <iostream>
 #include "DisplayWin.h"
 
@@ -9,9 +11,11 @@
 
 using namespace DirectX;
 
-Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMappingShaderPath, Microsoft::WRL::ComPtr<ID3D11Device> device, DisplayWin* displayWin,
+Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMappingShaderPath, DisplayWin* displayWin,
 	const LPCWSTR diffuseTexturePath)
 {
+	auto& device = RenderAPI::DirectX11::DirectX11RenderAPI::Instance->device;
+
 	// Create geometry pass resources shaders
 	geometryPassVertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
@@ -174,9 +178,6 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 
 	device->CreateSamplerState(&samplerDesc, &pSampler);
-
-	this->device = device;
-	this->displayWin = displayWin;
 }
 
 Material::~Material()
@@ -196,7 +197,7 @@ void Material::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVert
 		// If there was  nothing in the error message then it simply could not find the shader file itself.
 		else
 		{
-			MessageBox(displayWin->hWnd, shaderName, shaderName, MB_OK);
+			MessageBox(GameFramework::Instance->displayWin->hWnd, shaderName, shaderName, MB_OK);
 		}
 	}
 }

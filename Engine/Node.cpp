@@ -2,7 +2,7 @@
 #include "Mesh.h"
 #include "PhongCoefficients.h"
 
-Node::Node(std::vector<Mesh*> meshPtrs, const DirectX::SimpleMath::Matrix& transform) : meshPtrs(std::move(meshPtrs))
+Node::Node(std::vector<Mesh*> meshPtrs, const DirectX::SimpleMath::Matrix& transform) : m_meshPtrs(std::move(meshPtrs))
 {
 	this->transform = transform;
 }
@@ -11,7 +11,7 @@ void Node::DrawShadowMap(DirectX::SimpleMath::Matrix accumulatedTransform)
 {
 	const auto currentTransform = transform * accumulatedTransform;
 
-	for (const auto pm : meshPtrs)
+	for (const auto pm : m_meshPtrs)
 	{
 		pm->DrawShadowMap(currentTransform);
 	}
@@ -26,7 +26,7 @@ void Node::GeometryPass(DirectX::SimpleMath::Matrix accumulatedTransform, const 
 {
 	const auto currentTransform = transform * accumulatedTransform;
 
-	for (const auto pm : meshPtrs)
+	for (const auto pm : m_meshPtrs)
 	{
 		pm->GeometryPass(currentTransform, phongCoefficients);
 	}

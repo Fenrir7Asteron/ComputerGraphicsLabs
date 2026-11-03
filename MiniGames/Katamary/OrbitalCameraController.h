@@ -1,25 +1,27 @@
 #pragma once
-#include "CameraController.h"
+#include "Camera/CameraController.h"
 #include "InputDevice.h"
-#include "DisplayWin.h"
-#include "GameComponent.h"
+
+class DisplayWin;
+class GameObject;
+
 
 class OrbitalCameraController : public CameraController
 {
 public:
-	GAMEFRAMEWORK_API OrbitalCameraController(InputDevice* inputDevice, DisplayWin* displayWin, float mouseSensitivity, float maxCameraMoveSpeed, float cameraCloseupSpeed,
-		GameComponent* attachedToBody, float distanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface);
+	OrbitalCameraController(InputDevice* inputDevice, DisplayWin* displayWin, float mouseSensitivity, float maxCameraMoveSpeed, float cameraCloseupSpeed,
+		GameObject* attachedToBody, float distanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface);
 
-	GAMEFRAMEWORK_API virtual void MouseMove(const InputDevice::MouseMoveEventArgs& mouseMoveData);
-	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
-	void SetTargetBody(GameComponent* targetBody);
+	virtual void MouseMove(const InputDevice::MouseMoveEventArgs& mouseMoveData);
+	virtual void Update(float deltaTime) override;
+	void SetTargetBody(GameObject* targetBody);
 
 	InputDevice* inputDevice;
 	DisplayWin* displayWin;
 	float mouseSensitivity;
 	float maxCameraMoveSpeedDuringTransition;
 	float cameraCloseupSpeed;
-	GameComponent* attachedToBody;
+	GameObject* attachedToBody;
 	float distanceToBodySurface;
 	float minDistanceToBodySurface;
 	float maxDistanceToBodySurface;

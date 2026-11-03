@@ -7,7 +7,7 @@
 using namespace DirectX::SimpleMath;
 
 
-InputDevice::InputDevice(GameFramework* inGame) : game(inGame)
+GAMEFRAMEWORK_API InputDevice::InputDevice(GameFramework* inGame) : game(inGame)
 {
 	keys = new std::unordered_set<Keys>();
 	
@@ -30,12 +30,12 @@ InputDevice::InputDevice(GameFramework* inGame) : game(inGame)
 	}
 }
 
-InputDevice::~InputDevice()
+GAMEFRAMEWORK_API InputDevice::~InputDevice()
 {
 	delete keys;
 }
 
-void InputDevice::OnKeyDown(KeyboardInputEventArgs args)
+GAMEFRAMEWORK_API void InputDevice::OnKeyDown(KeyboardInputEventArgs args)
 {
 	bool Break = args.Flags & 0x01;
 
@@ -51,7 +51,7 @@ void InputDevice::OnKeyDown(KeyboardInputEventArgs args)
 	}
 }
 
-void InputDevice::OnMouseMove(RawMouseEventArgs args)
+GAMEFRAMEWORK_API void InputDevice::OnMouseMove(RawMouseEventArgs args)
 {
 	if(args.ButtonFlags & static_cast<int>(MouseButtonFlags::LeftButtonDown))
 		AddPressedKey(Keys::LeftButton);
@@ -86,7 +86,7 @@ void InputDevice::OnMouseMove(RawMouseEventArgs args)
 	MouseMove.Broadcast(moveArgs);
 }
 
-void InputDevice::AddPressedKey(Keys key)
+GAMEFRAMEWORK_API void InputDevice::AddPressedKey(Keys key)
 {
 	//if (!game->isActive) {
 	//	return;
@@ -94,12 +94,12 @@ void InputDevice::AddPressedKey(Keys key)
 	keys->insert(key);
 }
 
-void InputDevice::RemovePressedKey(Keys key)
+GAMEFRAMEWORK_API void InputDevice::RemovePressedKey(Keys key)
 {
 	keys->erase(key);
 }
 
-bool InputDevice::IsKeyDown(Keys key)
+GAMEFRAMEWORK_API bool InputDevice::IsKeyDown(Keys key)
 {
 	return keys->count(key);
 }

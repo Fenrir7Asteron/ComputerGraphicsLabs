@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 
 class Mesh;
 class PhongCoefficients;
@@ -16,7 +16,7 @@ public:
 	void AddChild(std::unique_ptr<Node> pChild);
 
 	std::vector<std::unique_ptr<Node>> childPtrs;
-	std::vector<Mesh*> meshPtrs;
+	std::vector<Mesh*> m_meshPtrs;
 	DirectX::SimpleMath::Matrix transform;
 };
 

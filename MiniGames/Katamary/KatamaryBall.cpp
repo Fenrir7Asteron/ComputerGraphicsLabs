@@ -3,7 +3,12 @@
 #include "KatamaryBall.h"
 #include "GameFramework.h"
 #include "ModelViewProjectionMatrices.h"
-#include "DebugRenderSysImpl.h"
+#include "Camera/Camera.h"
+#include "Component/GameObject.h"
+#include "Component/Physics/PhysicalBoxComponent.h"
+#include "Component/Physics/PhysicalSphereComponent.h"
+#include "Render/Debug/DebugRenderSysImpl.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -17,65 +22,38 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-KatamaryBall<BoundingSphere>::KatamaryBall(GameFramework* game, float radius, float moveSpeed,
-	const PhongCoefficients phongCoefficients,
-	const std::string modelDir,
-	const std::string modelName,
-	const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
-	float startScale,
-	DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
-	: Model<BoundingSphere>(game, nullptr, transform, modelDir, modelName, shaderPath, depthShaderPath, startScale, material, phongCoefficients, physicalLayer)
+KatamaryBall::KatamaryBall(GameObject* gameObject) : GameComponent(gameObject)
 {
-	this->radius = radius;
-	this->scale = Vector3::One * radius;
-	this->moveSpeed = moveSpeed;
-	this->targetVolume = Volume();
-
-	this->Move(Vector3::Up * radius);
-
-	this->physicalComponent.boundingShape.Radius *= radius;
 }
 
-KatamaryBall<BoundingOrientedBox>::KatamaryBall(GameFramework* game, float radius, float moveSpeed,
-	const PhongCoefficients phongCoefficients,
-	const std::string modelDir,
-	const std::string modelName,
-	const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
-	float startScale,
-	DirectX::SimpleMath::Matrix transform, Material* material, PhysicalLayer physicalLayer)
-	: Model<BoundingOrientedBox>(game, nullptr, transform, modelDir, modelName, shaderPath, depthShaderPath, startScale, material, phongCoefficients, physicalLayer)
+void KatamaryBall::Bind(float radius, float moveSpeed, PhysicalSphereComponent* physicalComponent)
 {
 	this->radius = radius;
-	this->scale = Vector3::One * radius;
+	this->m_physicalComponent = physicalComponent;
 	this->moveSpeed = moveSpeed;
 	this->targetVolume = Volume();
-
-	this->Move(Vector3::Up * radius);
-
-	this->physicalComponent.boundingShape.Extents = this->physicalComponent.boundingShape.Extents * (Vector3::One * radius);
 }
 
-template <class T>
-void KatamaryBall<T>::Update(float deltaTime)
+void KatamaryBall::Update(float deltaTime)
 {
-	float volume = Volume();
+	/*float volume = Volume();
 	if (volume + 0.001f < targetVolume)
 	{
 		float scaleDelta = std::min((float) std::pow((targetVolume - volume) / M_PI * (3.0f / 4.0f), 1.0f / 3.0f), deltaTime * 5.0f);
 		IncreaseSize(scaleDelta);
-	}
+	}*/
 
 	Vector3 moveDir = Vector3::Zero;
 
-	if (this->game_->inputDevice->IsKeyDown(Keys::W))	moveDir += Vector3::Forward;
-	if (this->game_->inputDevice->IsKeyDown(Keys::A))	moveDir += Vector3::Left;
-	if (this->game_->inputDevice->IsKeyDown(Keys::S))	moveDir += Vector3::Backward;
-	if (this->game_->inputDevice->IsKeyDown(Keys::D))	moveDir += Vector3::Right;
+	if (GameFramework::Instance->inputDevice->IsKeyDown(Keys::W))	moveDir += Vector3::Forward;
+	if (GameFramework::Instance->inputDevice->IsKeyDown(Keys::A))	moveDir += Vector3::Left;
+	if (GameFramework::Instance->inputDevice->IsKeyDown(Keys::S))	moveDir += Vector3::Backward;
+	if (GameFramework::Instance->inputDevice->IsKeyDown(Keys::D))	moveDir += Vector3::Right;
 
 	if (moveDir.LengthSquared() <= 0.001f)
 		return;
 
-	moveDir = Vector3::Transform(moveDir, this->game_->camera->rotation);
+	moveDir = Vector3::Transform(moveDir, GameFramework::Instance->camera->m_rotation);
 	moveDir.y = 0.0f;
 
 	moveDir.Normalize();
@@ -84,110 +62,78 @@ void KatamaryBall<T>::Update(float deltaTime)
 
 	float moveDelta = moveSpeed * deltaTime;
 
-	this->Move(moveDir * moveDelta);
-	this->Rotate(rotationAxis, -moveDelta / radius);
+	auto* transform = this->m_gameObject->GetTransform();
+	transform->Move(moveDir * moveDelta);
+	transform->RotateAxis(rotationAxis, -moveDelta / radius);
 
-	for (auto attached : attachedObjects)
-	{
-		attached->Move(moveDir * moveDelta);
-		attached->RotateAroundPoint(this->GetWorldMatrix().Translation(), rotationAxis, -moveDelta / radius);
-	}
-
-	GameComponent* other = this->game_->Intersects(&(this->physicalComponent));
+	GameComponent* other = GameFramework::Instance->Intersects(m_physicalComponent);
 	if (other != nullptr)
 	{
-		Model<BoundingOrientedBox>* boxModel = dynamic_cast<Model<BoundingOrientedBox>*>(other);
+		PhysicalBoxComponent* boxModel = dynamic_cast<PhysicalBoxComponent*>(other);
 		if (boxModel != nullptr)
 		{
 			float otherVolume = GetOtherObjectVolume(boxModel);
-			if (volume > otherVolume * 2.0f)
-				AttachObject(boxModel);
+			if (targetVolume > otherVolume * 2.0f)
+				AttachObject(boxModel, otherVolume);
 		}
 		else
 		{
-			Model<BoundingSphere>* sphereModel = dynamic_cast<Model<BoundingSphere>*>(other);
+			PhysicalSphereComponent* sphereModel = dynamic_cast<PhysicalSphereComponent*>(other);
 			if (sphereModel != nullptr)
 			{
 				float otherVolume = GetOtherObjectVolume(sphereModel);
-				if (volume > otherVolume * 2.0f)
-					AttachObject(sphereModel);
+				if (targetVolume > otherVolume * 2.0f)
+					AttachObject(sphereModel, otherVolume);
 			}
 		}
 	}
 }
 
-template <class T>
-template <class U>
-void KatamaryBall<T>::AttachObject(Model<U>* other)
+void KatamaryBall::AttachObject(PhysicalComponent* other, float otherVolume)
 {
-	attachedObjects.push_back(other);
+	other->m_gameObject->GetTransform()->SetParent(this->m_gameObject->GetTransform());
+	other->m_drawBoundary = false;
 	other->enabled = false;
 
-	targetVolume += GetOtherObjectVolume(other);
+	targetVolume += otherVolume;
 }
 
-template <class T>
-float KatamaryBall<T>::GetOtherObjectVolume(Model<BoundingOrientedBox>* other)
+float KatamaryBall::GetOtherObjectVolume(PhysicalBoxComponent* other)
 {
-	Vector3 extents = other->physicalComponent.boundingShape.Extents;
+	Vector3 extents = other->m_boundingShape.Extents;
 	return extents.x * extents.y * extents.z * 8.0f;
 }
 
-template <class T>
-float KatamaryBall<T>::GetOtherObjectVolume(Model<BoundingSphere>* other)
+float KatamaryBall::GetOtherObjectVolume(PhysicalSphereComponent* other)
 {
-	return (4.0f / 3.0f)* M_PI* std::pow(other->physicalComponent.boundingShape.Radius, 3);
+	return (4.0f / 3.0f)* M_PI* std::pow(other->m_boundingShape.Radius, 3);
 }
 
-template <class T>
-float KatamaryBall<T>::Volume()
+float KatamaryBall::Volume()
 {
 	return (4.0f / 3.0f) * M_PI * std::pow(this->radius, 3);
 }
 
-void KatamaryBall<BoundingSphere>::IncreaseSize(float sizeDelta)
+void KatamaryBall::IncreaseSize(float sizeDelta)
 {
 	this->radius += sizeDelta;
-	this->scale += Vector3::One * sizeDelta;
-	this->positionOffset += Vector3::Up * sizeDelta;
-	this->physicalComponent.boundingShape.Center = this->physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
-	this->physicalComponent.boundingShape.Radius = this->radius;
 
-	for (auto attached : attachedObjects)
-	{
-		Vector3 moveDir = attached->GetWorldMatrix().Translation() - this->GetWorldMatrix().Translation();
-		moveDir.Normalize();
-
-		attached->Move(moveDir * sizeDelta);
-	}
+	auto* transform = m_gameObject->GetTransform();
+	transform->SetScale(Vector3::One * sizeDelta);
+	transform->Move(Vector3::Up * sizeDelta);
+	m_physicalComponent->m_boundingShape.Center = m_physicalComponent->m_boundingShape.Center + Vector3::Up * sizeDelta;
+	m_physicalComponent->m_boundingShape.Radius = this->radius;
 }
 
-void KatamaryBall<BoundingOrientedBox>::IncreaseSize(float sizeDelta)
+void KatamaryBall::Destroy()
 {
-	this->radius += sizeDelta;
-	this->scale += Vector3::One * sizeDelta;
-	this->positionOffset += Vector3::Up * sizeDelta;
-	this->physicalComponent.boundingShape.Center = this->physicalComponent.boundingShape.Center + Vector3::Up * sizeDelta;
-	this->physicalComponent.boundingShape.Extents = Vector3::One * this->radius;
-
-	for (auto attached : attachedObjects)
-	{
-		Vector3 moveDir = attached->GetWorldMatrix().Translation() - this->GetWorldMatrix().Translation();
-		moveDir.Normalize();
-
-		attached->Move(moveDir * sizeDelta);
-	}
 }
 
-void KatamaryBall<BoundingSphere>::GeometryPass()
+void KatamaryBall::DrawShadowMap()
 {
-	Model<BoundingSphere>::GeometryPass();
-	this->game_->debugRender->DrawSphere(this->physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(this->physicalComponent.boundingShape.Center), 16);
 }
 
-void KatamaryBall<BoundingOrientedBox>::GeometryPass()
+void KatamaryBall::GeometryPass()
 {
-	Model<BoundingOrientedBox>::GeometryPass();
-	this->game_->debugRender->DrawSphere(this->physicalComponent.boundingShape.Extents.x, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(this->physicalComponent.boundingShape.Center), 16);
+	RenderAPI::DirectX11::DirectX11RenderAPI::Instance->debugRender->DrawSphere(m_physicalComponent->m_boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent->m_boundingShape.Center), 16);
 }
-
