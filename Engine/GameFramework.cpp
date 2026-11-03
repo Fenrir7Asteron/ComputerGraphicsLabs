@@ -10,6 +10,8 @@
 #include "Component/GameObject.h"
 #include "Component/Render/Light/PointLight.h"
 #include "Component/Render/Light/LightConstantData.h"
+#include "Component/Physics/PhysicalBoxComponent.h"
+#include "Component/Physics/PhysicalSphereComponent.h"
 #include "windowsx.h"
 #include <iostream>
 #include <d3dcompiler.h>
@@ -798,13 +800,13 @@ GAMEFRAMEWORK_API void GameFramework::AddComponentInternal(GameComponent* gameCo
 	if (renderComponent != nullptr)
 		renderComponents.push_back(renderComponent);
 
-	auto* boundingOrientedBoxComponent = dynamic_cast<Model<BoundingOrientedBox>*>(gameComponent);
-	if (boundingOrientedBoxComponent != nullptr)
-		physicalBoxComponents.push_back(&(boundingOrientedBoxComponent->m_physicalComponent));
+	auto* boxComponent = dynamic_cast<PhysicalBoxComponent*>(gameComponent);
+	if (boxComponent != nullptr)
+		physicalBoxComponents.push_back(boxComponent);
 
-	auto* boundingSphereComponent = dynamic_cast<Model<BoundingSphere>*>(gameComponent);
-	if (boundingSphereComponent != nullptr)
-		physicalSphereComponents.push_back(&(boundingSphereComponent->m_physicalComponent));
+	auto* sphereComponent = dynamic_cast<PhysicalSphereComponent*>(gameComponent);
+	if (sphereComponent != nullptr)
+		physicalSphereComponents.push_back(sphereComponent);
 }
 
 GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystemSorted* particleSystem)
@@ -812,32 +814,22 @@ GAMEFRAMEWORK_API void GameFramework::AddParticleSystem(ParticleSystemSorted* pa
 	particleSystems.push_back(particleSystem);
 }
 
-template<typename T>
-GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<T>* queryingComponent)
+GAMEFRAMEWORK_API PhysicalComponent* GameFramework::Intersects(PhysicalComponent* queryingComponent)
 {
 	for (auto otherBoxComponent : physicalBoxComponents) {
-		if (otherBoxComponent->enabled == false || otherBoxComponent->parent == queryingComponent->parent)
-			continue;
-
-		if (queryingComponent->boundingShape.Intersects(otherBoxComponent->boundingShape)) {
-			return otherBoxComponent->parent;
+		if (queryingComponent->Intersects(otherBoxComponent)) {
+			return otherBoxComponent;
 		}
 	}
 
 	for (auto otherSphere: physicalSphereComponents) {
-		if (otherSphere->enabled == false || otherSphere->parent == queryingComponent->parent)
-			continue;
-
-		if (queryingComponent->boundingShape.Intersects(otherSphere->boundingShape)) {
-			return otherSphere->parent;
+		if (queryingComponent->Intersects(otherSphere)) {
+			return otherSphere;
 		}
 	}
 
 	return nullptr;
 }
-
-template GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<BoundingSphere>* queryingComponent);
-template GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<BoundingOrientedBox>* queryingComponent);
 
 //GAMEFRAMEWORK_API GameComponent* GameFramework::RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed)
 //{

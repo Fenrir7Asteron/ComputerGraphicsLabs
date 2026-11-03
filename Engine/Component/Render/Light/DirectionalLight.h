@@ -1,11 +1,10 @@
 #pragma once
-#include "Utils/SimpleMath.h"
-#include "GameFrameworkExports.h"
+#include "Component/GameComponent.h"
+#include "LightViewProjection.h"
+#include "GlobalSettings.h"
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
-#include "LightViewProjection.h"
-#include "GlobalSettings.h"
 
 class GameFramework;
 

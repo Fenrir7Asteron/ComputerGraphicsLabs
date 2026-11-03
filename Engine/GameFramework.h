@@ -5,8 +5,6 @@
 #include <vector>
 
 #include "DisplayWin.h"
-#include "Component/Physics/PhysicalBoxComponent.h"
-#include "Component/Physics/PhysicalSphereComponent.h"
 #include "Camera/CameraController.h"
 #include "Component/Render/RenderComponent.h"
 #include "Component/Render/Light/DirectionalLight.h"
@@ -19,6 +17,8 @@
 #include "ParticleSystemSorted.h"
 
 class DebugRenderSysImpl;
+class PhysicalBoxComponent;
+class PhysicalSphereComponent;
 
 class GameFramework
 {
@@ -38,8 +38,7 @@ public:
 	GAMEFRAMEWORK_API virtual GameObject* CreateGameObject(std::string name);
 	GAMEFRAMEWORK_API virtual void AddParticleSystem(ParticleSystemSorted* particleSystem);
 
-	template <typename T>
-	GAMEFRAMEWORK_API GameComponent* Intersects(PhysicalComponent<T>* queryingObject);
+	GAMEFRAMEWORK_API PhysicalComponent* Intersects(PhysicalComponent* queryingObject);
 
 	//GAMEFRAMEWORK_API virtual GameComponent* RayIntersectsSomething(PhysicalBoxComponent* queryingBox, DirectX::SimpleMath::Vector3 origin, DirectX::SimpleMath::Vector3 currentSpeed);
 	
@@ -78,8 +77,8 @@ public:
 	std::vector<GameComponent*> gameComponents;
 	std::vector<RenderComponent*> renderComponents;
 	std::vector<ParticleSystemSorted*> particleSystems;
-	std::vector<PhysicalComponent<BoundingOrientedBox>*> physicalBoxComponents;
-	std::vector<PhysicalComponent<BoundingSphere>*> physicalSphereComponents;
+	std::vector<PhysicalBoxComponent*> physicalBoxComponents;
+	std::vector<PhysicalSphereComponent*> physicalSphereComponents;
 
 	Camera* camera;
 	std::vector<CameraController*> cameraControllers;

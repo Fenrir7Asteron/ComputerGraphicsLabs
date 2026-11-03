@@ -1,100 +1,82 @@
 #include "PhysicalComponent.h"
-#include "Component/GameComponent.h"
+#include "Component/GameObject.h"
+#include "Node.h"
+#include "Mesh.h"
+#include "Model.h"
+#include "Vertex.h"
 #include <cmath>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-template<class T>
-GAMEFRAMEWORK_API PhysicalComponent<T>::PhysicalComponent()
+
+GAMEFRAMEWORK_API PhysicalComponent::PhysicalComponent(GameObject* gameObject) : GameComponent(gameObject)
+{
+	m_subscriptionId = m_gameObject->GetTransform()->SubscribeToTransformChange([this]() { InvalidateCollider(); });
+}
+
+GAMEFRAMEWORK_API void PhysicalComponent::Bind(Model* model, PhysicalLayer physicalLayer)
+{
+	m_invalidateAABB = true;
+	UpdateAABBBoxBorders(model->GetRoot(), Matrix::Identity);
+
+	BoundingBox::CreateFromPoints(aabbBoundingBox, m_aabbMinPos, m_aabbMaxPos);
+	InvalidateCollider();
+}
+
+GAMEFRAMEWORK_API void PhysicalComponent::Update(float deltaTime)
+{
+	if (!m_invalidateCollider)
+		return;
+
+	UpdateCollider();
+	m_invalidateCollider = false;
+}
+
+GAMEFRAMEWORK_API void PhysicalComponent::Destroy()
+{
+	m_gameObject->GetTransform()->UnsubscribeFromTransformChange(m_subscriptionId);
+}
+
+GAMEFRAMEWORK_API void PhysicalComponent::DrawShadowMap()
 {
 }
 
-GAMEFRAMEWORK_API PhysicalComponent<BoundingOrientedBox>::PhysicalComponent(GameComponent* parent, PhysicalLayer physicalLayer, DirectX::SimpleMath::Matrix transform)
+GAMEFRAMEWORK_API void PhysicalComponent::UpdateAABBBoxBorders(const Node* pNode, Matrix accumulatedTransform)
 {
-	this->physicalLayer = physicalLayer;
-	this->parent = parent;
+	accumulatedTransform *= pNode->transform;
+	accumulatedTransform.Transpose();
 
-	Vector3 center;
-	Vector3 scale;
-	Quaternion rotation;
-	transform.Decompose(scale, rotation, center);
-	this->boundingShape = BoundingOrientedBox(center, scale, rotation);
+	for (int i = 0; i < pNode->childPtrs.size(); ++i)
+	{
+		UpdateAABBBoxBorders(pNode->childPtrs[i].get(), accumulatedTransform);
+	}
+
+	for (int meshIdx = 0; meshIdx < pNode->m_meshPtrs.size(); ++meshIdx)
+	{
+		Mesh* pMesh = pNode->m_meshPtrs[meshIdx];
+
+		for (int vertexIdx = 0; vertexIdx < pMesh->verticesLen; ++vertexIdx)
+		{
+			Vector4 pos = Vector4::Transform(pMesh->vertices[vertexIdx].pos, accumulatedTransform);
+
+			if (m_invalidateAABB)
+			{
+				m_aabbMinPos = pos;
+				m_aabbMaxPos = pos;
+				m_invalidateAABB = false;
+			}
+			else
+			{
+				m_aabbMinPos = XMVectorMin(m_aabbMinPos, pos);
+				m_aabbMaxPos = XMVectorMax(m_aabbMaxPos, pos);
+			}
+		}
+	}
 }
 
-GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent(GameComponent* parent, PhysicalLayer physicalLayer, DirectX::SimpleMath::Matrix transform)
+
+GAMEFRAMEWORK_API void PhysicalComponent::InvalidateCollider()
 {
-	this->physicalLayer = physicalLayer;
-	this->parent = parent;
-
-	Vector3 center;
-	Vector3 scale;
-	Quaternion rotation;
-	transform.Decompose(scale, rotation, center);
-
-	float radius = scale.x;
-	if (scale.y > radius)
-		radius = scale.y;
-	if (scale.z > radius)
-		radius = scale.z;
-
-	this->boundingShape = BoundingSphere(center, radius);
-}
-
-template GAMEFRAMEWORK_API PhysicalComponent<BoundingOrientedBox>::PhysicalComponent();
-template GAMEFRAMEWORK_API PhysicalComponent<BoundingSphere>::PhysicalComponent();
-
-
-
-template<class T>
-GAMEFRAMEWORK_API void PhysicalComponent<T>::Move(DirectX::SimpleMath::Vector3 positionDelta)
-{
-	boundingShape.Center = boundingShape.Center + positionDelta;
-}
-
-template<class T>
-GAMEFRAMEWORK_API void PhysicalComponent<T>::RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle)
-{
-	return;
-}
-
-GAMEFRAMEWORK_API void PhysicalComponent<BoundingOrientedBox>::RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle)
-{
-	float angleHalf = angle / 2;
-	float qx = std::sin(angleHalf) * axis.x;
-	float qy = std::sin(angleHalf) * axis.y;
-	float qz = std::sin(angleHalf) * axis.z;
-	float qw = std::cos(angleHalf);
-	Quaternion delta = { qx, qy, qz, qw };
-
-	Quaternion newOrientation = boundingShape.Orientation;
-	newOrientation *= delta;
-	newOrientation.Normalize();
-
-	boundingShape.Orientation = newOrientation;
-}
-
-template<class T>
-GAMEFRAMEWORK_API void PhysicalComponent<T>::RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle)
-{
-	return;
-}
-
-GAMEFRAMEWORK_API void PhysicalComponent<BoundingOrientedBox>::RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle)
-{
-	Vector3 newPosition = boundingShape.Center - point;
-
-	float angleHalf = angle / 2;
-	float qx = std::sin(angleHalf) * axis.x;
-	float qy = std::sin(angleHalf) * axis.y;
-	float qz = std::sin(angleHalf) * axis.z;
-	float qw = std::cos(angleHalf);
-	Quaternion rot = { qx, qy, qz, qw };
-	rot.Normalize();
-
-	Quaternion newOrientation = boundingShape.Orientation;
-	boundingShape.Orientation = newOrientation * rot;
-
-	newPosition = Vector3::Transform(newPosition, rot);
-	boundingShape.Center = newPosition + point;
+	m_invalidateCollider = true;
 }

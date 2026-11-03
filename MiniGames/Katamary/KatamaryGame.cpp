@@ -6,6 +6,8 @@
 #include "Model.h"
 #include "Component/GameObject.h"
 #include "Component/Render/Light/PointLight.h"
+#include "Component/Physics/PhysicalBoxComponent.h"
+#include "Component/Physics/PhysicalSphereComponent.h"
 #include "ParticleSystemSorted.h"
 #include <iostream>
 
@@ -60,9 +62,15 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	Material* katamaryMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/sphere_texture.jpg");
 	Material* whiteMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/White.png");
 
-	auto* katamaryObject = CreateGameObject("Katamary");
-	auto* katamary = katamaryObject->AddComponent<KatamaryBall<BoundingSphere>>();
-	katamary->Bind(50.0f, 500.0f, coeff2, "../Assets/Models/", "sphere.fbx", geometryPassShaderPath, depthShaderPath, 0.01f, katamaryMat, PhysicalLayer::Player);
+	auto* katamaryObject = SpawnPlayerController(
+		"Katamary",
+		"../Assets/Models/", "sphere.fbx",
+		katamaryMat, coeff2,
+		500.0f,
+		{ 0.0f, 50.0f, 0.0f },
+		Quaternion::Identity,
+		{ 50.0f, 50.0f, 50.0f },
+		0.01f);
 
 	Material* tableMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/wood1.jpg");
 
@@ -96,7 +104,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 				pointLightTransform->Move(pos);
 				pointLightTransform->SetScale(Vector3::One * radius);
 
-				Model<BoundingSphere>* pointLightSphereMesh = pointLightObject->AddComponent<Model<BoundingSphere>>();
+				Model* pointLightSphereMesh = pointLightObject->AddComponent<Model>();
 				pointLightSphereMesh->Bind(
 					"../Assets/Models/", "sphere.fbx",
 					geometryPassShaderPath, depthShaderPath, 1.0f, katamaryMat, coeff1);
@@ -221,7 +229,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		100.0f);
 
 
-	this->orbitalCamController = new OrbitalCameraController(inputDevice, displayWin, 0.005f, 500.0f, 100.0f, katamary, 1000.0f,
+	this->orbitalCamController = new OrbitalCameraController(inputDevice, displayWin, 0.005f, 500.0f, 100.0f, katamaryObject, 1000.0f,
 		200.0f,  // minDistanceToBodySurface
 		3000.0f // maxDistanceToBodySurface
 	);
@@ -234,6 +242,28 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 
 	/*fountainPS = new ParticleSystemSorted(this, nullptr, Vector3::Up * 200.0f + Vector3::Backward * 200.0f + Vector3::Right * 500.0f, Quaternion::Identity, Vector3::One, camera);
 	AddParticleSystem(fountainPS);*/
+}
+
+GameObject* KatamaryGame::SpawnPlayerController(const std::string& name, const std::string& modelDir, const std::string& modelName, Material* material,
+	const PhongCoefficients& coeff, float moveSpeed, const DirectX::SimpleMath::Vector3& position, const DirectX::SimpleMath::Quaternion& rotation, const DirectX::SimpleMath::Vector3& scale, float startScale)
+{
+	auto* object = new GameObject(name);
+	auto* transform = object->GetTransform();
+	transform->Move(position);
+	transform->Rotate(rotation);
+	transform->SetScale(scale);
+
+	auto* model = object->AddComponent<Model>();
+	model->Bind(modelDir, modelName, geometryPassShaderPath, depthShaderPath, startScale, material, coeff);
+
+	auto* physicalComponent = object->AddComponent<PhysicalSphereComponent>();
+	physicalComponent->Bind(model, PhysicalLayer::Player);
+
+	auto* katamary = object->AddComponent<KatamaryBall>();
+	float radius = object->GetTransform()->GetScale().x;
+	katamary->Bind(radius, moveSpeed, physicalComponent);
+
+	return object;
 }
 
 void KatamaryGame::SpawnPickableItem(
@@ -250,8 +280,12 @@ void KatamaryGame::SpawnPickableItem(
 	transform->Move(position);
 	transform->Rotate(rotation);
 	transform->SetScale(scale);
-	auto* model = object->AddComponent<Model<BoundingOrientedBox>>();
+
+	auto* model = object->AddComponent<Model>();
 	model->Bind(modelDir, modelName, geometryPassShaderPath, depthShaderPath, startScale, material, coeff);
+
+	auto* physicalComponent = object->AddComponent<PhysicalBoxComponent>();
+	physicalComponent->Bind(model);
 }
 
 void KatamaryGame::Update()

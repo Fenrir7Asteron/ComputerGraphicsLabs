@@ -1,19 +1,22 @@
 #pragma once
-#include "Component/GameComponent.h"
-#include "DirectXCollision.h"
-#include "Physics/PhysicalLayer.h"
+#include "PhysicalComponent.h"
 
 class GameFramework;
 
-class PhysicalSphereComponent : public GameComponent
+class PhysicalSphereComponent : public PhysicalComponent
 {
 public:
-	GAMEFRAMEWORK_API void Bind(
-		PhysicalLayer physicalLayer = PhysicalLayer::Default,
-		float radius = 1.0f);
+	GAMEFRAMEWORK_API PhysicalSphereComponent(GameObject* gameObject);
 
-	GAMEFRAMEWORK_API void Move(DirectX::SimpleMath::Vector3 positionDelta);
+	// Inherited via PhysicalComponent
+	GAMEFRAMEWORK_API void Bind(Model* model, PhysicalLayer physicalLayer = PhysicalLayer::Default) override;
+	GAMEFRAMEWORK_API void UpdateCollider() override;
+	GAMEFRAMEWORK_API void GeometryPass() override;
+	GAMEFRAMEWORK_API bool Intersects(PhysicalBoxComponent* other) override;
+	GAMEFRAMEWORK_API bool Intersects(PhysicalSphereComponent* other) override;
 
-	DirectX::BoundingSphere boundingSphere;
-	PhysicalLayer physicalLayer = PhysicalLayer::Default;
+	DirectX::BoundingSphere m_boundingShape;
+
+private:
+	DirectX::BoundingSphere m_boundingShapeNoTransform;
 };

@@ -1,24 +1,48 @@
 #pragma once
 #include "Component/GameComponent.h"
+#include "Component/Render/RenderComponent.h"
 #include "DirectXCollision.h"
 #include "Physics/PhysicalLayer.h"
 
-template <class T>
-class PhysicalComponent
+class Node;
+class Model;
+class PhysicalBoxComponent;
+class PhysicalSphereComponent;
+
+class PhysicalComponent : public GameComponent, public RenderComponent
 {
 public:
-	GAMEFRAMEWORK_API PhysicalComponent();
+	GAMEFRAMEWORK_API PhysicalComponent(GameObject* gameObject);
 
-	GAMEFRAMEWORK_API PhysicalComponent(GameComponent* parent, PhysicalLayer physicalLayer = PhysicalLayer::Default,
-		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity);
+	GAMEFRAMEWORK_API virtual void Bind(Model* model, PhysicalLayer physicalLayer = PhysicalLayer::Default);
 
-	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);
-	GAMEFRAMEWORK_API virtual void RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle);
-	GAMEFRAMEWORK_API virtual void RotateAroundPoint(DirectX::SimpleMath::Vector3 point, DirectX::SimpleMath::Vector3 axis, float angle);
+	GAMEFRAMEWORK_API virtual bool Intersects(PhysicalBoxComponent* other) = 0;
+	GAMEFRAMEWORK_API virtual bool Intersects(PhysicalSphereComponent* other) = 0;
 
-	T boundingShape;
+	// Inherited via GameComponent
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Destroy() override;
+
+	// Inherited via RenderComponent
+	GAMEFRAMEWORK_API void DrawShadowMap() override;
+	GAMEFRAMEWORK_API virtual void GeometryPass() = 0;
+
+	virtual void UpdateCollider() = 0;
+	GAMEFRAMEWORK_API void UpdateAABBBoxBorders(const Node* pNode, DirectX::SimpleMath::Matrix accumulatedTransform);
+
 	PhysicalLayer physicalLayer = PhysicalLayer::Default;
-	GameComponent* parent;
-	DirectX::SimpleMath::Matrix transform;
-	bool enabled = true;
+	bool m_drawBoundary = true;
+
+protected:
+	DirectX::BoundingBox aabbBoundingBox;
+
+private:
+	GAMEFRAMEWORK_API void InvalidateCollider();
+
+	bool m_invalidateAABB = false;
+	bool m_invalidateCollider = false;
+	int m_subscriptionId = -1;
+
+	DirectX::SimpleMath::Vector4 m_aabbMinPos;
+	DirectX::SimpleMath::Vector4 m_aabbMaxPos;
 };

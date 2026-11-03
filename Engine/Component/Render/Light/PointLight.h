@@ -1,10 +1,9 @@
 #pragma once
-#include "GameFrameworkExports.h"
-#include "Utils/SimpleMath.h"
-#include "Model.h"
+#include "Component/GameComponent.h"
 #include "PointLightConstantData.h"
 
 class GameFramework;
+class Model;
 
 class PointLight : public GameComponent
 {
@@ -15,7 +14,7 @@ public:
 		DirectX::SimpleMath::Vector4 lightColor,
 		float range,
 		float diffuseIntensity, float specularIntensity,
-		Model<BoundingSphere>* lightMesh
+		Model* lightMesh
 	);
 
 	// Inherited via GameComponent
@@ -27,7 +26,7 @@ public:
 	float diffuseIntensity;
 	float specularIntensity;
 	float ambientIntensity;
-	Model<BoundingSphere>* lightMesh;
+	Model* lightMesh;
 
 	PointLightConstantData pointLightMvp;
 };

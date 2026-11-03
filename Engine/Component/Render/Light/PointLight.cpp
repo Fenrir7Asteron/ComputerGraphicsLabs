@@ -1,4 +1,5 @@
 #include "PointLight.h"
+#include "Model.h"
 
 using namespace DirectX::SimpleMath;
 
@@ -9,7 +10,7 @@ GAMEFRAMEWORK_API PointLight::PointLight(GameObject* gameObject) : GameComponent
 GAMEFRAMEWORK_API void PointLight::Bind(
 	Vector4 lightColor,
 	float range, float diffuseIntensity, float specularIntensity,
-	Model<BoundingSphere>* lightMesh)
+	Model* lightMesh)
 {
 	this->lightColor = lightColor;
 	this->range = range;

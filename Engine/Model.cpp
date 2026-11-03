@@ -12,21 +12,17 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-GAMEFRAMEWORK_API Model<BoundingOrientedBox>::Model(GameObject* gameObject) : GameComponent(gameObject)
+GAMEFRAMEWORK_API Model::Model(GameObject* gameObject) : GameComponent(gameObject)
 {
 }
 
-GAMEFRAMEWORK_API Model<BoundingSphere>::Model(GameObject* gameObject) : GameComponent(gameObject)
-{
-}
 
-GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Bind(
+GAMEFRAMEWORK_API void Model::Bind(
     const std::string modelDir, const std::string modelName,
     const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
     float startScale,
     Material* material,
-    const PhongCoefficients phongCoefficients,
-    PhysicalLayer physicalLayer)
+    const PhongCoefficients phongCoefficients)
 {
     this->m_modelDir = modelDir;
     this->m_geometryPassShaderPath = geometryPassShaderPath;
@@ -48,52 +44,9 @@ GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Bind(
     }
 
     m_pRoot = ParseNode(*pScene->mRootNode);
-
-    m_physicalComponent.parent = this;
-
-    m_subscriptionId = m_gameObject->GetTransform()->SubscribeToTransformChange([this]() { OnTransformChange(); });
-    m_invalidateBoundingBox = true;
-    UpdateBoundary();
 }
 
-GAMEFRAMEWORK_API void Model<BoundingSphere>::Bind(
-    const std::string modelDir, const std::string modelName,
-    const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
-    float startScale,
-    Material* material,
-    const PhongCoefficients phongCoefficients,
-    PhysicalLayer physicalLayer)
-{
-    this->m_modelDir = modelDir;
-    this->m_geometryPassShaderPath = geometryPassShaderPath;
-    this->m_depthShaderPath = depthShaderPath;
-    this->m_phongCoefficients = phongCoefficients;
-
-    Assimp::Importer importer;
-
-    importer.SetPropertyBool("AI_CONFIG_PP_FD_CHECKAREA", false);
-
-    auto pScene = importer.ReadFile(modelDir + modelName,
-        aiProcessPreset_TargetRealtime_Fast
-        //aiProcess_Triangulate
-    );
-
-    for (int i = 0; i < pScene->mNumMeshes; ++i)
-    {
-        m_meshPtrs.push_back(ParseMesh(*pScene->mMeshes[i], startScale, material, pScene->mMaterials));
-    }
-
-    m_pRoot = ParseNode(*pScene->mRootNode);
-
-    m_physicalComponent.parent = this;
-
-    m_subscriptionId = m_gameObject->GetTransform()->SubscribeToTransformChange([this]() { OnTransformChange(); });
-    m_invalidateBoundingBox = true;
-    UpdateBoundary();
-}
-
-template <class T>
-GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model<T>::ParseMesh(const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
+GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(const aiMesh& mesh, float startScale, Material* material, const aiMaterial* const* pMaterials)
 {
     std::vector<Vertex> vertices;
     std::vector<int> indices;
@@ -172,8 +125,7 @@ GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model<T>::ParseMesh(const aiMesh& mesh, 
     return std::make_unique<Mesh>(m_gameObject, Matrix::Identity, material, vertices, indices);
 }
 
-template <class T>
-GAMEFRAMEWORK_API std::unique_ptr<Node> Model<T>::ParseNode(const aiNode& node)
+GAMEFRAMEWORK_API std::unique_ptr<Node> Model::ParseNode(const aiNode& node)
 {
     Matrix transform = *reinterpret_cast<const DirectX::XMFLOAT4X4*>(&node.mTransformation);
     transform.Transpose();
@@ -196,42 +148,7 @@ GAMEFRAMEWORK_API std::unique_ptr<Node> Model<T>::ParseNode(const aiNode& node)
     return pNode;
 }
 
-template <class T>
-GAMEFRAMEWORK_API void Model<T>::UpdateBoundingBoxBorders(Node* pNode, Matrix accumulatedTransform)
-{
-    accumulatedTransform *= pNode->transform;
-    accumulatedTransform.Transpose();
-
-    for (int i = 0; i < pNode->childPtrs.size(); ++i)
-    {
-        UpdateBoundingBoxBorders(pNode->childPtrs[i].get(), accumulatedTransform);
-    }
-
-    for (int meshIdx = 0; meshIdx < pNode->m_meshPtrs.size(); ++meshIdx)
-    {
-        Mesh* pMesh = pNode->m_meshPtrs[meshIdx];
-
-        for (int vertexIdx = 0; vertexIdx < pMesh->verticesLen; ++vertexIdx)
-        {
-            Vector4 pos = Vector4::Transform(pMesh->vertices[vertexIdx].pos, accumulatedTransform);
-
-            if (m_invalidateBoundingBox)
-            {
-                m_minPos = pos;
-                m_maxPos = pos;
-                m_invalidateBoundingBox = false;
-            }
-            else 
-            {
-                m_minPos = XMVectorMin(m_minPos, pos);
-                m_maxPos = XMVectorMax(m_maxPos, pos);
-            }
-        }
-    }
-}
-
-template <class T>
-GAMEFRAMEWORK_API void Model<T>::ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
+GAMEFRAMEWORK_API void Model::ElementWiseMin(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
 {
     out.x = std::min(vec1.x, vec2.x);
     out.y = std::min(vec1.y, vec2.y);
@@ -239,8 +156,7 @@ GAMEFRAMEWORK_API void Model<T>::ElementWiseMin(DirectX::SimpleMath::Vector4& ou
     out.w = std::min(vec1.w, vec2.w);
 }
 
-template <class T>
-GAMEFRAMEWORK_API void Model<T>::ElementWiseMax(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
+GAMEFRAMEWORK_API void Model::ElementWiseMax(DirectX::SimpleMath::Vector4& out, DirectX::SimpleMath::Vector4& vec1, DirectX::SimpleMath::Vector4& vec2)
 {
     out.x = std::max(vec1.x, vec2.x);
     out.y = std::max(vec1.y, vec2.y);
@@ -248,66 +164,20 @@ GAMEFRAMEWORK_API void Model<T>::ElementWiseMax(DirectX::SimpleMath::Vector4& ou
     out.w = std::max(vec1.w, vec2.w);
 }
 
-GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::Update(float deltaTime)
+GAMEFRAMEWORK_API const Node* Model::GetRoot()
 {
-    if (!m_invalidateBoundingBox)
-        return;
-
-    UpdateBoundary();
+    return m_pRoot.get();
 }
 
-GAMEFRAMEWORK_API void Model<BoundingSphere>::Update(float deltaTime)
+GAMEFRAMEWORK_API void Model::Update(float deltaTime)
 {
-    if (!m_invalidateBoundingBox)
-        return;
-
-    UpdateBoundary();
 }
 
-template<>
-GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::UpdateBoundary()
+GAMEFRAMEWORK_API void Model::Destroy()
 {
-    UpdateBoundingBoxBorders(m_pRoot.get(), Matrix::Identity);
-
-    BoundingBox aabbBoundingBox;
-    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
-    BoundingOrientedBox::CreateFromBoundingBox(m_physicalComponent.boundingShape, aabbBoundingBox);
-
-    auto* transform = m_gameObject->GetTransform();
-    auto m = transform->GetWorldMatrix();
-    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
-    m_offset = m_physicalComponent.boundingShape.Center - transform->GetPosition();
-
-    m_invalidateBoundingBox = false;
 }
 
-template<>
-GAMEFRAMEWORK_API void Model<BoundingSphere>::UpdateBoundary()
-{
-    UpdateBoundingBoxBorders(m_pRoot.get(), Matrix::Identity);
-
-    BoundingBox aabbBoundingBox;
-    BoundingBox::CreateFromPoints(aabbBoundingBox, m_minPos, m_maxPos);
-    BoundingSphere::CreateFromBoundingBox(m_physicalComponent.boundingShape, aabbBoundingBox);
-
-    m_physicalComponent.boundingShape.Radius = aabbBoundingBox.Extents.x;
-
-    auto* transform = m_gameObject->GetTransform();
-    auto m = transform->GetWorldMatrix();
-    m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
-    m_offset = m_physicalComponent.boundingShape.Center - transform->GetPosition();
-
-    m_invalidateBoundingBox = false;
-}
-
-template<class T>
-GAMEFRAMEWORK_API void Model<T>::Destroy()
-{
-    m_gameObject->GetTransform()->UnsubscribeFromTransformChange(m_subscriptionId);
-}
-
-template <class T>
-GAMEFRAMEWORK_API void Model<T>::DrawShadowMap()
+GAMEFRAMEWORK_API void Model::DrawShadowMap()
 {
     if (!enabled)
         return;
@@ -315,35 +185,10 @@ GAMEFRAMEWORK_API void Model<T>::DrawShadowMap()
     m_pRoot->DrawShadowMap(m_gameObject->GetTransform()->GetWorldMatrix());
 }
 
-template GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::DrawShadowMap();
-template GAMEFRAMEWORK_API void Model<BoundingSphere>::DrawShadowMap();
-
-GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::GeometryPass()
+GAMEFRAMEWORK_API void Model::GeometryPass()
 {
     if (!enabled)
         return;
 
     m_pRoot->GeometryPass(m_gameObject->GetTransform()->GetWorldMatrix(), this->m_phongCoefficients);
-
-    if (m_drawBoundary)
-        GameFramework::Instance->debugRender->DrawOrientedBoundingBox(m_physicalComponent.boundingShape, Matrix::Identity);
-}
-
-template<class T>
-void Model<T>::OnTransformChange()
-{
-    m_invalidateBoundingBox = true;
-}
-
-GAMEFRAMEWORK_API void Model<BoundingSphere>::GeometryPass()
-{
-    if (!enabled)
-        return;
-
-    m_pRoot->GeometryPass(m_gameObject->GetTransform()->GetWorldMatrix(), this->m_phongCoefficients);
-
-    if (m_drawBoundary)
-    {
-        GameFramework::Instance->debugRender->DrawSphere(m_physicalComponent.boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent.boundingShape.Center), 16);
-    }
 }

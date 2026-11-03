@@ -1,4 +1,6 @@
 #pragma once
+#include "Component/GameComponent.h"
+#include "Component/Render/RenderComponent.h"
 #include <d3d11.h>
 #include "PhongCoefficients.h"
 #include "Model.h"
@@ -6,31 +8,28 @@
 
 class UnlitDiffuseMaterial;
 class Vertex;
+class PhysicalBoxComponent;
+class PhysicalSphereComponent;
+class PhysicalComponent;
 
-template <class T>
-class KatamaryBall : public Model<T>
+class KatamaryBall : public GameComponent, public RenderComponent
 {
 public:
 	KatamaryBall(GameObject* gameObject);
-
-	void Bind(float radius, float moveSpeed,
-		const PhongCoefficients phongCoefficients,
-		const std::string modelDir,
-		const std::string modelName,
-		const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
-		float startScale,
-		Material* material = nullptr,
-		PhysicalLayer physicalLayer = PhysicalLayer::Default);
+	void Bind(float radius, float moveSpeed, PhysicalSphereComponent* physicalComponent);
 
 	// Inherited via GameComponent
 	virtual void Update(float deltaTime) override;
+	void Destroy() override;
+
+	// Inherited via RenderComponent
+	void DrawShadowMap() override;
 	virtual void GeometryPass() override;
 
-	template <class U>
-	void AttachObject(Model<U>* other);
+	void AttachObject(PhysicalComponent* other, float otherVolume);
 
-	float GetOtherObjectVolume(Model<BoundingOrientedBox>* other);
-	float GetOtherObjectVolume(Model<BoundingSphere>* other);
+	float GetOtherObjectVolume(PhysicalBoxComponent* other);
+	float GetOtherObjectVolume(PhysicalSphereComponent* other);
 
 	float Volume();
 	void IncreaseSize(float sizeDelta);
@@ -38,5 +37,6 @@ public:
 	float radius;
 	float targetVolume;
 	float moveSpeed;
+	PhysicalSphereComponent* m_physicalComponent;
 };
 

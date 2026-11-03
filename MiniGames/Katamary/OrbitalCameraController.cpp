@@ -11,7 +11,7 @@
 using namespace DirectX::SimpleMath;
 
 OrbitalCameraController::OrbitalCameraController(InputDevice* inputDevice, DisplayWin* displayWin, float mouseSensitivity, float maxCameraMoveSpeedDuringTransition, float cameraCloseupSpeed,
-	GameComponent* attachedToBody, float startDistanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface)
+	GameObject* attachedToBody, float startDistanceToBodySurface, float minDistanceToBodySurface, float maxDistanceToBodySurface)
 {
 	inputDevice->MouseMove.AddRaw(this, &OrbitalCameraController::MouseMove);
 
@@ -62,7 +62,7 @@ void OrbitalCameraController::Update(float deltaTime)
 
 	Vector3 camForward = Vector3::Transform(Vector3::Forward, camera->m_rotation);
 
-	Vector3 bodyPosition = attachedToBody->m_gameObject->GetTransform()->GetWorldMatrix().Translation();
+	Vector3 bodyPosition = attachedToBody->GetTransform()->GetWorldMatrix().Translation();
 	Vector3 cameraMoveTarget = bodyPosition - camForward * (distanceToBodySurface);
 	Vector3 offsetToTarget = cameraMoveTarget - camera->m_position;
 
@@ -86,7 +86,7 @@ void OrbitalCameraController::Update(float deltaTime)
 	}
 }
 
-void OrbitalCameraController::SetTargetBody(GameComponent* targetBody)
+void OrbitalCameraController::SetTargetBody(GameObject* targetBody)
 {
 	this->attachedToBody = targetBody;
 }
