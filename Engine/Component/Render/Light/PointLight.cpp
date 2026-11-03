@@ -2,20 +2,26 @@
 
 using namespace DirectX::SimpleMath;
 
-PointLight::PointLight()
+GAMEFRAMEWORK_API PointLight::PointLight(GameObject* gameObject) : GameComponent(gameObject)
 {
 }
 
-PointLight::PointLight(
-	Vector3 lightPos, Vector4 lightColor,
+GAMEFRAMEWORK_API void PointLight::Bind(
+	Vector4 lightColor,
 	float range, float diffuseIntensity, float specularIntensity,
-	Model<BoundingSphere>* lightMesh
-)
+	Model<BoundingSphere>* lightMesh)
 {
-	this->lightPos = lightPos;
 	this->lightColor = lightColor;
 	this->range = range;
 	this->diffuseIntensity = diffuseIntensity;
 	this->specularIntensity = specularIntensity;
 	this->lightMesh = lightMesh;
+}
+
+GAMEFRAMEWORK_API void PointLight::Update(float deltaTime)
+{
+}
+
+GAMEFRAMEWORK_API void PointLight::Destroy()
+{
 }

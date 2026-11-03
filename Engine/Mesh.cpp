@@ -7,6 +7,7 @@
 #include "Vertex.h"
 #include "PhongCoefficients.h"
 #include "PhongConstantData.h"
+#include "Camera/Camera.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -17,10 +18,12 @@
 
 using namespace DirectX::SimpleMath;
 
-Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
+GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material* material,
 	std::vector<Vertex>& vertices, std::vector<int>& indices)
-	: GameComponent(game, nullptr, transform, material)
+	: GameComponent(gameObject)
 {
+	this->material = material;
+
 	this->vertices = std::move(vertices);
 	this->indices = std::move(indices);
 	this->verticesLen = this->vertices.size();
@@ -39,7 +42,7 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
-	game_->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	GameFramework::Instance->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	D3D11_BUFFER_DESC indexBufDesc = {};
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -54,7 +57,7 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
-	game_->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	GameFramework::Instance->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	// Create MVP transform constant buffer
 	D3D11_BUFFER_DESC mvpBufDesc = {};
@@ -76,15 +79,15 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	};
 	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
 
-	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
-	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+	mvp.viewMatrix = GameFramework::Instance->camera->GetViewMatrix();
+	mvp.projectionMatrix = GameFramework::Instance->camera->GetProjectionMatrix();
 
 	D3D11_SUBRESOURCE_DATA mvpData = {};
 	mvpData.pSysMem = &mvp;
 	mvpData.SysMemPitch = 0;
 	mvpData.SysMemSlicePitch = 0;
 
-	game_->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
+	GameFramework::Instance->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
 	// Create Phong directional light constant buffer
 	D3D11_BUFFER_DESC phongBufDesc = {};
@@ -95,12 +98,23 @@ Mesh::Mesh(GameFramework* game, Matrix transform, Material* material,
 	phongBufDesc.StructureByteStride = 0;
 	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
 
-	game_->device->CreateBuffer(&phongBufDesc, nullptr, &constantPhongBuffer);
+	GameFramework::Instance->device->CreateBuffer(&phongBufDesc, nullptr, &constantPhongBuffer);
 }
 
-void Mesh::Update(float deltaTime)
+GAMEFRAMEWORK_API void Mesh::Update(float deltaTime)
 {
 
+}
+
+GAMEFRAMEWORK_API void Mesh::Destroy()
+{
+	vertices.clear();
+	indices.clear();
+
+	vb->Release();
+	ib->Release();
+	constantMvpBuffer->Release();
+	constantPhongBuffer->Release();
 }
 
 GAMEFRAMEWORK_API void Mesh::DrawShadowMap()
@@ -110,6 +124,9 @@ GAMEFRAMEWORK_API void Mesh::DrawShadowMap()
 
 void Mesh::DrawShadowMap(Matrix accumulatedTransform)
 {
+	auto* camera = GameFramework::Instance->camera;
+	auto* context = GameFramework::Instance->context;
+
 	// Update MVP transform constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -125,25 +142,25 @@ void Mesh::DrawShadowMap(Matrix accumulatedTransform)
 	};
 	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
 
-	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
-	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+	mvp.viewMatrix = camera->GetViewMatrix();
+	mvp.projectionMatrix = camera->GetProjectionMatrix();
 
-	game_->context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &mvp, sizeof(mvp));
-	game_->context->Unmap(constantMvpBuffer, 0);
+	context->Unmap(constantMvpBuffer, 0);
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
-	game_->context->IASetInputLayout(material->shadowLayout);
-	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game_->context->VSSetConstantBuffers(1, 1, &constantMvpBuffer);
-	game_->context->VSSetShader(material->shadowMappingVertexShader, nullptr, 0);
-	game_->context->GSSetShader(material->shadowMappingGeometryShader, nullptr, 0);
+	context->IASetInputLayout(material->shadowLayout);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->VSSetConstantBuffers(1, 1, &constantMvpBuffer);
+	context->VSSetShader(material->shadowMappingVertexShader, nullptr, 0);
+	context->GSSetShader(material->shadowMappingGeometryShader, nullptr, 0);
 
-	game_->context->DrawIndexed(indicesLen, 0, 0);
+	context->DrawIndexed(indicesLen, 0, 0);
 }
 
 GAMEFRAMEWORK_API void Mesh::GeometryPass()
@@ -151,8 +168,11 @@ GAMEFRAMEWORK_API void Mesh::GeometryPass()
 	GeometryPass(Matrix::Identity, {});
 }
 
-void Mesh::GeometryPass(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
+GAMEFRAMEWORK_API void Mesh::GeometryPass(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
+	auto* camera = GameFramework::Instance->camera;
+	auto* context = GameFramework::Instance->context;
+
 	// Update MVP transform constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -168,38 +188,38 @@ void Mesh::GeometryPass(Matrix accumulatedTransform, const PhongCoefficients& ph
 	};
 	mvp.transposeInverseWorldMatrix = mvp.transposeInverseWorldMatrix.Invert().Transpose();
 
-	mvp.viewMatrix = this->game_->camera->GetViewMatrix();
-	mvp.projectionMatrix = this->game_->camera->GetProjectionMatrix();
+	mvp.viewMatrix = camera->GetViewMatrix();
+	mvp.projectionMatrix = camera->GetProjectionMatrix();
 
-	game_->context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	context->Map(constantMvpBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &mvp, sizeof(mvp));
-	game_->context->Unmap(constantMvpBuffer, 0);
+	context->Unmap(constantMvpBuffer, 0);
 
 
 	// Update Phong directional light constant buffer
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	game_->context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	context->Map(constantPhongBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &phongCoefficients, sizeof(phongCoefficients));
-	game_->context->Unmap(constantPhongBuffer, 0);
+	context->Unmap(constantPhongBuffer, 0);
 
 	UINT strides[] = { sizeof(Vertex) };
 	UINT offsets[] = { 0 };
 
-	game_->context->RSSetState(material->rastState);
+	context->RSSetState(material->rastState);
 
-	game_->context->IASetInputLayout(material->geometryLayout);
-	game_->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	game_->context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-	game_->context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
-	game_->context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
-	game_->context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
+	context->IASetInputLayout(material->geometryLayout);
+	context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	context->IASetVertexBuffers(0, 1, &vb, strides, offsets);
+	context->VSSetConstantBuffers(0, 1, &constantMvpBuffer);
+	context->PSSetConstantBuffers(1, 1, &constantPhongBuffer);
 
-	game_->context->PSSetShaderResources(0, 1, &material->textureView);
-	game_->context->PSSetSamplers(0, 1, material->pSampler.GetAddressOf());
+	context->PSSetShaderResources(0, 1, &material->textureView);
+	context->PSSetSamplers(0, 1, material->pSampler.GetAddressOf());
 
-	game_->context->VSSetShader(material->geometryPassVertexShader, nullptr, 0);
-	game_->context->PSSetShader(material->geometryPassPixelShader, nullptr, 0);
+	context->VSSetShader(material->geometryPassVertexShader, nullptr, 0);
+	context->PSSetShader(material->geometryPassPixelShader, nullptr, 0);
 
-	game_->context->DrawIndexed(indicesLen, 0, 0);
+	context->DrawIndexed(indicesLen, 0, 0);
 }

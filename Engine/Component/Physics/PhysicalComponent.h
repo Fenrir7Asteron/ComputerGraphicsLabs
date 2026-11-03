@@ -1,7 +1,7 @@
 #pragma once
-#include "GameComponent.h"
+#include "Component/GameComponent.h"
 #include "DirectXCollision.h"
-#include "PhysicalLayer.h"
+#include "Physics/PhysicalLayer.h"
 
 template <class T>
 class PhysicalComponent
@@ -9,8 +9,7 @@ class PhysicalComponent
 public:
 	GAMEFRAMEWORK_API PhysicalComponent();
 
-	GAMEFRAMEWORK_API PhysicalComponent(GameComponent* parent,
-		PhysicalLayer physicalLayer = PhysicalLayer::Default,
+	GAMEFRAMEWORK_API PhysicalComponent(GameComponent* parent, PhysicalLayer physicalLayer = PhysicalLayer::Default,
 		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity);
 
 	GAMEFRAMEWORK_API virtual void Move(DirectX::SimpleMath::Vector3 positionDelta);

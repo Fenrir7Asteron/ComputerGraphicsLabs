@@ -1,37 +1,18 @@
 #define NOMINMAX
 #define _USE_MATH_DEFINES
 
-#include "Camera.h"
-#include "CameraController.h"
+#include "Camera/Camera.h"
+#include "Camera/CameraController.h"
 #include "GameFramework.h"
 #include "DirectionalLight.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-GAMEFRAMEWORK_API DirectionalLight::DirectionalLight()
+GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(GameObject* gameObject) 
+	: GameComponent(gameObject)
 {
-}
-
-GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
-	GameFramework* game,
-	Vector4 lightDir,
-	Vector4 lightColor,
-	float diffuseIntensity, float specularIntensity, float ambientIntensity,
-	Camera* renderCamera,
-	int shadowMapWidth,	int shadowMapHeight)
-{
-	this->game = game;
-	
-	this->direction = lightDir;
-	this->direction.Normalize();
-
-	this->lightColor = lightColor;
-	this->diffuseIntensity = diffuseIntensity;
-	this->specularIntensity = specularIntensity;
-	this->ambientIntensity = ambientIntensity;
-	this->renderCamera = renderCamera;
-
+	auto device = GameFramework::Instance->device;
 
 	// Create shadow map resources
 	D3D11_TEXTURE2D_DESC shadowMapDesc;
@@ -41,10 +22,10 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	shadowMapDesc.ArraySize = GlobalSettings::CASCADES_COUNT;
 	shadowMapDesc.SampleDesc.Count = 1;
 	shadowMapDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-	shadowMapDesc.Height = static_cast<UINT>(shadowMapWidth);
-	shadowMapDesc.Width = static_cast<UINT>(shadowMapHeight);
+	shadowMapDesc.Height = static_cast<UINT>(GlobalSettings::SHADOW_MAP_WIDTH);
+	shadowMapDesc.Width = static_cast<UINT>(GlobalSettings::SHADOW_MAP_HEIGHT);
 
-	HRESULT res = game->device->CreateTexture2D(
+	HRESULT res = device->CreateTexture2D(
 		&shadowMapDesc,
 		nullptr,
 		&shadowMap
@@ -67,13 +48,13 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	shaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0;
 	shaderResourceViewDesc.Texture2DArray.ArraySize = GlobalSettings::CASCADES_COUNT;
 
-	res = game->device->CreateDepthStencilView(
+	res = device->CreateDepthStencilView(
 		shadowMap,
 		&depthStencilViewDesc,
 		&shadowDepthView
 	);
 
-	res = game->device->CreateShaderResourceView(
+	res = device->CreateShaderResourceView(
 		shadowMap,
 		&shaderResourceViewDesc,
 		&shadowResourceView
@@ -101,7 +82,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	// UI option to enable/disable filtering so you can see the difference
 	// in quality and speed.
 
-	game->device->CreateSamplerState(
+	device->CreateSamplerState(
 		&comparisonSamplerDesc,
 		&comparisonSampler
 	);
@@ -112,7 +93,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	shadowRenderStateDesc.FillMode = D3D11_FILL_SOLID;
 	shadowRenderStateDesc.DepthClipEnable = true;
 
-	res = game->device->CreateRasterizerState(&shadowRenderStateDesc, &shadowRastState);
+	res = device->CreateRasterizerState(&shadowRenderStateDesc, &shadowRastState);
 
 
 	D3D11_BUFFER_DESC viewProjectionConstantBufferDesc = {};
@@ -123,7 +104,7 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 	viewProjectionConstantBufferDesc.StructureByteStride = 0;
 	viewProjectionConstantBufferDesc.ByteWidth = sizeof(LightViewProjection);
 
-	game->device->CreateBuffer(
+	device->CreateBuffer(
 		&viewProjectionConstantBufferDesc,
 		nullptr,
 		&constantLightViewProjectionBuffer
@@ -131,10 +112,36 @@ GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(
 
 	// Init viewport for shadow rendering
 	ZeroMemory(&shadowViewport, sizeof(D3D11_VIEWPORT));
-	shadowViewport.Height = shadowMapWidth;
-	shadowViewport.Width = shadowMapHeight;
+	shadowViewport.Height = GlobalSettings::SHADOW_MAP_WIDTH;
+	shadowViewport.Width = GlobalSettings::SHADOW_MAP_HEIGHT;
 	shadowViewport.MinDepth = 0.f;
 	shadowViewport.MaxDepth = 1.f;
+}
+
+GAMEFRAMEWORK_API void DirectionalLight::Bind(DirectX::SimpleMath::Vector4 lightDir, DirectX::SimpleMath::Vector4 lightColor, float diffuseIntensity, float specularIntensity, float ambientIntensity, Camera* renderCamera)
+{
+	this->direction = lightDir;
+	this->direction.Normalize();
+
+	this->lightColor = lightColor;
+	this->diffuseIntensity = diffuseIntensity;
+	this->specularIntensity = specularIntensity;
+	this->ambientIntensity = ambientIntensity;
+	this->renderCamera = renderCamera;
+}
+
+GAMEFRAMEWORK_API void DirectionalLight::Update(float deltaTime)
+{
+}
+
+GAMEFRAMEWORK_API void DirectionalLight::Destroy()
+{
+	shadowMap->Release();
+	shadowDepthView->Release();
+	shadowResourceView->Release();
+	shadowRastState->Release();
+	constantLightViewProjectionBuffer->Release();
+	comparisonSampler->Release();
 }
 
 GAMEFRAMEWORK_API std::vector<Vector4> DirectionalLight::GetFrustumCornersWorldSpace(const Matrix& view, const Matrix& proj)
@@ -167,7 +174,7 @@ GAMEFRAMEWORK_API std::vector<Vector4> DirectionalLight::GetFrustumCornersWorldS
 
 GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 {
-	float maxCascadeDistance = renderCamera->farZ - renderCamera->nearZ;
+	float maxCascadeDistance = renderCamera->m_farZ - renderCamera->m_nearZ;
 	float cascadeLength = maxCascadeDistance / ((float)GlobalSettings::CASCADES_COUNT);
 	
 	Matrix view = renderCamera->GetViewMatrix();
@@ -178,13 +185,13 @@ GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 	for (int i = 0; i < GlobalSettings::CASCADES_COUNT; ++i)
 	{
 		float currentCascadeDistance = (i + 1) * cascadeLength;
-		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, renderCamera->rotation);
+		Vector3 cameraForward = Vector3::Transform(Vector3::Forward, renderCamera->m_rotation);
 		Vector3 center = Vector3::Zero;
 
 		std::vector<Vector4> cornersCopy = corners;
 		for (int cornerIdx = 4; cornerIdx < 8; ++cornerIdx)
 		{
-			Vector3 dir = corners[cornerIdx - 4] - renderCamera->position;
+			Vector3 dir = corners[cornerIdx - 4] - renderCamera->m_position;
 			dir.Normalize();
 
 			cornersCopy[cornerIdx] = corners[cornerIdx - 4] + currentCascadeDistance * dir;
@@ -226,22 +233,13 @@ GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 
 		viewProjection.viewProjection[i] = lightView * XMMatrixOrthographicOffCenterLH(minX, maxX, minY, maxY, minZ, maxZ);
 
-		viewProjection.distances[i] = renderCamera->farZ / (GlobalSettings::CASCADES_COUNT - i);
+		viewProjection.distances[i] = renderCamera->m_farZ / (GlobalSettings::CASCADES_COUNT - i);
 	}
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	game->context->Map(constantLightViewProjectionBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	GameFramework::Instance->context->Map(constantLightViewProjectionBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &viewProjection, sizeof(viewProjection));
-	game->context->Unmap(constantLightViewProjectionBuffer, 0);
-}
-
-GAMEFRAMEWORK_API void DirectionalLight::Release()
-{
-	shadowMap->Release();
-	shadowDepthView->Release();
-	shadowResourceView->Release();
-	shadowRastState->Release();
-	constantLightViewProjectionBuffer->Release();
+	GameFramework::Instance->context->Unmap(constantLightViewProjectionBuffer, 0);
 }

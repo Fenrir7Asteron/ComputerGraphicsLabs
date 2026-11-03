@@ -11,13 +11,14 @@ template <class T>
 class KatamaryBall : public Model<T>
 {
 public:
-	KatamaryBall(GameFramework* game, float radius, float moveSpeed,
+	KatamaryBall(GameObject* gameObject);
+
+	void Bind(float radius, float moveSpeed,
 		const PhongCoefficients phongCoefficients,
 		const std::string modelDir,
 		const std::string modelName,
-		const LPCWSTR shaderPath, const LPCWSTR depthShaderPath,
+		const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
 		float startScale,
-		DirectX::SimpleMath::Matrix transform = DirectX::SimpleMath::Matrix::Identity,
 		Material* material = nullptr,
 		PhysicalLayer physicalLayer = PhysicalLayer::Default);
 

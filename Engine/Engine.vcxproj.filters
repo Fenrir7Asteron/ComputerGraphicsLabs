@@ -21,7 +21,7 @@
     <ClCompile Include="DisplayWin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameComponent.cpp">
+    <ClCompile Include="Component\GameComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Delegates.cpp">
@@ -30,34 +30,34 @@
     <ClCompile Include="InputDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicalBoxComponent.cpp">
+    <ClCompile Include="Component\Physics\PhysicalBoxComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="Camera\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SimpleMath.cpp">
+    <ClCompile Include="Utils\SimpleMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CameraController.cpp">
+    <ClCompile Include="Camera\CameraController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FPSCameraController.cpp">
+    <ClCompile Include="Camera\FPSCameraController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WICTextureLoader.cpp">
+    <ClCompile Include="Render\Texture\Loader\WICTextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp">
+    <ClCompile Include="Render\Texture\Loader\DDSTextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DebugRenderSysImpl.cpp">
+    <ClCompile Include="Render\Debug\DebugRenderSysImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VertexPositionColor.cpp">
+    <ClCompile Include="Render\Debug\VertexPositionColor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
@@ -69,19 +69,19 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicalSphereComponent.cpp">
+    <ClCompile Include="Component\Physics\PhysicalSphereComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicalComponent.cpp">
+    <ClCompile Include="Component\Physics\PhysicalComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLight.cpp">
+    <ClCompile Include="Component\Render\Light\DirectionalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PointLight.cpp">
+    <ClCompile Include="Component\Render\Light\PointLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ParticleSystem.cpp">
@@ -93,6 +93,12 @@
     <ClCompile Include="BitonicSort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Component\Transform\Transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Component\GameObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameFramework.h">
@@ -101,7 +107,7 @@
     <ClInclude Include="DisplayWin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameComponent.h">
+    <ClInclude Include="Component\GameComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GameFrameworkExports.h">
@@ -116,28 +122,28 @@
     <ClInclude Include="Keys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleMath.h">
+    <ClInclude Include="Utils\SimpleMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicalBoxComponent.h">
+    <ClInclude Include="Component\Physics\PhysicalBoxComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicalLayer.h">
+    <ClInclude Include="Physics\PhysicalLayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="Camera\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ModelViewProjectionMatrices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CameraController.h">
+    <ClInclude Include="Camera\CameraController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FPSCameraController.h">
+    <ClInclude Include="Camera\FPSCameraController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WICTextureLoader.h">
+    <ClInclude Include="Render\Texture\Loader\WICTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
@@ -152,19 +158,19 @@
     <ClInclude Include="PlatformHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LoaderHelpers.h">
+    <ClInclude Include="Render\Texture\Loader\LoaderHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DDS.h">
+    <ClInclude Include="Render\Texture\Loader\DDS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h">
+    <ClInclude Include="Render\Texture\Loader\DDSTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DebugRenderSysImpl.h">
+    <ClInclude Include="Render\Debug\DebugRenderSysImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VertexPositionColor.h">
+    <ClInclude Include="Render\Debug\VertexPositionColor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Model.h">
@@ -179,10 +185,10 @@
     <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicalSphereComponent.h">
+    <ClInclude Include="Component\Physics\PhysicalSphereComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirectionalLight.h">
+    <ClInclude Include="Component\Render\Light\DirectionalLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PhongCoefficients.h">
@@ -191,7 +197,7 @@
     <ClInclude Include="PhongConstantData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicalComponent.h">
+    <ClInclude Include="Component\Physics\PhysicalComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LightViewProjection.h">
@@ -203,13 +209,13 @@
     <ClInclude Include="GBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LightConstantData.h">
+    <ClInclude Include="Component\Render\Light\LightConstantData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PointLight.h">
+    <ClInclude Include="Component\Render\Light\PointLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PointLightConstantData.h">
+    <ClInclude Include="Component\Render\Light\PointLightConstantData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="magic_enum.hpp">
@@ -230,9 +236,18 @@
     <ClInclude Include="BitonicSort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Component\Transform\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Component\GameObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Component\Render\RenderComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="SimpleMath.inl">
+    <None Include="Utils\SimpleMath.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="cpp.hint" />

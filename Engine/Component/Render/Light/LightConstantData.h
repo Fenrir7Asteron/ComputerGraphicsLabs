@@ -1,8 +1,8 @@
 #pragma once
-#include "SimpleMath.h"
+#include "Utils/SimpleMath.h"
 #include "GameFrameworkExports.h"
 
-GAMEFRAMEWORK_API struct LightConstantData
+struct LightConstantData
 {
 	DirectX::SimpleMath::Vector4 cameraPos;
 	DirectX::SimpleMath::Vector4 lightParam1;

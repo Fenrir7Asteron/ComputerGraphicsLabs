@@ -1,5 +1,5 @@
 #include "d3dcompiler.h"
-#include "WICTextureLoader.h"
+#include "Render/Texture/Loader/WICTextureLoader.h"
 #include "Material.h"
 #include <iostream>
 #include "DisplayWin.h"

@@ -1,4 +1,5 @@
 #include "CameraController.h"
+#include "Camera.h"
 #include <cmath>
 
 using namespace DirectX::SimpleMath;
@@ -12,7 +13,7 @@ GAMEFRAMEWORK_API void CameraController::Move(DirectX::SimpleMath::Vector3 posit
 	if (camera == nullptr)
 		return;
 
-	camera->position += positionDelta;
+	camera->m_position += positionDelta;
 }
 
 GAMEFRAMEWORK_API void CameraController::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
@@ -27,8 +28,8 @@ GAMEFRAMEWORK_API void CameraController::Rotate(DirectX::SimpleMath::Vector3 axi
 	float qw = std::cos(angleHalf);
 	Quaternion delta = { qx, qy, qz, qw };
 
-	camera->rotation *= delta;
-	camera->rotation.Normalize();
+	camera->m_rotation *= delta;
+	camera->m_rotation.Normalize();
 }
 
 GAMEFRAMEWORK_API void CameraController::SetCamera(Camera* camera)

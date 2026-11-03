@@ -1,12 +1,13 @@
 #pragma once
 
-#include "GameComponent.h"
+#include "Component/GameComponent.h"
+#include "Component/Render/RenderComponent.h"
 #include <map>
 #include "BitonicSort.h"
 
 class Camera;
 
-class ParticleSystemSorted : public GameComponent
+class ParticleSystemSorted : public GameComponent, public RenderComponent
 {
 public:
 	ID3D11Buffer *particlesPool, *sortBuffer, *deadBuf, *injectionBuf, *constBuf, *countBuf, *debugBuf;
@@ -74,22 +75,22 @@ public:
 
 	BitonicSort* sort;
 
-	GAMEFRAMEWORK_API ParticleSystemSorted(GameFramework* game,
-		GameComponent* parent,
-		DirectX::SimpleMath::Vector3 position,
-		DirectX::SimpleMath::Quaternion rotation,
-		DirectX::SimpleMath::Vector3 scale,
-		Camera* camera);
+	GAMEFRAMEWORK_API ParticleSystemSorted(GameObject* gameObject, Camera* camera);
 
 	GAMEFRAMEWORK_API static void GetGroupSize(int particlesCount, int& groupSizeX, int& groupSizeY);
 
-	GAMEFRAMEWORK_API void Update(float deltaTime) override;
-	GAMEFRAMEWORK_API void GeometryPass() override;
+	// Inherited via GameComponent
+	GAMEFRAMEWORK_API virtual void Update(float deltaTime) override;
+	GAMEFRAMEWORK_API virtual void Destroy() override;
+
+	// Inherited via RenderComponent
+	GAMEFRAMEWORK_API virtual void DrawShadowMap() override;
+	GAMEFRAMEWORK_API virtual void GeometryPass() override;
 
 	GAMEFRAMEWORK_API void AddParticle(const Particle& p);
 
 private:
-	void LoadShaders();
-	void CreateBuffers();
+	GAMEFRAMEWORK_API void LoadShaders();
+	GAMEFRAMEWORK_API void CreateBuffers();
 };
 
