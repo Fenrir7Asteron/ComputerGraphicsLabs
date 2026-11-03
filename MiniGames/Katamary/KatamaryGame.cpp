@@ -94,7 +94,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 				auto pointLightObject = new GameObject("PointLight " + std::to_string(pointLightCount));
 				auto* pointLightTransform = pointLightObject->GetTransform();
 				pointLightTransform->Move(pos);
-				pointLightTransform->scale = Vector3::One * radius;
+				pointLightTransform->SetScale(Vector3::One * radius);
 
 				Model<BoundingSphere>* pointLightSphereMesh = pointLightObject->AddComponent<Model<BoundingSphere>>();
 				pointLightSphereMesh->Bind(
@@ -247,9 +247,9 @@ void KatamaryGame::SpawnPickableItem(
 {
 	auto* object = new GameObject(name);
 	auto* transform = object->GetTransform();
-	transform->positionOffset = position;
-	transform->rotation = rotation;
-	transform->scale = scale;
+	transform->Move(position);
+	transform->Rotate(rotation);
+	transform->SetScale(scale);
 	auto* model = object->AddComponent<Model<BoundingOrientedBox>>();
 	model->Bind(modelDir, modelName, geometryPassShaderPath, depthShaderPath, startScale, material, coeff);
 }
@@ -268,9 +268,9 @@ void KatamaryGame::Update()
 			Vector3 pos = transform->GetWorldMatrix().Translation();
 			p.Position = { pos.x, pos.y, pos.z, 1.0f };
 
-			Vector3 upVector = Vector3::Transform(Vector3::Up, transform->rotation);
-			Vector3 rightVector = Vector3::Transform(Vector3::Right, transform->rotation);
-			Vector3 forwardVector = Vector3::Transform(Vector3::Forward, transform->rotation);
+			Vector3 upVector = Vector3::Transform(Vector3::Up, transform->GetRotation());
+			Vector3 rightVector = Vector3::Transform(Vector3::Right, transform->GetRotation());
+			Vector3 forwardVector = Vector3::Transform(Vector3::Forward, transform->GetRotation());
 
 			Vector3 velocity = upVector * 1000.0f;
 			float angle = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * M_PI * 2.0f;

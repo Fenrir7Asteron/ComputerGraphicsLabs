@@ -276,7 +276,7 @@ GAMEFRAMEWORK_API void Model<BoundingOrientedBox>::UpdateBoundary()
     auto* transform = m_gameObject->GetTransform();
     auto m = transform->GetWorldMatrix();
     m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
-    m_offset = m_physicalComponent.boundingShape.Center - transform->positionOffset;
+    m_offset = m_physicalComponent.boundingShape.Center - transform->GetPosition();
 
     m_invalidateBoundingBox = false;
 }
@@ -295,7 +295,7 @@ GAMEFRAMEWORK_API void Model<BoundingSphere>::UpdateBoundary()
     auto* transform = m_gameObject->GetTransform();
     auto m = transform->GetWorldMatrix();
     m_physicalComponent.boundingShape.Transform(m_physicalComponent.boundingShape, m);
-    m_offset = m_physicalComponent.boundingShape.Center - transform->positionOffset;
+    m_offset = m_physicalComponent.boundingShape.Center - transform->GetPosition();
 
     m_invalidateBoundingBox = false;
 }

@@ -53,12 +53,12 @@ GAMEFRAMEWORK_API void PhysicalComponent<T>::Move(DirectX::SimpleMath::Vector3 p
 }
 
 template<class T>
-GAMEFRAMEWORK_API void PhysicalComponent<T>::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
+GAMEFRAMEWORK_API void PhysicalComponent<T>::RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle)
 {
 	return;
 }
 
-GAMEFRAMEWORK_API void PhysicalComponent<BoundingOrientedBox>::Rotate(DirectX::SimpleMath::Vector3 axis, float angle)
+GAMEFRAMEWORK_API void PhysicalComponent<BoundingOrientedBox>::RotateAxis(DirectX::SimpleMath::Vector3 axis, float angle)
 {
 	float angleHalf = angle / 2;
 	float qx = std::sin(angleHalf) * axis.x;
