@@ -816,7 +816,7 @@ template<typename T>
 GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<T>* queryingComponent)
 {
 	for (auto otherBoxComponent : physicalBoxComponents) {
-		if (otherBoxComponent->parent->enabled == false || otherBoxComponent->parent == queryingComponent->parent)
+		if (otherBoxComponent->enabled == false || otherBoxComponent->parent == queryingComponent->parent)
 			continue;
 
 		if (queryingComponent->boundingShape.Intersects(otherBoxComponent->boundingShape)) {
@@ -825,7 +825,7 @@ GAMEFRAMEWORK_API GameComponent* GameFramework::Intersects(PhysicalComponent<T>*
 	}
 
 	for (auto otherSphere: physicalSphereComponents) {
-		if (otherSphere->parent->enabled == false || otherSphere->parent == queryingComponent->parent)
+		if (otherSphere->enabled == false || otherSphere->parent == queryingComponent->parent)
 			continue;
 
 		if (queryingComponent->boundingShape.Intersects(otherSphere->boundingShape)) {

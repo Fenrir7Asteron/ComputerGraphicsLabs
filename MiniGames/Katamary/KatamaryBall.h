@@ -35,7 +35,6 @@ public:
 	float Volume();
 	void IncreaseSize(float sizeDelta);
 
-	std::vector<GameComponent*> attachedObjects;
 	float radius;
 	float targetVolume;
 	float moveSpeed;

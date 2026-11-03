@@ -133,7 +133,9 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		"Banana2",
 		"../Assets/Models/Banana/", "banana.fbx",
 		katamaryMat, coeff1,
-		{ -200.0f, 0.0f, -200.0f }, Quaternion::Identity, Vector3::One * 0.75f);
+		{ -200.0f, 0.0f, -200.0f }, 
+		Quaternion::CreateFromAxisAngle(Vector3::Up, XMConvertToRadians(-30.0f)),
+			Vector3::One * 0.75f);
 
 	SpawnPickableItem(
 		"Grass_block1",
