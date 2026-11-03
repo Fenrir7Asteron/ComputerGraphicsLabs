@@ -5,10 +5,13 @@
 #include "MacrosParser.h"
 #include "Component/GameObject.h"
 #include "Camera/Camera.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
+#include "Render/RenderAPI/DirectX11/ShaderAPIUtils.h"
 #include <iostream>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
+using namespace RenderAPI::DirectX11;
 
 using namespace magic_enum::bitwise_operators;
 
@@ -24,7 +27,8 @@ GAMEFRAMEWORK_API ParticleSystem::ParticleSystem(GameObject* gameObject, Camera*
 	rastDesc.CullMode = D3D11_CULL_BACK;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
-	GameFramework::Instance->device->CreateRasterizerState(&rastDesc, &rastState);
+	auto& device = DirectX11RenderAPI::Instance->device;
+	device->CreateRasterizerState(&rastDesc, &rastState);
 
 	auto blendStateDesc = D3D11_BLEND_DESC();
 	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
@@ -37,7 +41,7 @@ GAMEFRAMEWORK_API ParticleSystem::ParticleSystem(GameObject* gameObject, Camera*
 	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 
-	GameFramework::Instance->device->CreateBlendState(&blendStateDesc, &blendState);
+	device->CreateBlendState(&blendStateDesc, &blendState);
 
 	auto depthDesc = D3D11_DEPTH_STENCIL_DESC();
 	depthDesc.DepthEnable = true;
@@ -47,7 +51,7 @@ GAMEFRAMEWORK_API ParticleSystem::ParticleSystem(GameObject* gameObject, Camera*
 	//depthDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 	//depthDesc.StencilWriteMask = 0x00;
 
-	GameFramework::Instance->device->CreateDepthStencilState(&depthDesc, &depthState);
+	device->CreateDepthStencilState(&depthDesc, &depthState);
 }
 
 GAMEFRAMEWORK_API void ParticleSystem::GetGroupSize(int particlesCount, int& groupSizeX, int& groupSizeY)
@@ -66,7 +70,7 @@ GAMEFRAMEWORK_API void ParticleSystem::GetGroupSize(int particlesCount, int& gro
 
 GAMEFRAMEWORK_API void ParticleSystem::Update(float deltaTime)
 {
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	if (GameFramework::Instance->inputDevice->IsKeyDown(Keys::Space))
 		deltaTime = 0.0f;
@@ -84,8 +88,8 @@ GAMEFRAMEWORK_API void ParticleSystem::Update(float deltaTime)
 	context->CSSetConstantBuffers(0, 1, &constBuf);
 	
 	ID3D11ShaderResourceView* SRVs[] = { 
-		GameFramework::Instance->gBuffer.worldPos_DepthSRV, 
-		GameFramework::Instance->gBuffer.normalSRV };
+		DirectX11RenderAPI::Instance->gBuffer.worldPos_DepthSRV,
+		DirectX11RenderAPI::Instance->gBuffer.normalSRV };
 	context->CSSetShaderResources(1, 2, SRVs);
 
 	const UINT counterKeepValue = -1;
@@ -146,7 +150,7 @@ GAMEFRAMEWORK_API void ParticleSystem::Destroy()
 
 GAMEFRAMEWORK_API void ParticleSystem::GeometryPass()
 {
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	context->ClearState();
 
@@ -170,15 +174,15 @@ GAMEFRAMEWORK_API void ParticleSystem::GeometryPass()
 	context->GSSetConstantBuffers(0, 1, &constBuf);
 	context->GSSetShaderResources(0, 1, &srvSrc);
 
-	context->OMSetRenderTargets(1, &GameFramework::Instance->rtv, GameFramework::Instance->pDSV.Get());
-	context->RSSetViewports(1, &GameFramework::Instance->viewport);
+	context->OMSetRenderTargets(1, &DirectX11RenderAPI::Instance->rtv, DirectX11RenderAPI::Instance->pDSV.Get());
+	context->RSSetViewports(1, DirectX11RenderAPI::Instance->viewport);
 
 	context->Draw(ParticlesCount, 0);
 }
 
 GAMEFRAMEWORK_API void ParticleSystem::LoadShaders()
 {
-	auto device = GameFramework::Instance->device;
+	auto& device = DirectX11RenderAPI::Instance->device;
 
 	ID3DBlob *vertexBC, *geometryBC, *pixelBC, *errorCode;
 	const LPCWSTR shaderPath = L"./Shaders/ParticleSystemShader.hlsl";
@@ -244,7 +248,7 @@ GAMEFRAMEWORK_API void ParticleSystem::LoadShaders()
 			&computeBC,
 			&errorCode);
 
-		GameFramework::Instance->CheckShaderCreationSuccess(res, errorCode, shaderPath);
+		ShaderAPIUtils::CheckShaderCreationSuccess(res, errorCode, shaderPath);
 
 		device->CreateComputeShader(computeBC->GetBufferPointer(), computeBC->GetBufferSize(), nullptr, &ComputeShaders[flag]);
 		computeBC->Release();
@@ -253,8 +257,8 @@ GAMEFRAMEWORK_API void ParticleSystem::LoadShaders()
 
 GAMEFRAMEWORK_API void ParticleSystem::CreateBuffers()
 {
-	auto device = GameFramework::Instance->device;
-	auto* context = GameFramework::Instance->context;
+	auto& device = DirectX11RenderAPI::Instance->device;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	D3D11_BUFFER_DESC constBufDesc;
 

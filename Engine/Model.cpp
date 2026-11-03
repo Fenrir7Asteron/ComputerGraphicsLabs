@@ -68,7 +68,7 @@ GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(const aiMesh& mesh, flo
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new Material(m_geometryPassShaderPath, this->m_depthShaderPath, GameFramework::Instance->device, GameFramework::Instance->displayWin, wtext);
+            material = new Material(m_geometryPassShaderPath, this->m_depthShaderPath, GameFramework::Instance->displayWin, wtext);
             useTexture = true;
         }
         else if (pMaterial.GetTexture(aiTextureType_BASE_COLOR, 0, &texFileName) == aiReturn_SUCCESS)
@@ -78,7 +78,7 @@ GAMEFRAMEWORK_API std::unique_ptr<Mesh> Model::ParseMesh(const aiMesh& mesh, flo
             std::mbstowcs(wtext, texFileName.C_Str(), texFileName.length);
             wtext[texFileName.length] = '\0';
 
-            material = new Material(m_geometryPassShaderPath, this->m_depthShaderPath, GameFramework::Instance->device, GameFramework::Instance->displayWin, wtext);
+            material = new Material(m_geometryPassShaderPath, this->m_depthShaderPath, GameFramework::Instance->displayWin, wtext);
             useTexture = true;
         }
     }

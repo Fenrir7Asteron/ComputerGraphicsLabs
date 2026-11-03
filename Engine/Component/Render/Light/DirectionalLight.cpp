@@ -4,15 +4,17 @@
 #include "Camera/Camera.h"
 #include "Camera/CameraController.h"
 #include "GameFramework.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include "DirectionalLight.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
+using namespace RenderAPI::DirectX11;
 
 GAMEFRAMEWORK_API DirectionalLight::DirectionalLight(GameObject* gameObject) 
 	: GameComponent(gameObject)
 {
-	auto device = GameFramework::Instance->device;
+	auto& device = DirectX11RenderAPI::Instance->device;
 
 	// Create shadow map resources
 	D3D11_TEXTURE2D_DESC shadowMapDesc;
@@ -239,7 +241,7 @@ GAMEFRAMEWORK_API void DirectionalLight::UpdateViewProjection()
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	GameFramework::Instance->context->Map(constantLightViewProjectionBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	DirectX11RenderAPI::Instance->context->Map(constantLightViewProjectionBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &viewProjection, sizeof(viewProjection));
-	GameFramework::Instance->context->Unmap(constantLightViewProjectionBuffer, 0);
+	DirectX11RenderAPI::Instance->context->Unmap(constantLightViewProjectionBuffer, 0);
 }

@@ -8,6 +8,7 @@
 #include "Component/Physics/PhysicalBoxComponent.h"
 #include "Component/Physics/PhysicalSphereComponent.h"
 #include "Render/Debug/DebugRenderSysImpl.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -134,5 +135,5 @@ void KatamaryBall::DrawShadowMap()
 
 void KatamaryBall::GeometryPass()
 {
-	GameFramework::Instance->debugRender->DrawSphere(m_physicalComponent->m_boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent->m_boundingShape.Center), 16);
+	RenderAPI::DirectX11::DirectX11RenderAPI::Instance->debugRender->DrawSphere(m_physicalComponent->m_boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_physicalComponent->m_boundingShape.Center), 16);
 }

@@ -8,6 +8,7 @@
 #include "PhongCoefficients.h"
 #include "PhongConstantData.h"
 #include "Camera/Camera.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -17,6 +18,7 @@
 #pragma comment(lib, "dxguid.lib")
 
 using namespace DirectX::SimpleMath;
+using namespace RenderAPI::DirectX11;
 
 GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material* material,
 	std::vector<Vertex>& vertices, std::vector<int>& indices)
@@ -42,7 +44,8 @@ GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material*
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
-	GameFramework::Instance->device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
+	auto & device = DirectX11RenderAPI::Instance->device;
+	device->CreateBuffer(&vertexBufDesc, &vertexData, &vb);
 
 	D3D11_BUFFER_DESC indexBufDesc = {};
 	indexBufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -57,7 +60,7 @@ GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material*
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
-	GameFramework::Instance->device->CreateBuffer(&indexBufDesc, &indexData, &ib);
+	device->CreateBuffer(&indexBufDesc, &indexData, &ib);
 
 	// Create MVP transform constant buffer
 	D3D11_BUFFER_DESC mvpBufDesc = {};
@@ -87,7 +90,7 @@ GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material*
 	mvpData.SysMemPitch = 0;
 	mvpData.SysMemSlicePitch = 0;
 
-	GameFramework::Instance->device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
+	device->CreateBuffer(&mvpBufDesc, &mvpData, &constantMvpBuffer);
 
 	// Create Phong directional light constant buffer
 	D3D11_BUFFER_DESC phongBufDesc = {};
@@ -98,7 +101,7 @@ GAMEFRAMEWORK_API Mesh::Mesh(GameObject* gameObject, Matrix transform, Material*
 	phongBufDesc.StructureByteStride = 0;
 	phongBufDesc.ByteWidth = sizeof(PhongConstantData);
 
-	GameFramework::Instance->device->CreateBuffer(&phongBufDesc, nullptr, &constantPhongBuffer);
+	device->CreateBuffer(&phongBufDesc, nullptr, &constantPhongBuffer);
 }
 
 GAMEFRAMEWORK_API void Mesh::Update(float deltaTime)
@@ -125,7 +128,7 @@ GAMEFRAMEWORK_API void Mesh::DrawShadowMap()
 void Mesh::DrawShadowMap(Matrix accumulatedTransform)
 {
 	auto* camera = GameFramework::Instance->camera;
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	// Update MVP transform constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -171,7 +174,7 @@ GAMEFRAMEWORK_API void Mesh::GeometryPass()
 GAMEFRAMEWORK_API void Mesh::GeometryPass(Matrix accumulatedTransform, const PhongCoefficients& phongCoefficients)
 {
 	auto* camera = GameFramework::Instance->camera;
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	// Update MVP transform constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;

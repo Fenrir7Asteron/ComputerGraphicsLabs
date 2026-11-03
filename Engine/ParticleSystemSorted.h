@@ -3,9 +3,13 @@
 #include "Component/GameComponent.h"
 #include "Component/Render/RenderComponent.h"
 #include <map>
-#include "BitonicSort.h"
 
 class Camera;
+
+namespace RenderAPI::DirectX11
+{
+	class BitonicSort;
+}
 
 class ParticleSystemSorted : public GameComponent, public RenderComponent
 {
@@ -73,7 +77,7 @@ public:
 
 	Camera* camera;
 
-	BitonicSort* sort;
+	RenderAPI::DirectX11::BitonicSort* sort;
 
 	GAMEFRAMEWORK_API ParticleSystemSorted(GameObject* gameObject, Camera* camera);
 

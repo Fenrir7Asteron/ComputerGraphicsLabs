@@ -169,10 +169,13 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BitonicSort.cpp" />
+    <ClCompile Include="Render\RenderAPI\DirectX11\BitonicSort.cpp" />
     <ClCompile Include="Camera\Camera.cpp" />
     <ClCompile Include="Camera\CameraController.cpp" />
     <ClCompile Include="Component\GameObject.cpp" />
+    <ClCompile Include="Render\RenderAPI\DirectX11\DirectX11RenderAPI.cpp" />
+    <ClCompile Include="Render\RenderAPI\DirectX11\LightAPIComponent.cpp" />
+    <ClCompile Include="Render\RenderAPI\RenderAPI.cpp" />
     <ClCompile Include="Render\Texture\Loader\DDSTextureLoader.cpp" />
     <ClCompile Include="Render\Debug\DebugRenderSysImpl.cpp" />
     <ClCompile Include="Delegates.cpp" />
@@ -194,16 +197,21 @@
     <ClCompile Include="Component\Physics\PhysicalSphereComponent.cpp" />
     <ClCompile Include="Component\Render\Light\PointLight.cpp" />
     <ClCompile Include="Component\Transform\Transform.cpp" />
+    <ClCompile Include="Render\RenderAPI\DirectX11\ShaderAPIUtils.cpp" />
     <ClCompile Include="Utils\SimpleMath.cpp" />
     <ClCompile Include="Render\Debug\VertexPositionColor.cpp" />
     <ClCompile Include="Render\Texture\Loader\WICTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BitonicSort.h" />
+    <ClInclude Include="Render\RenderAPI\DirectX11\BitonicSort.h" />
     <ClInclude Include="Camera\Camera.h" />
     <ClInclude Include="Camera\CameraController.h" />
     <ClInclude Include="Component\GameObject.h" />
     <ClInclude Include="Component\Render\RenderComponent.h" />
+    <ClInclude Include="Render\RenderAPI\DirectX11\DirectX11RenderAPI.h" />
+    <ClInclude Include="Render\RenderAPI\RenderAPI.h" />
+    <ClInclude Include="Render\RenderAPI\RenderAPIComponent.h" />
+    <ClInclude Include="Render\RenderAPI\DirectX11\LightAPIComponent.h" />
     <ClInclude Include="Render\Texture\Loader\DDS.h" />
     <ClInclude Include="Render\Texture\Loader\DDSTextureLoader.h" />
     <ClInclude Include="Render\Debug\DebugRenderSysImpl.h" />
@@ -243,6 +251,7 @@
     <ClInclude Include="Component\Render\Light\PointLightConstantData.h" />
     <ClInclude Include="ShaderFlags.h" />
     <ClInclude Include="Component\Transform\Transform.h" />
+    <ClInclude Include="Render\RenderAPI\DirectX11\ShaderAPIUtils.h" />
     <ClInclude Include="Utils\SimpleMath.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Render\Debug\VertexPositionColor.h" />

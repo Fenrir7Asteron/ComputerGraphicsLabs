@@ -3,6 +3,7 @@
 #include "Component/GameComponent.h"
 #include "Component/GameObject.h"
 #include "Render/Debug/DebugRenderSysImpl.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
 #include "GameFramework.h"
 
 PhysicalSphereComponent::PhysicalSphereComponent(GameObject* gameObject) : PhysicalComponent(gameObject)
@@ -30,7 +31,7 @@ GAMEFRAMEWORK_API void PhysicalSphereComponent::GeometryPass()
     if (!m_drawBoundary)
         return;
 
-    GameFramework::Instance->debugRender->DrawSphere(m_boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_boundingShape.Center), 16);
+    RenderAPI::DirectX11::DirectX11RenderAPI::Instance->debugRender->DrawSphere(m_boundingShape.Radius, { 0.0f, 1.0f, 0.0f, 1.0f }, Matrix::CreateTranslation(m_boundingShape.Center), 16);
 }
 
 GAMEFRAMEWORK_API bool PhysicalSphereComponent::Intersects(PhysicalBoxComponent* other)

@@ -1,4 +1,6 @@
 #pragma once
+#include "GameFrameworkExports.h"
+
 struct ID3D11Texture2D;
 struct ID3D11RenderTargetView;
 struct ID3D11ShaderResourceView;
@@ -28,5 +30,6 @@ public:
 	ID3D11ShaderResourceView* specularCoeffSRV;
 	ID3D11ShaderResourceView* ambientCoeffSRV;
 
-	void Clear(ID3D11DeviceContext* context, float* color);
+	GAMEFRAMEWORK_API void Clear(ID3D11DeviceContext* context, float* color);
+	GAMEFRAMEWORK_API void Release();
 };

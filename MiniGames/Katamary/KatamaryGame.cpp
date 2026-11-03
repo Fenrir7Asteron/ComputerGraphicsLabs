@@ -8,7 +8,9 @@
 #include "Component/Render/Light/PointLight.h"
 #include "Component/Physics/PhysicalBoxComponent.h"
 #include "Component/Physics/PhysicalSphereComponent.h"
+#include "Render/RenderAPI/RenderAPI.h"
 #include "ParticleSystemSorted.h"
+#include "OrbitalCameraController.h"
 #include <iostream>
 
 using namespace DirectX;
@@ -26,8 +28,8 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 	GameFramework::Init(windowWidth, windowHeight);
 
 	auto dirLightObject = CreateGameObject("DirectionalLight");	
-	dirLight = dirLightObject->AddComponent<DirectionalLight>();
-	dirLight->Bind(
+	m_renderer->dirLight = dirLightObject->AddComponent<DirectionalLight>();
+	m_renderer->dirLight->Bind(
 		{ 1.0f, -0.5f, 1.0f, 1.0f },
 		{ 1.0f, 1.0f, 1.0f, 1.0f }, 
 		01.5f,                    
@@ -35,7 +37,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		01.0f,                    
 		camera
 	);
-	dirLight->enabled = true;
+	m_renderer->dirLight->enabled = true;
 
 
 	PhongCoefficients coeff1 =
@@ -59,8 +61,8 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		{0.1f, 0.1f, 0.1f, 0.0f},
 	};
 
-	Material* katamaryMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/sphere_texture.jpg");
-	Material* whiteMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/White.png");
+	Material* katamaryMat = new Material(geometryPassShaderPath, depthShaderPath, displayWin, L"./Textures/sphere_texture.jpg");
+	Material* whiteMat = new Material(geometryPassShaderPath, depthShaderPath, displayWin, L"./Textures/White.png");
 
 	auto* katamaryObject = SpawnPlayerController(
 		"Katamary",
@@ -72,7 +74,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		{ 50.0f, 50.0f, 50.0f },
 		0.01f);
 
-	Material* tableMat = new Material(geometryPassShaderPath, depthShaderPath, device, displayWin, L"./Textures/wood1.jpg");
+	Material* tableMat = new Material(geometryPassShaderPath, depthShaderPath, displayWin, L"./Textures/wood1.jpg");
 
 	int lightRows = 3;
 	int lightColumns = 3;
@@ -118,7 +120,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 					pointLightSphereMesh
 				);
 
-				pointLights.push_back(pointLight);
+				m_renderer->pointLights.push_back(pointLight);
 			}
 		}
 	}

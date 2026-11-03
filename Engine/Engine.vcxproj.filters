@@ -90,13 +90,25 @@
     <ClCompile Include="ParticleSystemSorted.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BitonicSort.cpp">
+    <ClCompile Include="Render\RenderAPI\DirectX11\BitonicSort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\Transform\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\GameObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\RenderAPI\DirectX11\LightAPIComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\RenderAPI\DirectX11\ShaderAPIUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\RenderAPI\DirectX11\DirectX11RenderAPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\RenderAPI\RenderAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,7 +245,7 @@
     <ClInclude Include="ParticleSystemSorted.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BitonicSort.h">
+    <ClInclude Include="Render\RenderAPI\DirectX11\BitonicSort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Component\Transform\Transform.h">
@@ -243,6 +255,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Component\Render\RenderComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI\DirectX11\LightAPIComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI\RenderAPIComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI\DirectX11\ShaderAPIUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI\RenderAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\RenderAPI\DirectX11\DirectX11RenderAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

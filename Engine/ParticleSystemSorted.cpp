@@ -5,9 +5,13 @@
 #include "MacrosParser.h"
 #include "Component/GameObject.h"
 #include "Camera/Camera.h"
+#include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
+#include "Render/RenderAPI/DirectX11/ShaderAPIUtils.h"
+#include "Render/RenderAPI/DirectX11/BitonicSort.h"
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
+using namespace RenderAPI::DirectX11;
 
 using namespace magic_enum::bitwise_operators;
 
@@ -23,7 +27,8 @@ GAMEFRAMEWORK_API ParticleSystemSorted::ParticleSystemSorted(GameObject* gameObj
 	rastDesc.CullMode = D3D11_CULL_BACK;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
-	GameFramework::Instance->device->CreateRasterizerState(&rastDesc, &rastState);
+	auto& device = DirectX11RenderAPI::Instance->device;
+	device->CreateRasterizerState(&rastDesc, &rastState);
 
 	auto blendStateDesc = D3D11_BLEND_DESC();
 	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
@@ -36,7 +41,7 @@ GAMEFRAMEWORK_API ParticleSystemSorted::ParticleSystemSorted(GameObject* gameObj
 	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
 	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 
-	GameFramework::Instance->device->CreateBlendState(&blendStateDesc, &blendState);
+	device->CreateBlendState(&blendStateDesc, &blendState);
 
 	auto depthDesc = D3D11_DEPTH_STENCIL_DESC();
 	depthDesc.DepthEnable = true;
@@ -46,7 +51,7 @@ GAMEFRAMEWORK_API ParticleSystemSorted::ParticleSystemSorted(GameObject* gameObj
 	//depthDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 	//depthDesc.StencilWriteMask = 0x00;
 
-	GameFramework::Instance->device->CreateDepthStencilState(&depthDesc, &depthState);
+	device->CreateDepthStencilState(&depthDesc, &depthState);
 
 
 	sort = new BitonicSort();
@@ -68,7 +73,7 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::GetGroupSize(int particlesCount, in
 
 GAMEFRAMEWORK_API void ParticleSystemSorted::LoadShaders()
 {
-	auto device = GameFramework::Instance->device;
+	auto& device = DirectX11RenderAPI::Instance->device;
 
 	ID3DBlob* vertexBC, * geometryBC, * pixelBC, * errorCode;
 	const LPCWSTR shaderPath = L"./Shaders/ParticleSystemSortedShader.hlsl";
@@ -134,7 +139,7 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::LoadShaders()
 			&computeBC,
 			&errorCode);
 
-		GameFramework::Instance->CheckShaderCreationSuccess(res, errorCode, shaderPath);
+		ShaderAPIUtils::CheckShaderCreationSuccess(res, errorCode, shaderPath);
 
 		device->CreateComputeShader(computeBC->GetBufferPointer(), computeBC->GetBufferSize(), nullptr, &ComputeShaders[flag]);
 		computeBC->Release();
@@ -143,8 +148,8 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::LoadShaders()
 
 GAMEFRAMEWORK_API void ParticleSystemSorted::CreateBuffers()
 {
-	auto device = GameFramework::Instance->device;
-	auto* context = GameFramework::Instance->context;
+	auto& device = DirectX11RenderAPI::Instance->device;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	D3D11_BUFFER_DESC constBufDesc;
 
@@ -262,7 +267,7 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::DrawShadowMap()
 
 GAMEFRAMEWORK_API void ParticleSystemSorted::Update(float deltaTime)
 {
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	//sort->Sort(uavSorted, srvSorted);
 
@@ -280,7 +285,7 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::Update(float deltaTime)
 	context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 	context->CSSetConstantBuffers(0, 1, &constBuf);
 
-	ID3D11ShaderResourceView* SRVs[] = { GameFramework::Instance->gBuffer.worldPos_DepthSRV, GameFramework::Instance->gBuffer.normalSRV };
+	ID3D11ShaderResourceView* SRVs[] = { DirectX11RenderAPI::Instance->gBuffer.worldPos_DepthSRV, DirectX11RenderAPI::Instance->gBuffer.normalSRV };
 	context->CSSetShaderResources(1, 2, SRVs);
 
 	const UINT counterKeepValue = -1;
@@ -355,7 +360,7 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::Destroy()
 
 GAMEFRAMEWORK_API void ParticleSystemSorted::GeometryPass()
 {
-	auto* context = GameFramework::Instance->context;
+	auto* context = DirectX11RenderAPI::Instance->context;
 
 	context->ClearState();
 
@@ -379,8 +384,8 @@ GAMEFRAMEWORK_API void ParticleSystemSorted::GeometryPass()
 	context->GSSetConstantBuffers(0, 1, &constBuf);
 	context->GSSetShaderResources(0, 1, &srvPool);
 
-	context->OMSetRenderTargets(1, &GameFramework::Instance->rtv, GameFramework::Instance->pDSV.Get());
-	context->RSSetViewports(1, &GameFramework::Instance->viewport);
+	context->OMSetRenderTargets(1, &DirectX11RenderAPI::Instance->rtv, DirectX11RenderAPI::Instance->pDSV.Get());
+	context->RSSetViewports(1, DirectX11RenderAPI::Instance->viewport);
 
 	context->Draw(ParticlesCount, 0);
 }
