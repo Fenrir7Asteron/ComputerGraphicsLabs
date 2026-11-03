@@ -31,6 +31,8 @@ public:
 	GAMEFRAMEWORK_API virtual void RenderShadowMap();
 	GAMEFRAMEWORK_API virtual void GeometryPass();
 	GAMEFRAMEWORK_API virtual void LightingPass();
+	GAMEFRAMEWORK_API void DirectionalLightLightingPass();
+	GAMEFRAMEWORK_API void PointLightLightingPass();
 	GAMEFRAMEWORK_API virtual void ParticleSystemPass();
 
 	GAMEFRAMEWORK_API virtual GameObject* CreateGameObject(std::string name);
