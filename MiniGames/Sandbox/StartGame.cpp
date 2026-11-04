@@ -16,8 +16,17 @@ import vulkan_hpp;
 
 int main()
 {
-	SandboxGame game("Sandbox");
-	game.Init(800, 800);
-	game.Run();
-	return 0;
+	try
+	{
+		SandboxGame game("Sandbox");
+		game.Init(800, 800);
+		game.Run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	return EXIT_SUCCESS;
 }

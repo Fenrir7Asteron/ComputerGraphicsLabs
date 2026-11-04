@@ -1,7 +1,8 @@
 #include <iostream>
-
 #include "DisplayWin.h"
+
 #define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -33,6 +34,7 @@ GAMEFRAMEWORK_API DisplayWin::DisplayWin(const std::string& applicationName, int
 DisplayWin::~DisplayWin()
 {
 	glfwDestroyWindow(window);
+	glfwTerminate();
 }
 
 GAMEFRAMEWORK_API void DisplayWin::SetMouseCapture(bool isMouseCaptured)

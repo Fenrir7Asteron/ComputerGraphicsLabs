@@ -200,6 +200,7 @@
     <ClCompile Include="Utils\SimpleMath.cpp" />
     <ClCompile Include="Render\Debug\VertexPositionColor.cpp" />
     <ClCompile Include="Render\Texture\Loader\WICTextureLoader.cpp" />
+    <ClCompile Include="Render\RenderAPI\Vulkan\VulkanRenderAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\RenderAPI\DirectX11\BitonicSort.h" />
@@ -255,6 +256,7 @@
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Render\Debug\VertexPositionColor.h" />
     <ClInclude Include="Render\Texture\Loader\WICTextureLoader.h" />
+    <ClInclude Include="Render\RenderAPI\Vulkan\VulkanRenderAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

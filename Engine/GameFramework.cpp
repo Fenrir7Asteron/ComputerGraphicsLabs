@@ -9,6 +9,7 @@
 #include "Render/Debug/DebugRenderSysImpl.h"
 #include "Render/RenderAPI/RenderAPI.h"
 #include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
+#include "Render/RenderAPI/Vulkan/VulkanRenderAPI.h"
 #include "Component/GameObject.h"
 #include "Component/Render/Light/PointLight.h"
 #include "Component/Render/Light/LightConstantData.h"
@@ -19,13 +20,6 @@
 #include <d3dcompiler.h>
 #include "MacrosParser.h"
 #include "DisplayWin.h"
-
-#include <memory>
-#if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
-#	include <vulkan/vulkan_raii.hpp>
-#else
-import vulkan_hpp;
-#endif
 #include <GLFW/glfw3.h>
 
 using namespace DirectX::SimpleMath;
@@ -48,7 +42,7 @@ GAMEFRAMEWORK_API void GameFramework::Init(int screenWidth, int screenHeight)
 
 	displayWin = new DisplayWin(applicationName, screenWidth, screenHeight);
 
-	m_renderer = new RenderAPI::DirectX11::DirectX11RenderAPI(screenWidth, screenHeight, displayWin);
+	m_renderer = new RenderAPI::Vulkan::VulkanRenderAPI(screenWidth, screenHeight, displayWin);
 
 	inputDevice = new InputDevice(this);
 
