@@ -339,7 +339,12 @@ namespace RenderAPI::DirectX11
 		context->ClearRenderTargetView(rtv, color);
 		gBuffer.Clear(context, color);
 		context->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		if (dirLight != nullptr)
+		{
+			context->ClearDepthStencilView(dirLight->shadowDepthView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		}
+		
 		debugRender->Clear();
 	}
 

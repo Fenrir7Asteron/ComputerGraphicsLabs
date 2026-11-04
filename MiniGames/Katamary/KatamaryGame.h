@@ -6,7 +6,7 @@ class OrbitalCameraController;
 class KatamaryGame : public GameFramework
 {
 public:
-	KatamaryGame(LPCWSTR applicationName);
+	KatamaryGame(const std::string& applicationName);
 	void Init(int windowWidth, int windowHeight) override;
 
 	GameObject* SpawnPlayerController(

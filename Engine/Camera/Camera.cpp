@@ -14,6 +14,7 @@ Camera::Camera(float nearPlane, float farPlane, float fovYDegrees, int width, in
 	this->m_height = height;
 
 	m_rotation = Quaternion::LookRotation(Vector3::Forward, Vector3::Up);
+	m_position = { 0.0f, 100.0f, -10.0f };
 	SetOrthographic(false);
 }
 

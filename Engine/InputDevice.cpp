@@ -2,6 +2,7 @@
 #include "InputDevice.h"
 #include <iostream>
 #include "GameFramework.h"
+#include "DisplayWin.h"
 
 
 using namespace DirectX::SimpleMath;

@@ -10,7 +10,7 @@
 int main()
 {
 
-	KatamaryGame game(L"Katamary Game");
+	KatamaryGame game("Katamary Game");
 	game.Init(800, 800);
 	game.Run();
 	return 0;

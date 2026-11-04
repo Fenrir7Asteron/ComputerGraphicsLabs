@@ -1,76 +1,38 @@
 #include <iostream>
 
 #include "DisplayWin.h"
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 using namespace DirectX::SimpleMath;
 
-void DisplayWin::CreateGameWindow(LPCWSTR applicationName, int windowWidth, int windowHeight)
+GAMEFRAMEWORK_API DisplayWin::DisplayWin(const std::string& applicationName, int windowWidth, int windowHeight)
 {
-	HINSTANCE hInstance = GetModuleHandle(nullptr);
+	glfwInit();
 
-	WNDCLASSEX wc;
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	wc.lpfnWndProc = WndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
-	wc.hIconSm = wc.hIcon;
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
-	wc.lpszMenuName = nullptr;
-	wc.lpszClassName = applicationName;
-	wc.cbSize = sizeof(WNDCLASSEX);
+	window = glfwCreateWindow(windowWidth, windowHeight, applicationName.c_str(), nullptr, nullptr);
+	glfwSwapInterval(1);
 
-	// Register the window class.
-	RegisterClassEx(&wc);
-
-
-	auto screenWidth = windowWidth;
-	auto screenHeight = windowHeight;
-
-	RECT windowRect = { 0, 0, static_cast<LONG>(screenWidth), static_cast<LONG>(screenHeight) };
-	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-	auto dwStyle = WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_THICKFRAME;
-
-	auto posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
-	auto posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
-
-	this->hWnd = CreateWindowEx(WS_EX_APPWINDOW, applicationName, applicationName,
-		dwStyle,
-		posX, posY,
-		windowRect.right - windowRect.left,
-		windowRect.bottom - windowRect.top,
-		nullptr, nullptr, hInstance, nullptr);
+	this->hWnd = glfwGetWin32Window(window);
 
 	ShowWindow(hWnd, SW_SHOW);
 	SetForegroundWindow(hWnd);
 	SetFocus(hWnd);
 
-	ShowCursor(false);
-
-	SetMouseCapture(true);
-
-	// Get the window client area.
-	RECT rc;
-	GetClientRect(hWnd, &rc);
-
-	// Convert the client area to screen coordinates.
-	POINT pt = { rc.left, rc.top };
-	POINT pt2 = { rc.right, rc.bottom };
-	ClientToScreen(hWnd, &pt);
-	ClientToScreen(hWnd, &pt2);
-	SetRect(&rc, pt.x, pt.y, pt2.x, pt2.y);
-
-	// Confine the cursor.
-	ClipCursor(&rc);
-
+	LockCursor(true);
 	CenterMouse();
 
 	this->windowWidth = windowWidth;
 	this->windowHeight= windowHeight;
+}
+
+DisplayWin::~DisplayWin()
+{
+	glfwDestroyWindow(window);
 }
 
 GAMEFRAMEWORK_API void DisplayWin::SetMouseCapture(bool isMouseCaptured)
@@ -99,22 +61,10 @@ GAMEFRAMEWORK_API Vector2 DisplayWin::OffsetFromWindowCenter(DirectX::SimpleMath
 	return offset;
 }
 
-LRESULT DisplayWin::WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
+GAMEFRAMEWORK_API void DisplayWin::LockCursor(bool isLocked)
 {
-	switch (umessage)
-	{
-	case WM_KEYDOWN:
-	{
-		// If a key is pressed send it to the input object so it can record that state.
-		std::cout << "Key: " << static_cast<unsigned int>(wparam) << std::endl;
+	ShowCursor(!isLocked);
+	SetMouseCapture(isLocked);
 
-		if (static_cast<unsigned int>(wparam) == 27) PostQuitMessage(0);
-
-		return 0;
-	}
-	default:
-	{
-		return DefWindowProc(hwnd, umessage, wparam, lparam);
-	}
-	}
+	isCursorLocked = isLocked;
 }

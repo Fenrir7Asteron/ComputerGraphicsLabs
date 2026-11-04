@@ -16,7 +16,7 @@
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
-KatamaryGame::KatamaryGame(LPCWSTR applicationName) : GameFramework::GameFramework(applicationName)
+KatamaryGame::KatamaryGame(const std::string& applicationName) : GameFramework::GameFramework(applicationName)
 {
 }
 

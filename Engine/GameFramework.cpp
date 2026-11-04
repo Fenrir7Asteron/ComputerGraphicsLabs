@@ -18,25 +18,35 @@
 #include <iostream>
 #include <d3dcompiler.h>
 #include "MacrosParser.h"
+#include "DisplayWin.h"
+
+#include <memory>
+#if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
+#	include <vulkan/vulkan_raii.hpp>
+#else
+import vulkan_hpp;
+#endif
+#include <GLFW/glfw3.h>
 
 using namespace DirectX::SimpleMath;
 
 GameFramework* GameFramework::Instance = nullptr;
+DisplayWin* GameFramework::displayWin = nullptr;
+InputDevice* GameFramework::inputDevice = nullptr;
 
-GameFramework::GameFramework(LPCWSTR applicationName)
+GAMEFRAMEWORK_API GameFramework::GameFramework(const std::string& applicationName)
 {
 	GameFramework::Instance = this;
 
 	this->applicationName = applicationName;
 }
 
-void GameFramework::Init(int screenWidth, int screenHeight)
+GAMEFRAMEWORK_API void GameFramework::Init(int screenWidth, int screenHeight)
 {
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenWidth;
 
-	displayWin = new DisplayWin();
-	displayWin->CreateGameWindow(applicationName, screenWidth, screenHeight);
+	displayWin = new DisplayWin(applicationName, screenWidth, screenHeight);
 
 	m_renderer = new RenderAPI::DirectX11::DirectX11RenderAPI(screenWidth, screenHeight, displayWin);
 
@@ -53,16 +63,19 @@ void GameFramework::Init(int screenWidth, int screenHeight)
 	}
 }
 
-void GameFramework::Run()
+GAMEFRAMEWORK_API void GameFramework::Run()
 {
 	PrevTime = std::chrono::steady_clock::now();
 	float totalTimeClamped = 0;
 	unsigned int frameCount = 0;
 
-	MSG msg = {};
-	bool isExitRequested = false;
+	glfwSetKeyCallback(displayWin->window, KeyCallback);
+	glfwSetCursorPosCallback(displayWin->window, CursorPosCallback);
+	glfwSetMouseButtonCallback(displayWin->window, MouseButtonCallback);
+	glfwSetScrollCallback(displayWin->window, ScrollCallback);
 
-	while (!isExitRequested) {
+	// Main loop
+	while (!glfwWindowShouldClose(displayWin->window)) {
 		auto	curTime = std::chrono::steady_clock::now();
 		deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(curTime - PrevTime).count() / 1000000.0f;
 		PrevTime = curTime;
@@ -71,47 +84,7 @@ void GameFramework::Run()
 
 		UpdateFrameCount(frameCount, totalTimeClamped);
 
-		// Handle the windows messages.
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-
-			// If windows signals to end the application then exit out.
-			if (msg.message == WM_QUIT) {
-				isExitRequested = true;
-				break;
-			}
-
-			if (msg.message == WM_KEYDOWN) {
-				Keys keyEnum = static_cast<Keys>(msg.wParam);
-				inputDevice->AddPressedKey(keyEnum);
-			}
-
-			if (msg.message == WM_KEYUP) {
-				Keys keyEnum = static_cast<Keys>(msg.wParam);
-				inputDevice->RemovePressedKey(keyEnum);
-			}
-
-			if (msg.message == WM_MOUSEMOVE) {
-				InputDevice::RawMouseEventArgs args;
-				args.X = GET_X_LPARAM(msg.lParam);
-				args.Y = GET_Y_LPARAM(msg.lParam);
-				args.WheelDelta = 0;
-				inputDevice->OnMouseMove(args);
-				displayWin->CenterMouse();
-			}
-
-			if (msg.message == WM_MOUSEWHEEL) {
-				InputDevice::RawMouseEventArgs args;
-				args.X = 0;
-				args.Y = 0;
-				args.WheelDelta = (float) GET_WHEEL_DELTA_WPARAM(msg.wParam) / WHEEL_DELTA;
-				inputDevice->OnMouseMove(args);
-			}
-		}
-
-		if (isExitRequested)
-			break;
+		glfwPollEvents();
 
 		Update();
 		m_renderer->Render(deltaTime);
@@ -120,7 +93,7 @@ void GameFramework::Run()
 	FreeGameResources();
 }
 
-void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeClamped)
+GAMEFRAMEWORK_API void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeClamped)
 {
 	frameCount++;
 
@@ -137,7 +110,7 @@ void GameFramework::UpdateFrameCount(unsigned int &frameCount, float &totalTimeC
 	}
 }
 
-void GameFramework::Update()
+GAMEFRAMEWORK_API void GameFramework::Update()
 {
 	for (auto gameComponent : gameComponents)
 	{
@@ -161,7 +134,7 @@ void GameFramework::Update()
 	}
 }
 
-GameObject* GameFramework::CreateGameObject(std::string name)
+GAMEFRAMEWORK_API GameObject* GameFramework::CreateGameObject(std::string name)
 {
 	auto* gameObject = new GameObject(name);
 	gameObjects.push_back(gameObject);
@@ -212,7 +185,7 @@ GAMEFRAMEWORK_API PhysicalComponent* GameFramework::Intersects(PhysicalComponent
 	return nullptr;
 }
 
-void GameFramework::FreeGameResources()
+GAMEFRAMEWORK_API void GameFramework::FreeGameResources()
 {
 	m_renderer->Release();
 
@@ -249,4 +222,67 @@ GAMEFRAMEWORK_API void GameFramework::SetCameraController(int cameraIdx)
 		else
 			cameraControllers[i]->camera = camera;
 	}
+}
+
+GAMEFRAMEWORK_API void GameFramework::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (!displayWin->isCursorLocked)
+		return;
+
+	if (action == GLFW_PRESS) {
+		std::cout << "Key: " << key << std::endl;
+
+		Keys keyEnum = static_cast<Keys>(key);
+		inputDevice->AddPressedKey(keyEnum);
+
+		if (key == GLFW_KEY_ESCAPE)
+		{
+			displayWin->LockCursor(false);
+		}
+	}
+
+	if (action == GLFW_RELEASE) {
+		Keys keyEnum = static_cast<Keys>(key);
+		inputDevice->RemovePressedKey(keyEnum);
+	}
+}
+
+GAMEFRAMEWORK_API void GameFramework::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (!displayWin->isCursorLocked)
+		return;
+
+	InputDevice::RawMouseEventArgs args;
+	args.X = xpos;
+	args.Y = ypos;
+	args.WheelDelta = 0;
+	inputDevice->OnMouseMove(args);
+	displayWin->CenterMouse();
+}
+
+GAMEFRAMEWORK_API void GameFramework::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		if (!displayWin->isCursorLocked)
+		{
+			displayWin->LockCursor(true);
+		}
+	}
+}
+
+GAMEFRAMEWORK_API void GameFramework::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (!displayWin->isCursorLocked)
+		return;
+
+	InputDevice::RawMouseEventArgs args;
+
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	args.X = width / 2;
+	args.Y = height / 2;
+
+	args.WheelDelta = (float) yoffset;
+	inputDevice->OnMouseMove(args);
 }
