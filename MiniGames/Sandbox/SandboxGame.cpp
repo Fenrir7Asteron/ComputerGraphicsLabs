@@ -10,8 +10,8 @@ SandboxGame::SandboxGame(const std::string& applicationName) : GameFramework::Ga
 {
 }
 
-const LPCWSTR geometryPassShaderPath = L"./Shaders/GeometryShader.hlsl";
-const LPCWSTR depthShaderPath = L"./Shaders/CascadeGeometryDepthShader.hlsl";
+const std::wstring geometryPassShaderPath = L"./Shaders/GeometryShader.hlsl";
+const std::wstring depthShaderPath = L"./Shaders/CascadeGeometryDepthShader.hlsl";
 
 void SandboxGame::Init(int windowWidth, int windowHeight)
 {

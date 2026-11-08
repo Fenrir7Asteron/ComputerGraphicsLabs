@@ -13,6 +13,10 @@
 #include <ParticleSystemSorted.h>
 #include <iostream>
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
 namespace RenderAPI::DirectX11
 {
 	DirectX11RenderAPI* DirectX11RenderAPI::Instance = nullptr;
@@ -33,7 +37,7 @@ namespace RenderAPI::DirectX11
 		swapDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		swapDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 		swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapDesc.OutputWindow = displayWin->hWnd;
+		swapDesc.OutputWindow = glfwGetWin32Window(displayWin->window);
 		swapDesc.Windowed = true;
 		swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;

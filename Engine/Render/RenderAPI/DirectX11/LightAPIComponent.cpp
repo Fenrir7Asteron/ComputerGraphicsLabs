@@ -27,13 +27,13 @@ namespace RenderAPI::DirectX11
 		ID3DBlob* errorVertexCode = nullptr;
 		HRESULT res;
 
-		const LPCWSTR lightingPassShaderPath = L"./Shaders/LightingShader.hlsl";
+		const std::wstring lightingPassShaderPath = L"./Shaders/LightingShader.hlsl";
 
 		for (auto flag : vsLightingFlags)
 		{
 			auto macros = MacrosParser::GetMacros(flag);
 
-			res = D3DCompileFromFile(lightingPassShaderPath,
+			res = D3DCompileFromFile(lightingPassShaderPath.c_str(),
 				&macros[0],
 				nullptr /*include*/,
 				"VSMain",
@@ -64,7 +64,7 @@ namespace RenderAPI::DirectX11
 		{
 			auto macros = MacrosParser::GetMacros(flag);
 
-			res = D3DCompileFromFile(lightingPassShaderPath,
+			res = D3DCompileFromFile(lightingPassShaderPath.c_str(),
 				&macros[0] /*macros*/,
 				nullptr /*include*/,
 				"PSMain",

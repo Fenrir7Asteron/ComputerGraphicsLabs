@@ -18,8 +18,8 @@ GAMEFRAMEWORK_API Model::Model(GameObject* gameObject) : GameComponent(gameObjec
 
 
 GAMEFRAMEWORK_API void Model::Bind(
-    const std::string modelDir, const std::string modelName,
-    const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
+    const std::string& modelDir, const std::string& modelName,
+    const std::wstring& geometryPassShaderPath, const std::wstring& depthShaderPath,
     float startScale,
     Material* material,
     const PhongCoefficients phongCoefficients)

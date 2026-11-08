@@ -19,14 +19,16 @@ namespace RenderAPI::Vulkan
 	public:
 		GAMEFRAMEWORK_API VulkanRenderAPI(int screenWidth, int screenHeight, DisplayWin* displayWin);
 
-		GAMEFRAMEWORK_API void CreateInstance();
-		GAMEFRAMEWORK_API void SetupDebugMessenger();
-
 		// Inherited via RenderAPI
 		GAMEFRAMEWORK_API void Render(float deltaTime) override;
 		GAMEFRAMEWORK_API void Release() override;
 
 	private:
+		GAMEFRAMEWORK_API void CreateInstance();
+		GAMEFRAMEWORK_API void SetupDebugMessenger();
+		GAMEFRAMEWORK_API void PickPhysicalDevice();
+		GAMEFRAMEWORK_API void CreateLogicalDevice();
+
 		GAMEFRAMEWORK_API std::vector<const char*> GetRequiredExtensions();
 		GAMEFRAMEWORK_API void CheckExtensionsAvailability(std::vector<const char*> requiredExtensions);
 
@@ -42,6 +44,9 @@ namespace RenderAPI::Vulkan
 		vk::raii::Context  context;
 		vk::raii::Instance instance = nullptr;
 		vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
+		vk::raii::PhysicalDevice physicalDevice = nullptr;
+		vk::raii::Device device = nullptr;
+		vk::raii::Queue graphicsQueue = nullptr;
 	};
 }
 

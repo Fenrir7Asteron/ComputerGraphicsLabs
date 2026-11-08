@@ -1,6 +1,7 @@
 #include "d3dcompiler.h"
 #include "Render/Texture/Loader/WICTextureLoader.h"
 #include "Render/RenderAPI/DirectX11/DirectX11RenderAPI.h"
+#include "Render/RenderAPI/DirectX11/ShaderAPIUtils.h"
 #include "Material.h"
 #include "GameFramework.h"
 #include <iostream>
@@ -11,8 +12,8 @@
 
 using namespace DirectX;
 
-Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMappingShaderPath, DisplayWin* displayWin,
-	const LPCWSTR diffuseTexturePath)
+Material::Material(const std::wstring& geometryPassShaderPath, const std::wstring& shadowMappingShaderPath, DisplayWin* displayWin,
+	const std::wstring& diffuseTexturePath)
 {
 	auto& device = RenderAPI::DirectX11::DirectX11RenderAPI::Instance->device;
 
@@ -20,7 +21,7 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 	geometryPassVertexBC = nullptr;
 	ID3DBlob* errorVertexCode = nullptr;
 
-	HRESULT res = D3DCompileFromFile(geometryPassShaderPath,
+	HRESULT res = D3DCompileFromFile(geometryPassShaderPath.c_str(),
 		nullptr /*macros*/,
 		nullptr /*include*/,
 		"VSMain",
@@ -30,13 +31,13 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 		&geometryPassVertexBC,
 		&errorVertexCode);
 
-	CheckShaderCreationSuccess(res, errorVertexCode, geometryPassShaderPath);
+	RenderAPI::DirectX11::ShaderAPIUtils::CheckShaderCreationSuccess(res, errorVertexCode, geometryPassShaderPath);
 
 	geometryPassPixelBC = nullptr;
 	ID3DBlob* errorPixelCode = nullptr;
 
-	res = D3DCompileFromFile(geometryPassShaderPath, nullptr /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &geometryPassPixelBC, &errorPixelCode);
-	CheckShaderCreationSuccess(res, errorPixelCode, geometryPassShaderPath);
+	res = D3DCompileFromFile(geometryPassShaderPath.c_str(), nullptr /*macros*/, nullptr /*include*/, "PSMain", "ps_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &geometryPassPixelBC, &errorPixelCode);
+	RenderAPI::DirectX11::ShaderAPIUtils::CheckShaderCreationSuccess(res, errorPixelCode, geometryPassShaderPath);
 
 	res = device->CreateVertexShader(
 		geometryPassVertexBC->GetBufferPointer(),
@@ -63,7 +64,7 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 	shadowMappingVertexBC = nullptr;
 	errorVertexCode = nullptr;
 
-	res = D3DCompileFromFile(shadowMappingShaderPath,
+	res = D3DCompileFromFile(shadowMappingShaderPath.c_str(),
 		nullptr /*macros*/,
 		nullptr /*include*/,
 		"VSMain",
@@ -73,13 +74,13 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 		&shadowMappingVertexBC,
 		&errorVertexCode);
 
-	CheckShaderCreationSuccess(res, errorVertexCode, shadowMappingShaderPath);
+	RenderAPI::DirectX11::ShaderAPIUtils::CheckShaderCreationSuccess(res, errorVertexCode, shadowMappingShaderPath);
 
 	shadowMappingGeometryBC = nullptr;
 	ID3DBlob* errorGeometryCode = nullptr;
 
-	res = D3DCompileFromFile(shadowMappingShaderPath, nullptr /*macros*/, nullptr /*include*/, "GSMain", "gs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &shadowMappingGeometryBC, &errorGeometryCode);
-	CheckShaderCreationSuccess(res, errorGeometryCode, shadowMappingShaderPath);
+	res = D3DCompileFromFile(shadowMappingShaderPath.c_str(), nullptr /*macros*/, nullptr /*include*/, "GSMain", "gs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, &shadowMappingGeometryBC, &errorGeometryCode);
+	RenderAPI::DirectX11::ShaderAPIUtils::CheckShaderCreationSuccess(res, errorGeometryCode, shadowMappingShaderPath);
 
 	res = device->CreateVertexShader(
 		shadowMappingVertexBC->GetBufferPointer(),
@@ -169,7 +170,7 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 
 	res = device->CreateRasterizerState(&rastDesc, &rastState);
 
-	CreateWICTextureFromFile(device.Get(), diffuseTexturePath, &texture, &textureView);
+	CreateWICTextureFromFile(device.Get(), diffuseTexturePath.c_str(), &texture, &textureView);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -182,22 +183,4 @@ Material::Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMap
 
 Material::~Material()
 {
-}
-
-
-void Material::CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName)
-{
-	if (FAILED(res)) {
-		// If the shader failed to compile it should have written something to the error message.
-		if (errorVertexCode) {
-			char* compileErrors = (char*)(errorVertexCode->GetBufferPointer());
-
-			std::cout << compileErrors << std::endl;
-		}
-		// If there was  nothing in the error message then it simply could not find the shader file itself.
-		else
-		{
-			MessageBox(GameFramework::Instance->displayWin->hWnd, shaderName, shaderName, MB_OK);
-		}
-	}
 }

@@ -42,9 +42,10 @@ GAMEFRAMEWORK_API void GameFramework::Init(int screenWidth, int screenHeight)
 
 	displayWin = new DisplayWin(applicationName, screenWidth, screenHeight);
 
+	/*m_renderer = new RenderAPI::DirectX11::DirectX11RenderAPI(screenWidth, screenHeight, displayWin);*/
 	m_renderer = new RenderAPI::Vulkan::VulkanRenderAPI(screenWidth, screenHeight, displayWin);
 
-	inputDevice = new InputDevice(this);
+	inputDevice = new InputDevice();
 
 	camera = new Camera(0.1f, 10000.0f, 50.0f, screenWidth, screenHeight);
 	m_renderer->SetCamera(camera);
@@ -96,9 +97,9 @@ GAMEFRAMEWORK_API void GameFramework::UpdateFrameCount(unsigned int &frameCount,
 
 		totalTimeClamped -= 1.0f;
 
-		WCHAR text[256];
-		swprintf_s(text, TEXT("FPS: %f"), fps);
-		SetWindowText(displayWin->hWnd, text);
+		CHAR text[256];
+		sprintf_s(text, "FPS: %f", fps);
+		glfwSetWindowTitle(displayWin->window, text);
 
 		frameCount = 0;
 	}

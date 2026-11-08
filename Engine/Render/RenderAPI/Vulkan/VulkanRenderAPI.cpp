@@ -3,6 +3,8 @@
 #include <memory>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <map>
+#include <ranges>
 
 namespace RenderAPI::Vulkan
 {
@@ -22,6 +24,8 @@ namespace RenderAPI::Vulkan
 		{
 			CreateInstance();
 			SetupDebugMessenger();
+			PickPhysicalDevice();
+			CreateLogicalDevice();
 		}
 		catch (const vk::SystemError& err)
 		{
@@ -79,6 +83,138 @@ namespace RenderAPI::Vulkan
 
 		debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
 
+	}
+
+	GAMEFRAMEWORK_API void VulkanRenderAPI::PickPhysicalDevice()
+	{
+		auto physicalDevices = instance.enumeratePhysicalDevices();
+
+		if (physicalDevices.empty())
+		{
+			throw std::runtime_error("failed to find GPUs with Vulkan support!");
+		}
+
+		// Use an ordered map to automatically sort candidates by increasing score
+		std::multimap<int, vk::raii::PhysicalDevice> candidates;
+
+		for (const auto& pd : physicalDevices)
+		{
+			auto deviceProperties = pd.getProperties2();
+			auto deviceFeatures = pd.getFeatures2();
+			auto queueFamilies = pd.getQueueFamilyProperties2();
+			auto availableDeviceExtensions = pd.enumerateDeviceExtensionProperties();
+
+			std::vector<const char*> requiredDeviceExtension = { vk::KHRSwapchainExtensionName };
+			int score = 0;
+
+			// Discrete GPUs have a significant performance advantage
+			if (deviceProperties.properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
+				score += 1000;
+			}
+
+			// Maximum possible size of textures affects graphics quality
+			score += deviceProperties.properties.limits.maxImageDimension2D;
+
+			// Minimal required Vulkan version is 1.3
+			if (deviceProperties.properties.apiVersion <= vk::ApiVersion12)
+				continue;
+
+			bool supportsGraphics = std::ranges::any_of(queueFamilies,
+				[](vk::QueueFamilyProperties2 const& family) 
+			{
+				return !!(family.queueFamilyProperties.queueFlags & vk::QueueFlagBits::eGraphics);
+			});
+			if (!supportsGraphics)
+				continue;
+
+			bool supportsAllRequiredExtensions =
+				std::ranges::all_of(requiredDeviceExtension, 
+					[&availableDeviceExtensions](auto const& requiredExtension)
+					{
+						return std::ranges::any_of(
+							availableDeviceExtensions,
+							[&requiredExtension](vk::ExtensionProperties const& availableExtension)
+							{
+								return strcmp(availableExtension.extensionName, requiredExtension) == 0;
+							});
+					});
+			if (!supportsAllRequiredExtensions)
+				continue;
+
+			// Check if the physicalDevice supports the required features
+			auto features = pd.template getFeatures2<vk::PhysicalDeviceFeatures2,
+				vk::PhysicalDeviceVulkan11Features,
+				vk::PhysicalDeviceVulkan13Features,
+				vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+			bool supportsRequiredFeatures = 
+				deviceFeatures.features.geometryShader &&
+				features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+				features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+				features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState
+			;
+
+			if (!supportsRequiredFeatures)
+				continue;
+
+			candidates.insert(std::make_pair(score, pd));
+		}
+
+		// Check if the best candidate is suitable at all
+		if (!candidates.empty() && candidates.rbegin()->first > 0)
+		{
+			this->physicalDevice = candidates.rbegin()->second;
+		}
+		else
+		{
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
+	}
+
+	GAMEFRAMEWORK_API void VulkanRenderAPI::CreateLogicalDevice()
+	{
+		std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
+
+		auto graphicsQueueFamilyProperty =
+			std::ranges::find_if(queueFamilyProperties, [](auto const& family)
+				{ return (family.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0); });
+
+		auto graphicsIndex = static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+
+		float queuePriority = 0.5f;
+		vk::DeviceQueueCreateInfo deviceQueueCreateInfo{ 
+			.queueFamilyIndex = graphicsIndex,
+			.queueCount = 1,
+			.pQueuePriorities = &queuePriority
+		};
+
+		vk::PhysicalDeviceFeatures deviceFeatures;
+
+		// Create a chain of feature structures
+		vk::StructureChain<vk::PhysicalDeviceFeatures2,
+			vk::PhysicalDeviceVulkan11Features,
+			vk::PhysicalDeviceVulkan13Features,
+			vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+			featureChain = {
+				{},                                    
+				{.shaderDrawParameters = true},        
+				{.dynamicRendering = true},            
+				{.extendedDynamicState = true}         
+		};
+
+		std::vector<const char*> requiredDeviceExtension = {
+			vk::KHRSwapchainExtensionName 
+		};
+
+		vk::DeviceCreateInfo deviceCreateInfo{
+			.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+			.queueCreateInfoCount = 1,
+			.pQueueCreateInfos = &deviceQueueCreateInfo,
+			.enabledExtensionCount = static_cast<uint32_t>(requiredDeviceExtension.size()),
+			.ppEnabledExtensionNames = requiredDeviceExtension.data()
+		};
+
+		device = vk::raii::Device(physicalDevice, deviceCreateInfo);
+		graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
 	}
 
 	GAMEFRAMEWORK_API void VulkanRenderAPI::Render(float deltaTime)

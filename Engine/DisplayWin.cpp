@@ -1,10 +1,8 @@
 #include <iostream>
 #include "DisplayWin.h"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 
 using namespace DirectX::SimpleMath;
 
@@ -18,11 +16,7 @@ GAMEFRAMEWORK_API DisplayWin::DisplayWin(const std::string& applicationName, int
 	window = glfwCreateWindow(windowWidth, windowHeight, applicationName.c_str(), nullptr, nullptr);
 	glfwSwapInterval(1);
 
-	this->hWnd = glfwGetWin32Window(window);
-
-	ShowWindow(hWnd, SW_SHOW);
-	SetForegroundWindow(hWnd);
-	SetFocus(hWnd);
+	glfwShowWindow(window);
 
 	LockCursor(true);
 	CenterMouse();
@@ -37,23 +31,9 @@ DisplayWin::~DisplayWin()
 	glfwTerminate();
 }
 
-GAMEFRAMEWORK_API void DisplayWin::SetMouseCapture(bool isMouseCaptured)
-{
-	std::cout << isMouseCaptured << std::endl;
-	if (isMouseCaptured) 
-	{
-		SetCapture(hWnd);
-	}
-		
-	else
-		ReleaseCapture();
-}
-
 GAMEFRAMEWORK_API void DisplayWin::CenterMouse()
 {
-	POINT pt = { windowWidth / 2, windowHeight / 2 };
-	ClientToScreen(hWnd, &pt);
-	SetCursorPos(pt.x, pt.y);
+	glfwSetCursorPos(window, windowWidth / 2, windowHeight / 2);
 }
 
 GAMEFRAMEWORK_API Vector2 DisplayWin::OffsetFromWindowCenter(DirectX::SimpleMath::Vector2 offset)
@@ -65,8 +45,10 @@ GAMEFRAMEWORK_API Vector2 DisplayWin::OffsetFromWindowCenter(DirectX::SimpleMath
 
 GAMEFRAMEWORK_API void DisplayWin::LockCursor(bool isLocked)
 {
-	ShowCursor(!isLocked);
-	SetMouseCapture(isLocked);
+	if (isLocked)
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	else
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	isCursorLocked = isLocked;
 }

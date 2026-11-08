@@ -2,14 +2,15 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "GameFrameworkExports.h"
+#include <string>
 
 class DisplayWin;
 
 class Material
 {
 public:
-	GAMEFRAMEWORK_API Material(const LPCWSTR geometryPassShaderPath, const LPCWSTR shadowMappingShaderPath, DisplayWin* displayWin,
-		const LPCWSTR diffuseTexturePath);
+	GAMEFRAMEWORK_API Material(const std::wstring& geometryPassShaderPath, const std::wstring& shadowMappingShaderPath, DisplayWin* displayWin,
+		const std::wstring& diffuseTexturePath);
 
 	GAMEFRAMEWORK_API virtual ~Material();
 
@@ -31,8 +32,5 @@ public:
 	ID3D11InputLayout* geometryLayout;
 	ID3D11InputLayout* shadowLayout;
 	ID3D11RasterizerState* rastState;
-
-protected:
-	GAMEFRAMEWORK_API void CheckShaderCreationSuccess(const HRESULT res, ID3DBlob* errorVertexCode, const LPCWSTR shaderName);
 };
 

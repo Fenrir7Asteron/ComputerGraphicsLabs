@@ -26,8 +26,8 @@ class Model : public GameComponent, public RenderComponent
 public:
 	GAMEFRAMEWORK_API Model(GameObject* gameObject);
 
-	GAMEFRAMEWORK_API void Bind(const std::string modelDir, const std::string modelName,
-		const LPCWSTR geometryPassShaderPath, const LPCWSTR depthShaderPath,
+	GAMEFRAMEWORK_API void Bind(const std::string& modelDir, const std::string& modelName,
+		const std::wstring& geometryPassShaderPath, const std::wstring& depthShaderPath,
 		float startScale,
 		Material* material,
 		const PhongCoefficients phongCoefficients);
@@ -51,8 +51,8 @@ private:
 
 	std::unique_ptr<Node> m_pRoot;
 	std::string m_modelDir;
-	LPCWSTR m_geometryPassShaderPath;
-	LPCWSTR m_depthShaderPath;
+	std::wstring m_geometryPassShaderPath;
+	std::wstring m_depthShaderPath;
 	PhongCoefficients m_phongCoefficients;
 	DirectX::SimpleMath::Vector3 m_offset;
 };

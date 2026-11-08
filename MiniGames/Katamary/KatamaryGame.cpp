@@ -20,8 +20,8 @@ KatamaryGame::KatamaryGame(const std::string& applicationName) : GameFramework::
 {
 }
 
-const LPCWSTR geometryPassShaderPath = L"./Shaders/GeometryShader.hlsl";
-const LPCWSTR depthShaderPath = L"./Shaders/CascadeGeometryDepthShader.hlsl";
+const std::wstring geometryPassShaderPath = L"./Shaders/GeometryShader.hlsl";
+const std::wstring depthShaderPath = L"./Shaders/CascadeGeometryDepthShader.hlsl";
 
 void KatamaryGame::Init(int windowWidth, int windowHeight)
 {
@@ -231,7 +231,7 @@ void KatamaryGame::Init(int windowWidth, int windowHeight)
 		100.0f);
 
 
-	this->orbitalCamController = new OrbitalCameraController(inputDevice, displayWin, 0.005f, 500.0f, 100.0f, katamaryObject, 1000.0f,
+	this->orbitalCamController = new OrbitalCameraController(inputDevice, displayWin, 0.01f, 500.0f, 100.0f, katamaryObject, 1000.0f,
 		200.0f,  // minDistanceToBodySurface
 		3000.0f // maxDistanceToBodySurface
 	);
